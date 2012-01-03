@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<project name="dexmaker" default="jar">
+
+    <target name="compile">
+        <mkdir dir="build/dx/classes"/>
+        <javac srcdir="src/dx/java" includes="**" destdir="build/dx/classes"
+               debug="on" source="1.5" target="1.5" includeantruntime="false">
+            <compilerarg value="-Xlint"/>
+        </javac>
+        <mkdir dir="build/main/classes"/>
+        <javac srcdir="src/main/java" includes="**" destdir="build/main/classes"
+               debug="on" source="1.5" target="1.5" includeantruntime="false">
+            <compilerarg value="-Xlint"/>
+            <classpath>
+                <pathelement location="build/dx/classes" />
+            </classpath>
+        </javac>
+        <mkdir dir="build/test/classes"/>
+        <javac srcdir="src/test/java" includes="**" destdir="build/test/classes"
+               debug="on" source="1.5" target="1.5" includeantruntime="false">
+            <compilerarg value="-Xlint"/>
+            <classpath>
+                <pathelement location="build/main/classes" />
+                <pathelement location="lib/junit.jar" />
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar destfile="build/dexmaker.jar" update="true" index="true">
+            <fileset dir="build/dx/classes"/>
+            <fileset dir="build/main/classes"/>
+        </jar>
+    </target>
+
+    <target name="docs">
+        <mkdir dir="build/api"/>
+		<javadoc destdir="build/api" windowtitle="dexmaker" source="1.5">
+			<packageset dir="src/main/java"/>
+		</javadoc>
+	</target>
+
+    <target name="clean">
+        <delete dir="build"/>
+    </target>
+
+</project>
+

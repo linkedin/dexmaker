@@ -14,8 +14,16 @@
  * limitations under the License.
  */
 
-package com.google.dexmaker;
+package com.google.dexmaker.stock;
 
+import com.google.dexmaker.Code;
+import com.google.dexmaker.Comparison;
+import com.google.dexmaker.DexGenerator;
+import com.google.dexmaker.FieldId;
+import com.google.dexmaker.Label;
+import com.google.dexmaker.Local;
+import com.google.dexmaker.MethodId;
+import com.google.dexmaker.Type;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -158,13 +166,13 @@ public final class ProxyBuilder<T> {
      *
      * @throws UnsupportedOperationException if the class we are trying to create a proxy for is
      *     not accessible.
-     * @throws DexCacheException if an exception occurred writing to the {@code dexCache} directory.
+     * @throws IOException if an exception occurred writing to the {@code dexCache} directory.
      * @throws UndeclaredThrowableException if the constructor for the base class to proxy throws
      *     a declared exception during construction.
      * @throws IllegalArgumentException if the handler is null, if the constructor argument types
      *     do not match the constructor argument values, or if no such constructor exists.
      */
-    public T build() {
+    public T build() throws IOException {
         check(handler != null, "handler == null");
         check(constructorArgTypes.length == constructorArgValues.length,
                 "constructorArgValues.length != constructorArgTypes.length");
@@ -176,12 +184,7 @@ public final class ProxyBuilder<T> {
         Method[] methodsToProxy = getMethodsToProxy(baseClass);
         generateCodeForAllMethods(generator, generatedType, methodsToProxy, superType);
         generator.declare(generatedType, generatedName + ".generated", PUBLIC, superType);
-        ClassLoader classLoader;
-        try {
-            classLoader = generator.load(parentClassLoader, dexCache, dexCache);
-        } catch (IOException e) {
-            throw new DexCacheException(e);
-        }
+        ClassLoader classLoader = generator.load(parentClassLoader, dexCache, dexCache);
         Class<? extends T> proxyClass;
         try {
             proxyClass = loadClass(classLoader, generatedName);
@@ -389,7 +392,7 @@ public final class ProxyBuilder<T> {
             for (int p = 0; p < argTypes.length; ++p) {
                 code.loadConstant(intValue, p);
                 Local<?> parameter = code.getParameter(p, argTypes[p]);
-                Local<?> unboxedIfNecessary = boxIfRequired(generator, code, parameter, temp);
+                Local<?> unboxedIfNecessary = boxIfRequired(code, parameter, temp);
                 code.aput(args, intValue, unboxedIfNecessary);
             }
             code.invokeInterface(methodInvoke, invokeResult, localHandler,
@@ -440,15 +443,13 @@ public final class ProxyBuilder<T> {
         }
     }
 
-    // This one is tricky to fix, I gave up.
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static <T> void invokeSuper(MethodId superMethod, Code superCode,
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void invokeSuper(MethodId superMethod, Code superCode,
             Local superThis, Local[] superArgs, Local superResult) {
         superCode.invokeSuper(superMethod, superResult, superThis, superArgs);
     }
 
-    private static Local<?> boxIfRequired(DexGenerator generator, Code code, Local<?> parameter,
-            Local<Object> temp) {
+    private static Local<?> boxIfRequired(Code code, Local<?> parameter, Local<Object> temp) {
         MethodId<?, ?> unboxMethod = PRIMITIVE_TYPE_TO_UNBOX_METHOD.get(parameter.getType());
         if (unboxMethod == null) {
             return parameter;

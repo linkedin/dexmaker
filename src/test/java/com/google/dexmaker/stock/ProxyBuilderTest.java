@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.google.dexmaker;
+package com.google.dexmaker.stock;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
-
+import com.google.dexmaker.DexGeneratorTest;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Random;
+import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
 
 public class ProxyBuilderTest extends TestCase {
     private FakeInvocationHandler fakeHandler = new FakeInvocationHandler();
@@ -400,7 +400,8 @@ public class ProxyBuilderTest extends TestCase {
         try {
           proxyFor(Object.class).dexCache(new File("//////")).build();
           fail();
-        } catch (DexCacheException expected) {}
+        } catch (IOException expected) {
+        }
     }
 
     public void testInvalidConstructorSpecification() throws Exception {

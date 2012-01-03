@@ -16,10 +16,6 @@
 
 package com.google.dexmaker;
 
-import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
-import static com.android.dx.rop.code.AccessFlags.ACC_PRIVATE;
-import static com.android.dx.rop.code.AccessFlags.ACC_STATIC;
-
 import com.android.dx.dex.DexFormat;
 import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.code.DalvCode;
@@ -30,16 +26,18 @@ import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedField;
 import com.android.dx.dex.file.EncodedMethod;
 import com.android.dx.rop.code.AccessFlags;
+import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
 import com.android.dx.rop.code.LocalVariableInfo;
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.StdTypeList;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import static java.lang.reflect.Modifier.PRIVATE;
+import static java.lang.reflect.Modifier.STATIC;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -61,6 +59,8 @@ public final class DexGenerator {
         return result;
     }
 
+    // TODO: describe the legal flags without referring to a non-public API AccessFlags
+
     /**
      * @param flags any flags masked by {@link com.android.dx.rop.code.AccessFlags#CLASS_FLAGS}.
      */
@@ -75,6 +75,13 @@ public final class DexGenerator {
         declaration.supertype = supertype;
         declaration.sourceFile = sourceFile;
         declaration.interfaces = new TypeList(interfaces);
+    }
+
+    /**
+     * @param flags any flags masked by {@link com.android.dx.rop.code.AccessFlags#METHOD_FLAGS}.
+     */
+    public Code declareConstructor(MethodId<?, ?> method, int flags) {
+        return declare(method, flags | ACC_CONSTRUCTOR);
     }
 
     /**
@@ -234,7 +241,7 @@ public final class DexGenerator {
         private final Object staticValue;
 
         FieldDeclaration(FieldId<?, ?> fieldId, int accessFlags, Object staticValue) {
-            if ((accessFlags & (AccessFlags.ACC_STATIC)) == 0 && staticValue != null) {
+            if ((accessFlags & STATIC) == 0 && staticValue != null) {
                 throw new IllegalArgumentException("instance fields may not have a value");
             }
             this.fieldId = fieldId;
@@ -247,7 +254,7 @@ public final class DexGenerator {
         }
 
         public boolean isStatic() {
-            return (accessFlags & (AccessFlags.ACC_STATIC)) != 0;
+            return (accessFlags & STATIC) != 0;
         }
     }
 
@@ -263,11 +270,11 @@ public final class DexGenerator {
         }
 
         boolean isStatic() {
-            return (flags & ACC_STATIC) != 0;
+            return (flags & STATIC) != 0;
         }
 
         boolean isDirect() {
-            return (flags & (ACC_STATIC | ACC_PRIVATE | ACC_CONSTRUCTOR)) != 0;
+            return (flags & (STATIC | PRIVATE | ACC_CONSTRUCTOR)) != 0;
         }
 
         EncodedMethod toEncodedMethod(DexOptions dexOptions) {

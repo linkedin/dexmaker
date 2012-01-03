@@ -16,11 +16,6 @@
 
 package com.google.dexmaker;
 
-import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
-import static com.android.dx.rop.code.AccessFlags.ACC_PRIVATE;
-import static com.android.dx.rop.code.AccessFlags.ACC_PUBLIC;
-import static com.android.dx.rop.code.AccessFlags.ACC_STATIC;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -29,6 +24,9 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import static java.lang.reflect.Modifier.PRIVATE;
+import static java.lang.reflect.Modifier.PUBLIC;
+import static java.lang.reflect.Modifier.STATIC;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -177,7 +175,7 @@ public final class ProxyBuilder<T> {
         generateConstructorsAndFields(generator, generatedType, superType, baseClass);
         Method[] methodsToProxy = getMethodsToProxy(baseClass);
         generateCodeForAllMethods(generator, generatedType, methodsToProxy, superType);
-        generator.declare(generatedType, generatedName + ".generated", ACC_PUBLIC, superType);
+        generator.declare(generatedType, generatedName + ".generated", PUBLIC, superType);
         ClassLoader classLoader;
         try {
             classLoader = generator.load(parentClassLoader, dexCache, dexCache);
@@ -353,7 +351,7 @@ public final class ProxyBuilder<T> {
             Type<?> resultType = Type.get(returnType);
             MethodId<T, ?> superMethod = superclassType.getMethod(resultType, name, argTypes);
             MethodId<?, ?> methodId = generatedType.getMethod(resultType, name, argTypes);
-            Code code = generator.declare(methodId, ACC_PUBLIC);
+            Code code = generator.declare(methodId, PUBLIC);
             Local<G> localThis = code.getThis(generatedType);
             Local<InvocationHandler> localHandler = code.newLocal(handlerType);
             Local<Object> invokeResult = code.newLocal(Type.OBJECT);
@@ -425,7 +423,7 @@ public final class ProxyBuilder<T> {
             String superName = "super_" + name;
             MethodId<G, ?> callsSuperMethod = generatedType.getMethod(
                     resultType, superName, argTypes);
-            Code superCode = generator.declare(callsSuperMethod, ACC_PUBLIC);
+            Code superCode = generator.declare(callsSuperMethod, PUBLIC);
             Local<G> superThis = superCode.getThis(generatedType);
             Local<?>[] superArgs = new Local<?>[argClasses.length];
             for (int i = 0; i < superArgs.length; ++i) {
@@ -479,17 +477,17 @@ public final class ProxyBuilder<T> {
         Type<Method[]> methodArrayType = Type.get(Method[].class);
         FieldId<G, InvocationHandler> handlerField = generatedType.getField(
                 handlerType, FIELD_NAME_HANDLER);
-        generator.declare(handlerField, ACC_PRIVATE, null);
+        generator.declare(handlerField, PRIVATE, null);
         FieldId<G, Method[]> allMethods = generatedType.getField(
                 methodArrayType, FIELD_NAME_METHODS);
-        generator.declare(allMethods, ACC_PRIVATE | ACC_STATIC, null);
+        generator.declare(allMethods, PRIVATE | STATIC, null);
         for (Constructor<T> constructor : getConstructorsToOverwrite(superClass)) {
             if (constructor.getModifiers() == Modifier.FINAL) {
                 continue;
             }
             Type<?>[] types = classArrayToTypeArray(constructor.getParameterTypes());
             MethodId<?, ?> method = generatedType.getConstructor(types);
-            Code constructorCode = generator.declare(method, ACC_PUBLIC | ACC_CONSTRUCTOR);
+            Code constructorCode = generator.declareConstructor(method, PUBLIC);
             Local<G> thisRef = constructorCode.getThis(generatedType);
             Local<?>[] params = new Local[types.length];
             for (int i = 0; i < params.length; ++i) {
@@ -520,7 +518,7 @@ public final class ProxyBuilder<T> {
                     // Skip final methods, we can't override them.
                     continue;
                 }
-                if ((method.getModifiers() & Modifier.STATIC) != 0) {
+                if ((method.getModifiers() & STATIC) != 0) {
                     // Skip static methods, overriding them has no effect.
                     continue;
                 }

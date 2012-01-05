@@ -18,7 +18,7 @@ package com.google.dexmaker.stock;
 
 import com.google.dexmaker.Code;
 import com.google.dexmaker.Comparison;
-import com.google.dexmaker.DexGenerator;
+import com.google.dexmaker.DexMaker;
 import com.google.dexmaker.FieldId;
 import com.google.dexmaker.Label;
 import com.google.dexmaker.Local;
@@ -176,15 +176,15 @@ public final class ProxyBuilder<T> {
         check(handler != null, "handler == null");
         check(constructorArgTypes.length == constructorArgValues.length,
                 "constructorArgValues.length != constructorArgTypes.length");
-        DexGenerator generator = new DexGenerator();
+        DexMaker dexMaker = new DexMaker();
         String generatedName = getMethodNameForProxyOf(baseClass);
         Type<? extends T> generatedType = Type.get("L" + generatedName + ";");
         Type<T> superType = Type.get(baseClass);
-        generateConstructorsAndFields(generator, generatedType, superType, baseClass);
+        generateConstructorsAndFields(dexMaker, generatedType, superType, baseClass);
         Method[] methodsToProxy = getMethodsToProxy(baseClass);
-        generateCodeForAllMethods(generator, generatedType, methodsToProxy, superType);
-        generator.declare(generatedType, generatedName + ".generated", PUBLIC, superType);
-        ClassLoader classLoader = generator.load(parentClassLoader, dexCache, dexCache);
+        generateCodeForAllMethods(dexMaker, generatedType, methodsToProxy, superType);
+        dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType);
+        ClassLoader classLoader = dexMaker.load(parentClassLoader, dexCache, dexCache);
         Class<? extends T> proxyClass;
         try {
             proxyClass = loadClass(classLoader, generatedName);
@@ -287,7 +287,7 @@ public final class ProxyBuilder<T> {
         }
     }
 
-    private static <T, G extends T> void generateCodeForAllMethods(DexGenerator generator,
+    private static <T, G extends T> void generateCodeForAllMethods(DexMaker dexMaker,
             Type<G> generatedType, Method[] methodsToProxy, Type<T> superclassType) {
         Type<InvocationHandler> handlerType = Type.get(InvocationHandler.class);
         Type<Method[]> methodArrayType = Type.get(Method[].class);
@@ -354,7 +354,7 @@ public final class ProxyBuilder<T> {
             Type<?> resultType = Type.get(returnType);
             MethodId<T, ?> superMethod = superclassType.getMethod(resultType, name, argTypes);
             MethodId<?, ?> methodId = generatedType.getMethod(resultType, name, argTypes);
-            Code code = generator.declare(methodId, PUBLIC);
+            Code code = dexMaker.declare(methodId, PUBLIC);
             Local<G> localThis = code.getThis(generatedType);
             Local<InvocationHandler> localHandler = code.newLocal(handlerType);
             Local<Object> invokeResult = code.newLocal(Type.OBJECT);
@@ -426,7 +426,7 @@ public final class ProxyBuilder<T> {
             String superName = "super_" + name;
             MethodId<G, ?> callsSuperMethod = generatedType.getMethod(
                     resultType, superName, argTypes);
-            Code superCode = generator.declare(callsSuperMethod, PUBLIC);
+            Code superCode = dexMaker.declare(callsSuperMethod, PUBLIC);
             Local<G> superThis = superCode.getThis(generatedType);
             Local<?>[] superArgs = new Local<?>[argClasses.length];
             for (int i = 0; i < superArgs.length; ++i) {
@@ -472,23 +472,23 @@ public final class ProxyBuilder<T> {
         }
     }
 
-    private static <T, G extends T> void generateConstructorsAndFields(DexGenerator generator,
+    private static <T, G extends T> void generateConstructorsAndFields(DexMaker dexMaker,
             Type<G> generatedType, Type<T> superType, Class<T> superClass) {
         Type<InvocationHandler> handlerType = Type.get(InvocationHandler.class);
         Type<Method[]> methodArrayType = Type.get(Method[].class);
         FieldId<G, InvocationHandler> handlerField = generatedType.getField(
                 handlerType, FIELD_NAME_HANDLER);
-        generator.declare(handlerField, PRIVATE, null);
+        dexMaker.declare(handlerField, PRIVATE, null);
         FieldId<G, Method[]> allMethods = generatedType.getField(
                 methodArrayType, FIELD_NAME_METHODS);
-        generator.declare(allMethods, PRIVATE | STATIC, null);
+        dexMaker.declare(allMethods, PRIVATE | STATIC, null);
         for (Constructor<T> constructor : getConstructorsToOverwrite(superClass)) {
             if (constructor.getModifiers() == Modifier.FINAL) {
                 continue;
             }
             Type<?>[] types = classArrayToTypeArray(constructor.getParameterTypes());
             MethodId<?, ?> method = generatedType.getConstructor(types);
-            Code constructorCode = generator.declareConstructor(method, PUBLIC);
+            Code constructorCode = dexMaker.declareConstructor(method, PUBLIC);
             Local<G> thisRef = constructorCode.getThis(generatedType);
             Local<?>[] params = new Local[types.length];
             for (int i = 0; i < params.length; ++i) {

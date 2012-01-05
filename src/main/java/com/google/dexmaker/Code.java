@@ -73,7 +73,7 @@ public final class Code {
     private final List<Label> catchLabels = new ArrayList<Label>();
     private StdTypeList catches = StdTypeList.EMPTY;
 
-    Code(DexGenerator.MethodDeclaration methodDeclaration) {
+    Code(DexMaker.MethodDeclaration methodDeclaration) {
         this.method = methodDeclaration.method;
         if (methodDeclaration.isStatic()) {
             thisLocal = null;

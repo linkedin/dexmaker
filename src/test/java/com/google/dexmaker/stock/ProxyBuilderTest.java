@@ -16,7 +16,7 @@
 
 package com.google.dexmaker.stock;
 
-import com.google.dexmaker.DexGeneratorTest;
+import com.google.dexmaker.DexMakerTest;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -303,7 +303,7 @@ public class ProxyBuilderTest extends TestCase {
     public void testWithoutInvocationHandler_ThrowsIllegalArgumentException() throws Throwable {
         try {
             ProxyBuilder.forClass(TwoConstructors.class)
-                    .dexCache(DexGeneratorTest.getDataDirectory())
+                    .dexCache(DexMakerTest.getDataDirectory())
                     .build();
             fail();
         } catch (IllegalArgumentException expected) {}
@@ -516,7 +516,7 @@ public class ProxyBuilderTest extends TestCase {
     private <T> ProxyBuilder<T> proxyFor(Class<T> clazz) throws Exception {
         return ProxyBuilder.forClass(clazz)
                 .handler(fakeHandler)
-                .dexCache(DexGeneratorTest.getDataDirectory());
+                .dexCache(DexMakerTest.getDataDirectory());
     }
 
     private static class FakeInvocationHandler implements InvocationHandler {

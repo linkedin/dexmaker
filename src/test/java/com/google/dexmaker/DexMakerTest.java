@@ -38,9 +38,9 @@ import junit.framework.TestCase;
  *
  * <p>This test must run on a Dalvik VM.
  */
-public final class DexGeneratorTest extends TestCase {
-    private DexGenerator generator;
-    private static Type<DexGeneratorTest> TEST_TYPE = Type.get(DexGeneratorTest.class);
+public final class DexMakerTest extends TestCase {
+    private DexMaker dexMaker;
+    private static Type<DexMakerTest> TEST_TYPE = Type.get(DexMakerTest.class);
     private static Type<?> INT_ARRAY = Type.get(int[].class);
     private static Type<boolean[]> BOOLEAN_ARRAY = Type.get(boolean[].class);
     private static Type<long[]> LONG_ARRAY = Type.get(long[].class);
@@ -60,8 +60,8 @@ public final class DexGeneratorTest extends TestCase {
      * This is necessary to generate multiple classes in the same test method.
      */
     private void reset() {
-        generator = new DexGenerator();
-        generator.declare(GENERATED, "Generated.java", PUBLIC, Type.OBJECT);
+        dexMaker = new DexMaker();
+        dexMaker.declare(GENERATED, "Generated.java", PUBLIC, Type.OBJECT);
     }
 
     public void testNewInstance() throws Exception {
@@ -74,7 +74,7 @@ public final class DexGeneratorTest extends TestCase {
         Type<Constructable> constructable = Type.get(Constructable.class);
         MethodId<?, Constructable> methodId = GENERATED.getMethod(
                 constructable, "call", Type.LONG, Type.BOOLEAN);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Long> localA = code.getParameter(0, Type.LONG);
         Local<Boolean> localB = code.getParameter(1, Type.BOOLEAN);
         MethodId<Constructable, Void> constructor
@@ -103,7 +103,7 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         MethodId<?, Void> methodId = GENERATED.getMethod(Type.VOID, "call");
-        Code code = generator.declare(methodId, PUBLIC);
+        Code code = dexMaker.declare(methodId, PUBLIC);
         code.returnVoid();
 
         addDefaultConstructor();
@@ -117,12 +117,12 @@ public final class DexGeneratorTest extends TestCase {
     public void testInvokeStatic() throws Exception {
         /*
          * public static int call(int a) {
-         *   int result = DexGeneratorTest.staticMethod(a);
+         *   int result = DexMakerTest.staticMethod(a);
          *   return result;
          * }
          */
         MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localA = code.getParameter(0, Type.INT);
         Local<Integer> localResult = code.newLocal(Type.INT);
         MethodId<?, Integer> staticMethod
@@ -141,7 +141,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         MethodId<?, Void> methodId = GENERATED.getMethod(Type.VOID, "call", Type.INT);
         Type<Method> methodType = Type.get(Method.class);
-        Code code = generator.declare(methodId, PUBLIC);
+        Code code = dexMaker.declare(methodId, PUBLIC);
         Local<Method> localMethod = code.newLocal(methodType);
         code.loadConstant(localMethod, null);
         code.returnVoid();
@@ -161,17 +161,17 @@ public final class DexGeneratorTest extends TestCase {
 
     public void testInvokeVirtual() throws Exception {
         /*
-         * public static int call(DexGeneratorTest test, int a) {
+         * public static int call(DexMakerTest test, int a) {
          *   int result = test.virtualMethod(a);
          *   return result;
          * }
          */
         MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", TEST_TYPE, Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
-        Local<DexGeneratorTest> localInstance = code.getParameter(0, TEST_TYPE);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
+        Local<DexMakerTest> localInstance = code.getParameter(0, TEST_TYPE);
         Local<Integer> localA = code.getParameter(1, Type.INT);
         Local<Integer> localResult = code.newLocal(Type.INT);
-        MethodId<DexGeneratorTest, Integer> virtualMethod
+        MethodId<DexMakerTest, Integer> virtualMethod
                 = TEST_TYPE.getMethod(Type.INT, "virtualMethod", Type.INT);
         code.invokeVirtual(virtualMethod, localResult, localInstance, localA);
         code.returnValue(localResult);
@@ -198,14 +198,14 @@ public final class DexGeneratorTest extends TestCase {
          */
         Type<G> generated = Type.get("LGenerated;");
         MethodId<G, Integer> directMethodId = generated.getMethod(Type.INT, "directMethod");
-        Code directCode = generator.declare(directMethodId, PRIVATE);
+        Code directCode = dexMaker.declare(directMethodId, PRIVATE);
         directCode.getThis(generated); // 'this' is unused
         Local<Integer> localA = directCode.newLocal(Type.INT);
         directCode.loadConstant(localA, 5);
         directCode.returnValue(localA);
 
         MethodId<G, Integer> methodId = generated.getMethod(Type.INT, "call", generated);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localB = code.newLocal(Type.INT);
         Local<G> localG = code.getParameter(0, generated);
         code.invokeDirect(directMethodId, localB, localG);
@@ -231,14 +231,14 @@ public final class DexGeneratorTest extends TestCase {
          */
         Type<G> generated = Type.get("LGenerated;");
         MethodId<Object, Integer> objectHashCode = Type.OBJECT.getMethod(Type.INT, "hashCode");
-        Code superHashCode = generator.declare(
+        Code superHashCode = dexMaker.declare(
                 GENERATED.getMethod(Type.INT, "superHashCode"), PUBLIC);
         Local<Integer> localResult = superHashCode.newLocal(Type.INT);
         Local<G> localThis = superHashCode.getThis(generated);
         superHashCode.invokeSuper(objectHashCode, localResult, localThis);
         superHashCode.returnValue(localResult);
 
-        Code generatedHashCode = generator.declare(
+        Code generatedHashCode = dexMaker.declare(
                 GENERATED.getMethod(Type.INT, "hashCode"), PUBLIC);
         Local<Integer> localZero = generatedHashCode.newLocal(Type.INT);
         generatedHashCode.loadConstant(localZero, 0);
@@ -260,7 +260,7 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         MethodId<?, Object> methodId = GENERATED.getMethod(Type.OBJECT, "call", CALLABLE);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Callable> localC = code.getParameter(0, CALLABLE);
         Local<Object> localResult = code.newLocal(Type.OBJECT);
         code.invokeInterface(CALL, localResult, localC);
@@ -280,7 +280,7 @@ public final class DexGeneratorTest extends TestCase {
                 Type.OBJECT,
         };
         MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", argTypes);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         try {
             code.getParameter(0, Type.INT);
         } catch (IllegalArgumentException e) {
@@ -293,15 +293,15 @@ public final class DexGeneratorTest extends TestCase {
 
     public void testInvokeTypeSafety() throws Exception {
         /*
-         * public static boolean call(DexGeneratorTest test) {
+         * public static boolean call(DexMakerTest test) {
          *   CharSequence cs = test.toString();
          *   boolean result = cs.equals(test);
          *   return result;
          * }
          */
         MethodId<?, Boolean> methodId = GENERATED.getMethod(Type.BOOLEAN, "call", TEST_TYPE);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
-        Local<DexGeneratorTest> localTest = code.getParameter(0, TEST_TYPE);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
+        Local<DexMakerTest> localTest = code.getParameter(0, TEST_TYPE);
         Type<CharSequence> charSequenceType = Type.get(CharSequence.class);
         MethodId<Object, String> objectToString = Type.OBJECT.getMethod(Type.STRING, "toString");
         MethodId<Object, Boolean> objectEquals
@@ -317,7 +317,7 @@ public final class DexGeneratorTest extends TestCase {
 
     public void testReturnTypeMismatch() {
         MethodId<?, String> methodId = GENERATED.getMethod(Type.STRING, "call");
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         try {
             code.returnValue(code.newLocal(Type.BOOLEAN));
             fail();
@@ -337,8 +337,8 @@ public final class DexGeneratorTest extends TestCase {
          *   protected static Object b;
          * }
          */
-        generator.declare(GENERATED.getField(Type.INT, "a"), PUBLIC | STATIC, 3);
-        generator.declare(GENERATED.getField(Type.OBJECT, "b"), PROTECTED | STATIC, null);
+        dexMaker.declare(GENERATED.getField(Type.INT, "a"), PUBLIC | STATIC, 3);
+        dexMaker.declare(GENERATED.getField(Type.OBJECT, "b"), PROTECTED | STATIC, null);
         Class<?> generatedClass = generateAndLoad();
 
         Field a = generatedClass.getField("a");
@@ -358,8 +358,8 @@ public final class DexGeneratorTest extends TestCase {
          *   protected Object b;
          * }
          */
-        generator.declare(GENERATED.getField(Type.INT, "a"), PUBLIC, null);
-        generator.declare(GENERATED.getField(Type.OBJECT, "b"), PROTECTED, null);
+        dexMaker.declare(GENERATED.getField(Type.INT, "a"), PUBLIC, null);
+        dexMaker.declare(GENERATED.getField(Type.OBJECT, "b"), PROTECTED, null);
 
         addDefaultConstructor();
 
@@ -391,9 +391,9 @@ public final class DexGeneratorTest extends TestCase {
          */
         Type<G> generated = Type.get("LGenerated;");
         FieldId<G, Integer> fieldId = generated.getField(Type.INT, "a");
-        generator.declare(fieldId, PUBLIC | FINAL, null);
+        dexMaker.declare(fieldId, PUBLIC | FINAL, null);
         MethodId<?, Void> constructor = GENERATED.getConstructor(Type.INT);
-        Code code = generator.declareConstructor(constructor, PUBLIC);
+        Code code = dexMaker.declareConstructor(constructor, PUBLIC);
         Local<G> thisRef = code.getThis(generated);
         Local<Integer> parameter = code.getParameter(0, Type.INT);
         code.invokeDirect(Type.OBJECT.getConstructor(), null, thisRef);
@@ -429,7 +429,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         reset();
         Type<T> returnType = Type.get(javaType);
-        Code code = generator.declare(GENERATED.getMethod(returnType, "call"), PUBLIC | STATIC);
+        Code code = dexMaker.declare(GENERATED.getMethod(returnType, "call"), PUBLIC | STATIC);
         if (value != null) {
             Local<T> i = code.newLocal(returnType);
             code.loadConstant(i, value);
@@ -488,7 +488,7 @@ public final class DexGeneratorTest extends TestCase {
         reset();
         MethodId<?, Boolean> methodId = GENERATED.getMethod(
                 Type.BOOLEAN, "call", Type.INT, Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localA = code.getParameter(0, Type.INT);
         Local<Integer> localB = code.getParameter(1, Type.INT);
         Local<Boolean> result = code.newLocal(Type.get(boolean.class));
@@ -623,7 +623,7 @@ public final class DexGeneratorTest extends TestCase {
         Type<?> sourceType = Type.get(source);
         Type<?> targetType = Type.get(target);
         MethodId<?, ?> methodId = GENERATED.getMethod(targetType, "call", sourceType);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<?> localSource = code.getParameter(0, sourceType);
         Local<?> localCasted = code.newLocal(targetType);
         code.numericCast(localSource, localCasted);
@@ -653,7 +653,7 @@ public final class DexGeneratorTest extends TestCase {
         reset();
         Type<T> valueType = Type.get(source);
         MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", valueType);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localSource = code.getParameter(0, valueType);
         code.not(localSource, localSource);
         code.returnValue(localSource);
@@ -694,7 +694,7 @@ public final class DexGeneratorTest extends TestCase {
         reset();
         Type<T> valueType = Type.get(source);
         MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", valueType);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localSource = code.getParameter(0, valueType);
         code.negate(localSource, localSource);
         code.returnValue(localSource);
@@ -849,7 +849,7 @@ public final class DexGeneratorTest extends TestCase {
         reset();
         Type<T> valueType = Type.get(valueClass);
         MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", valueType, valueType);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localA = code.getParameter(0, valueType);
         Local<T> localB = code.getParameter(1, valueType);
         Local<T> localResult = code.newLocal(valueType);
@@ -933,7 +933,7 @@ public final class DexGeneratorTest extends TestCase {
         Type<Instance> objectType = Type.get(Instance.class);
         FieldId<Instance, V> fieldId = objectType.getField(valueType, fieldName);
         MethodId<?, V> methodId = GENERATED.getMethod(valueType, "call", objectType, valueType);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Instance> localInstance = code.getParameter(0, objectType);
         Local<V> localNewValue = code.getParameter(1, valueType);
         Local<V> localOldValue = code.newLocal(valueType);
@@ -1016,7 +1016,7 @@ public final class DexGeneratorTest extends TestCase {
         Type<Static> objectType = Type.get(Static.class);
         FieldId<Static, V> fieldId = objectType.getField(valueType, fieldName);
         MethodId<?, V> methodId = GENERATED.getMethod(valueType, "call", valueType);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<V> localNewValue = code.getParameter(0, valueType);
         Local<V> localOldValue = code.newLocal(valueType);
         code.sget(fieldId, localOldValue);
@@ -1032,7 +1032,7 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         MethodId<?, String> methodId = GENERATED.getMethod(Type.STRING, "call", Type.OBJECT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Object> localObject = code.getParameter(0, Type.OBJECT);
         Local<String> localString = code.newLocal(Type.STRING);
         code.typeCast(localObject, localString);
@@ -1057,7 +1057,7 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         MethodId<?, Boolean> methodId = GENERATED.getMethod(Type.BOOLEAN, "call", Type.OBJECT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Object> localObject = code.getParameter(0, Type.OBJECT);
         Local<Boolean> localResult = code.newLocal(Type.BOOLEAN);
         code.instanceOfType(localResult, localObject, Type.STRING);
@@ -1083,7 +1083,7 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localCount = code.getParameter(0, Type.INT);
         Local<Integer> localResult = code.newLocal(Type.INT);
         Local<Integer> localI = code.newLocal(Type.INT);
@@ -1128,7 +1128,7 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localMax = code.getParameter(0, Type.INT);
         Local<Integer> localResult = code.newLocal(Type.INT);
         Local<Integer> local2 = code.newLocal(Type.INT);
@@ -1173,7 +1173,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         MethodId<?, Integer> methodId = GENERATED.getMethod(
                 Type.INT, "call", Type.INT, Type.INT, Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localA = code.getParameter(0, Type.INT);
         Local<Integer> localB = code.getParameter(1, Type.INT);
         Local<Integer> localC = code.getParameter(2, Type.INT);
@@ -1216,7 +1216,7 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localA = code.getParameter(0, Type.INT);
         Local<Integer> local1 = code.newLocal(Type.INT);
         Local<Integer> local2 = code.newLocal(Type.INT);
@@ -1250,7 +1250,7 @@ public final class DexGeneratorTest extends TestCase {
         /*
          * public static String call(int i) {
          *   try {
-         *     DexGeneratorTest.thrower(i);
+         *     DexMakerTest.thrower(i);
          *     return "NONE";
          *   } catch (IllegalArgumentException e) {
          *     return "IAE";
@@ -1261,7 +1261,7 @@ public final class DexGeneratorTest extends TestCase {
          *   }
          */
         MethodId<?, String> methodId = GENERATED.getMethod(Type.STRING, "call", Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localI = code.getParameter(0, Type.INT);
         Local<String> result = code.newLocal(Type.STRING);
         Label catchIae = code.newLabel();
@@ -1323,13 +1323,13 @@ public final class DexGeneratorTest extends TestCase {
         /*
          * public static String call(int a, int b, int c) {
          *   try {
-         *     DexGeneratorTest.thrower(a);
+         *     DexMakerTest.thrower(a);
          *     try {
-         *       DexGeneratorTest.thrower(b);
+         *       DexMakerTest.thrower(b);
          *     } catch (IllegalArgumentException) {
          *       return "INNER";
          *     }
-         *     DexGeneratorTest.thrower(c);
+         *     DexMakerTest.thrower(c);
          *     return "NONE";
          *   } catch (IllegalArgumentException e) {
          *     return "OUTER";
@@ -1337,7 +1337,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         MethodId<?, String> methodId = GENERATED.getMethod(
                 Type.STRING, "call", Type.INT, Type.INT, Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localA = code.getParameter(0, Type.INT);
         Local<Integer> localB = code.getParameter(1, Type.INT);
         Local<Integer> localC = code.getParameter(2, Type.INT);
@@ -1383,7 +1383,7 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         MethodId<?, Void> methodId = GENERATED.getMethod(Type.VOID, "call");
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Type<IllegalStateException> iseType = Type.get(IllegalStateException.class);
         MethodId<IllegalStateException, Void> iseConstructor = iseType.getConstructor();
         Local<IllegalStateException> localIse = code.newLocal(iseType);
@@ -1404,7 +1404,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         MethodId<?, Void> methodId = GENERATED.getMethod(
                 Type.VOID, "call", Type.INT, Type.LONG, Type.LONG);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         code.returnVoid();
         getMethod().invoke(null, 1, 2, 3);
     }
@@ -1461,7 +1461,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         reset();
         MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", valueType, valueType);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localA = code.getParameter(0, valueType);
         Local<T> localB = code.getParameter(1, valueType);
         Local<Integer> localResult = code.newLocal(Type.INT);
@@ -1478,7 +1478,7 @@ public final class DexGeneratorTest extends TestCase {
          * }
          */
         MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.LONG, Type.LONG);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Long> localA = code.getParameter(0, Type.LONG);
         Local<Long> localB = code.getParameter(1, Type.LONG);
         Local<Integer> localResult = code.newLocal(Type.INT);
@@ -1528,7 +1528,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         reset();
         MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", valueType);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localArray = code.getParameter(0, valueType);
         Local<Integer> localResult = code.newLocal(Type.INT);
         code.arrayLength(localArray, localResult);
@@ -1570,7 +1570,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         reset();
         MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", Type.INT);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localLength = code.getParameter(0, Type.INT);
         Local<T> localResult = code.newLocal(valueType);
         code.newArray(localLength, localResult);
@@ -1617,7 +1617,7 @@ public final class DexGeneratorTest extends TestCase {
         reset();
         MethodId<?, T> methodId = GENERATED.getMethod(
                 singleType, "call", arrayType, Type.INT, singleType);
-        Code code = generator.declare(methodId, PUBLIC | STATIC);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<A> localArray = code.getParameter(0, arrayType);
         Local<Integer> localIndex = code.getParameter(1, Type.INT);
         Local<T> localNewValue = code.getParameter(2, singleType);
@@ -1635,7 +1635,7 @@ public final class DexGeneratorTest extends TestCase {
     // TODO: don't generate multiple times (?)
 
     private void addDefaultConstructor() {
-        Code code = generator.declareConstructor(GENERATED.getConstructor(), PUBLIC);
+        Code code = dexMaker.declareConstructor(GENERATED.getConstructor(), PUBLIC);
         Local<?> thisRef = code.getThis(GENERATED);
         code.invokeDirect(Type.OBJECT.getConstructor(), null, thisRef);
         code.returnVoid();
@@ -1662,7 +1662,7 @@ public final class DexGeneratorTest extends TestCase {
     }
 
     private Class<?> generateAndLoad() throws Exception {
-        return generator.load(getClass().getClassLoader(),
+        return dexMaker.load(getClass().getClassLoader(),
                 getDataDirectory(), getDataDirectory()).loadClass("Generated");
     }
 }

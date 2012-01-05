@@ -46,7 +46,7 @@ import java.util.jar.JarOutputStream;
 /**
  * Define types, fields and methods.
  */
-public final class DexGenerator {
+public final class DexMaker {
     private final Map<Type<?>, TypeDeclaration> types
             = new LinkedHashMap<Type<?>, TypeDeclaration>();
 

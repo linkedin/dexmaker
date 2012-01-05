@@ -108,7 +108,7 @@ public final class DexGeneratorTest extends TestCase {
 
         addDefaultConstructor();
 
-        Class<?> generatedClass = loadAndGenerate();
+        Class<?> generatedClass = generateAndLoad();
         Object instance = generatedClass.newInstance();
         Method method = generatedClass.getMethod("call");
         method.invoke(instance);
@@ -148,7 +148,7 @@ public final class DexGeneratorTest extends TestCase {
 
         addDefaultConstructor();
 
-        Class<?> generatedClass = loadAndGenerate();
+        Class<?> generatedClass = generateAndLoad();
         Object instance = generatedClass.newInstance();
         Method method = generatedClass.getMethod("call", int.class);
         method.invoke(instance, 0);
@@ -213,7 +213,7 @@ public final class DexGeneratorTest extends TestCase {
 
         addDefaultConstructor();
 
-        Class<?> generatedClass = loadAndGenerate();
+        Class<?> generatedClass = generateAndLoad();
         Object instance = generatedClass.newInstance();
         Method method = generatedClass.getMethod("call", generatedClass);
         assertEquals(5, method.invoke(null, instance));
@@ -246,15 +246,10 @@ public final class DexGeneratorTest extends TestCase {
 
         addDefaultConstructor();
 
-        Class<?> generatedClass = loadAndGenerate();
+        Class<?> generatedClass = generateAndLoad();
         Object instance = generatedClass.newInstance();
         Method method = generatedClass.getMethod("superHashCode");
         assertEquals(System.identityHashCode(instance), method.invoke(instance));
-    }
-
-    @SuppressWarnings("unused") // called by generated code
-    public int superMethod(int a) {
-        return a + 4;
     }
 
     public void testInvokeInterface() throws Exception {
@@ -344,7 +339,7 @@ public final class DexGeneratorTest extends TestCase {
          */
         generator.declare(GENERATED.getField(Type.INT, "a"), PUBLIC | STATIC, 3);
         generator.declare(GENERATED.getField(Type.OBJECT, "b"), PROTECTED | STATIC, null);
-        Class<?> generatedClass = loadAndGenerate();
+        Class<?> generatedClass = generateAndLoad();
 
         Field a = generatedClass.getField("a");
         assertEquals(int.class, a.getType());
@@ -368,7 +363,7 @@ public final class DexGeneratorTest extends TestCase {
 
         addDefaultConstructor();
 
-        Class<?> generatedClass = loadAndGenerate();
+        Class<?> generatedClass = generateAndLoad();
         Object instance = generatedClass.newInstance();
 
         Field a = generatedClass.getField("a");
@@ -405,7 +400,7 @@ public final class DexGeneratorTest extends TestCase {
         code.iput(fieldId, thisRef, parameter);
         code.returnVoid();
 
-        Class<?> generatedClass = loadAndGenerate();
+        Class<?> generatedClass = generateAndLoad();
         Field a = generatedClass.getField("a");
         Object instance = generatedClass.getConstructor(int.class).newInstance(0xabcd);
         assertEquals(0xabcd, a.get(instance));
@@ -443,7 +438,7 @@ public final class DexGeneratorTest extends TestCase {
             code.returnVoid();
         }
 
-        Class<?> generatedClass = loadAndGenerate();
+        Class<?> generatedClass = generateAndLoad();
         Method method = generatedClass.getMethod("call");
         assertEquals(javaType, method.getReturnType());
         assertEquals(value, method.invoke(null));
@@ -1650,7 +1645,7 @@ public final class DexGeneratorTest extends TestCase {
      * Returns the generated method.
      */
     private Method getMethod() throws Exception {
-        Class<?> generated = loadAndGenerate();
+        Class<?> generated = generateAndLoad();
         for (Method method : generated.getMethods()) {
             if (method.getName().equals("call")) {
                 return method;
@@ -1666,7 +1661,7 @@ public final class DexGeneratorTest extends TestCase {
         return (File) dataDirectory;
     }
 
-    private Class<?> loadAndGenerate() throws Exception {
+    private Class<?> generateAndLoad() throws Exception {
         return generator.load(getClass().getClassLoader(),
                 getDataDirectory(), getDataDirectory()).loadClass("Generated");
     }

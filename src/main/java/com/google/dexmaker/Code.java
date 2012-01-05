@@ -61,6 +61,11 @@ public final class Code {
     private boolean localsInitialized;
 
     private final Local<?> thisLocal;
+
+    /**
+     * The parameters on this method. If this is non-static, the first parameter
+     * is 'thisLocal' and we have to offset the user's indices by one.
+     */
     private final List<Local<?>> parameters = new ArrayList<Local<?>>();
     private final List<Local<?>> locals = new ArrayList<Local<?>>();
     private SourcePosition sourcePosition = SourcePosition.NO_INFO;
@@ -70,9 +75,12 @@ public final class Code {
 
     Code(DexGenerator.MethodDeclaration methodDeclaration) {
         this.method = methodDeclaration.method;
-        this.thisLocal = methodDeclaration.isStatic()
-                ? null
-                : Local.get(this, method.declaringType);
+        if (methodDeclaration.isStatic()) {
+            thisLocal = null;
+        } else {
+            thisLocal = Local.get(this, method.declaringType);
+            parameters.add(thisLocal);
+        }
         for (Type<?> parameter : method.parameters.types) {
             parameters.add(Local.get(this, parameter));
         }
@@ -90,6 +98,9 @@ public final class Code {
     }
 
     public <T> Local<T> getParameter(int index, Type<T> type) {
+        if (thisLocal != null) {
+            index++; // adjust for the hidden 'this' parameter
+        }
         return coerce(parameters.get(index), type);
     }
 
@@ -130,11 +141,7 @@ public final class Code {
         for (Local<?> local : locals) {
             reg += local.initialize(reg);
         }
-        if (thisLocal != null) {
-            reg += thisLocal.initialize(reg);
-        }
         int firstParamReg = reg;
-
         List<Insn> moveParameterInstructions = new ArrayList<Insn>();
         for (Local<?> local : parameters) {
             CstInteger paramConstant = CstInteger.make(reg - firstParamReg);
@@ -145,6 +152,10 @@ public final class Code {
         labels.get(0).instructions.addAll(0, moveParameterInstructions);
     }
 
+    /**
+     * Returns the number of registers to hold the parameters. This includes the
+     * 'this' parameter if it exists.
+     */
     int paramSize() {
         int result = 0;
         for (Local<?> local : parameters) {

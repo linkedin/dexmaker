@@ -41,12 +41,15 @@ public final class Local<T> {
      *
      * @return the number of registers required.
      */
-    int initialize(int reg) {
-        this.reg = reg;
-        this.spec = RegisterSpec.make(reg, type.ropType);
+    int initialize(int nextAvailableRegister) {
+        this.reg = nextAvailableRegister;
+        this.spec = RegisterSpec.make(nextAvailableRegister, type.ropType);
         return size();
     }
 
+    /**
+     * Returns the number of registered required to hold this local.
+     */
     int size() {
         return type.ropType.getCategory();
     }

@@ -59,7 +59,7 @@ public final class FibonacciMaker {
         code.returnValue(i);
 
         ClassLoader loader = dexMaker.generateAndLoad(
-                FibonacciMaker.class.getClassLoader(), getDataDirectory(), getDataDirectory());
+                FibonacciMaker.class.getClassLoader(), getDataDirectory());
         Class<?> fibonacciClass = loader.loadClass("com.google.dexmaker.examples.Fibonacci");
         Method fibMethod = fibonacciClass.getMethod("fib", int.class);
         System.out.println(fibMethod.invoke(null, 8));

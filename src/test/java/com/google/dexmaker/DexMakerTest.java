@@ -1668,7 +1668,7 @@ public final class DexMakerTest extends TestCase {
     }
 
     private Class<?> generateAndLoad() throws Exception {
-        return dexMaker.generateAndLoad(getClass().getClassLoader(),
-                getDataDirectory(), getDataDirectory()).loadClass("Generated");
+        return dexMaker.generateAndLoad(getClass().getClassLoader(), getDataDirectory())
+                .loadClass("Generated");
     }
 }

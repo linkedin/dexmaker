@@ -185,7 +185,7 @@ public final class ProxyBuilder<T> {
         Method[] methodsToProxy = getMethodsToProxy(baseClass);
         generateCodeForAllMethods(dexMaker, generatedType, methodsToProxy, superType);
         dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType);
-        ClassLoader classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache, dexCache);
+        ClassLoader classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache);
         Class<? extends T> proxyClass;
         try {
             proxyClass = loadClass(classLoader, generatedName);

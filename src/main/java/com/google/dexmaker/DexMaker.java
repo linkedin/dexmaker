@@ -174,11 +174,11 @@ import java.util.jar.JarOutputStream;
  * the generated code into the current process. This only works when the current
  * process is running on Android. We use {@link #generateAndLoad} which takes
  * the class loader that will be used as our generated code's parent class
- * loader. It also requires two paths where temporary files may be written.
+ * loader. It also requires a directory where temporary files can be written.
  * <pre>   {@code
  *
  *   ClassLoader loader = dexMaker.generateAndLoad(
- *       Fibonacci.class.getClassLoader(), getDataDirectory(), getDataDirectory());
+ *       Fibonacci.class.getClassLoader(), getDataDirectory());
  * }</pre>
  * Finally we'll use reflection to lookup our generated class on its class
  * loader and invoke its {@code fib()} method: <pre>   {@code
@@ -284,13 +284,10 @@ public final class DexMaker {
      *
      * @param parent the parent ClassLoader to be used when loading
      *     our generated types
-     * @param dexOutputDir the destination directory wherein we will write
-     *     emitted .dex files before they end up in the cache directory
-     * @param dexOptCacheDir where optimized .dex files are to be written
+     * @param dexDir the destination directory where generated and
+     *     optimized dex files will be written.
      */
-    // TODO: why two directories?
-    public ClassLoader generateAndLoad(ClassLoader parent, File dexOutputDir, File dexOptCacheDir)
-            throws IOException {
+    public ClassLoader generateAndLoad(ClassLoader parent, File dexDir) throws IOException {
         byte[] dex = generate();
 
         /*
@@ -300,7 +297,7 @@ public final class DexMaker {
          *
          * TODO: load the dex from memory where supported.
          */
-        File result = File.createTempFile("Generated", ".jar", dexOutputDir);
+        File result = File.createTempFile("Generated", ".jar", dexDir);
         result.deleteOnExit();
         JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(result));
         jarOut.putNextEntry(new JarEntry(DexFormat.DEX_IN_JAR_NAME));
@@ -310,7 +307,7 @@ public final class DexMaker {
         try {
             return (ClassLoader) Class.forName("dalvik.system.DexClassLoader")
                     .getConstructor(String.class, String.class, String.class, ClassLoader.class)
-                    .newInstance(result.getPath(), dexOptCacheDir.getAbsolutePath(), null, parent);
+                    .newInstance(result.getPath(), dexDir.getAbsolutePath(), null, parent);
         } catch (ClassNotFoundException e) {
             throw new UnsupportedOperationException("load() requires a Dalvik VM", e);
         } catch (InvocationTargetException e) {

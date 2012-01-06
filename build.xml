@@ -27,10 +27,13 @@
     </target>
 
     <target name="jar" depends="compile">
-        <jar destfile="build/dexmaker.jar" update="true" index="true">
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+            classpath="lib/jarjar.jar"/>
+        <jarjar jarfile="build/dexmaker.jar">
             <fileset dir="build/dx/classes"/>
             <fileset dir="build/main/classes"/>
-        </jar>
+            <rule pattern="com.android.dx.**" result="com.google.dexmaker.dx.@1"/>
+        </jarjar>
     </target>
 
     <target name="docs">

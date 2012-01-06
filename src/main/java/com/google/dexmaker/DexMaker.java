@@ -44,13 +44,155 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
 /**
- * Define types, fields and methods.
+ * Generates a </i><strong>D</strong>alvik <strong>EX</strong>ecutable (dex)
+ * file for execution on Android. dex files defines classes and interfaces,
+ * including their member methods and fields, executable code, and debugging
+ * information. They also define annotations, though this API currently has no
+ * facility to create a dex file that contains annotations.
+ *
+ * <p>This library is intended to satisfy two use cases:
+ * <ul>
+ *   <li><strong>For runtime code generation.</strong> By embedding this library
+ *       in your Android application, you can dynamically generate and load
+ *       executable code. This approach takes advantage of the fact that the
+ *       host environment and target environment are both Android.
+ *   <li><strong>For compile time code generation.</strong> You may use this
+ *       library as a part of a compiler that targets Android. In this scenario
+ *       the generated dex file must be installed on an Android device before it
+ *       can be executed.
+ * </ul>
+ *
+ * <h3>Example: Fibonacci</h3>
+ * To illustrate how this API is used, we'll use DexMaker to generate a class
+ * equivalent to the following Java source: <pre>   {@code
+ *
+ * package com.publicobject.fib;
+ *
+ * public class Fibonacci {
+ *   public static int fib(int i) {
+ *     if (i < 2) {
+ *       return i;
+ *     }
+ *     return fib(i - 1) + fib(i - 2);
+ *   }
+ * }}</pre>
+ *
+ * <p>We start by creating a {@link TypeId} to identify the generated {@code
+ * Fibonacci} class. DexMaker identifies types by their internal names like
+ * {@code Ljava/lang/Object;} rather than their Java identifiers like {@code
+ * java.lang.Object}. <pre>   {@code
+ *
+ *   TypeId<?> fibonacci = TypeId.get("Lcom/google/dexmaker/examples/Fibonacci;");
+ * }</pre>
+ *
+ * <p>Next we declare the class. It allows us to specify the type's source file
+ * for stack traces, its modifiers, its superclass, and the interfaces it
+ * implements. In this case, {@code Fibonacci} is a public class that extends
+ * from {@code Object}: <pre>   {@code
+ *
+ *   String fileName = "Fibonacci.generated";
+ *   DexMaker dexMaker = new DexMaker();
+ *   dexMaker.declare(fibonacci, fileName, Modifier.PUBLIC, TypeId.OBJECT);
+ * }</pre>
+ * It is illegal to declare members of a class without also declaring the class
+ * itself.
+ *
+ * <p>To make it easier to go from our Java method to dex instructions, we'll
+ * manually translate it to pseudocode fit for an assembler. We need to replace
+ * control flow like {@code if()} blocks and {@code for()} loops with labels and
+ * branches. We'll also avoid performing multiple operations in one statement,
+ * using local variables to hold intermediate values as necessary:
+ * <pre>   {@code
+ *
+ *   int constant1 = 1;
+ *   int constant2 = 2;
+ *   if (i < constant2) goto baseCase;
+ *   int a = i - constant1;
+ *   int b = i - constant2;
+ *   int c = fib(a);
+ *   int d = fib(b);
+ *   int result = c + d;
+ *   return result;
+ * baseCase:
+ *   return i;
+ * }</pre>
+ *
+ * <p>We lookup the {@code MethodId} for the method on the declaring type. This
+ * takes the method's return type (possibly {@link TypeId#VOID}), its name, and
+ * its parameters. Next we declare the method, specifying its modifiers by ORing
+ * constants from {@link java.lang.reflect.Modifier}. The declare call returns a
+ * {@link Code} object, which we'll use to define the method's instructions.
+ * <pre>   {@code
+ *
+ *   MethodId<?, Integer> fib = fibonacci.getMethod(TypeId.INT, "fib", TypeId.INT);
+ *   Code code = dexMaker.declare(fib, Modifier.PUBLIC | Modifier.STATIC);
+ * }</pre>
+ *
+ * <p>One limitation of {@code DexMaker}'s API is that it requires all local
+ * variables to be created before any instructions are emitted. Use {@link
+ * Code#newLocal} to create a new local variable. The method's parameters are
+ * exposed as locals using {@link Code#getParameter}. For non-static methods the
+ * 'this' pointer is exposed using {@link Code#getThis}. Here we declare all of
+ * the local variables that we'll need for our {@code fib()} method:
+ * <pre>   {@code
+ *
+ *   Local<Integer> i = code.getParameter(0, TypeId.INT);
+ *   Local<Integer> constant1 = code.newLocal(TypeId.INT);
+ *   Local<Integer> constant2 = code.newLocal(TypeId.INT);
+ *   Local<Integer> a = code.newLocal(TypeId.INT);
+ *   Local<Integer> b = code.newLocal(TypeId.INT);
+ *   Local<Integer> c = code.newLocal(TypeId.INT);
+ *   Local<Integer> d = code.newLocal(TypeId.INT);
+ *   Local<Integer> result = code.newLocal(TypeId.INT);
+ * }</pre>
+ *
+ * <p>Notice that {@link Local} has a type parameter. This is useful for
+ * generating code that works with existing types like {@code String} and {@code
+ * Integer}, but it can be a hindrance when generating code that involves new
+ * types. For this reason you may prefer to use raw types only and add
+ * {@code @SuppressWarnings("unsafe")} on your calling code. This will yield the
+ * same result but you won't get a compiler warning if you make a type error.
+ *
+ * <p>We're ready to start defining our method's instructions: <pre>   {@code
+ *
+ *   code.loadConstant(constant1, 1);
+ *   code.loadConstant(constant2, 2);
+ *   Label baseCase = code.newLabel();
+ *   code.compare(Comparison.LT, baseCase, i, constant2);
+ *   code.op(BinaryOp.SUBTRACT, a, i, constant1);
+ *   code.op(BinaryOp.SUBTRACT, b, i, constant2);
+ *   code.invokeStatic(fib, c, a);
+ *   code.invokeStatic(fib, d, b);
+ *   code.op(BinaryOp.ADD, result, c, d);
+ *   code.returnValue(result);
+ *   code.mark(baseCase);
+ *   code.returnValue(i);
+ * }</pre>
+ *
+ * <p>We're done defining the instructions! We just need to write the dex to the
+ * file system or load it into the current process. For this example we'll load
+ * the generated code into the current process. This only works when the current
+ * process is running on Android. We use {@link #generateAndLoad} which takes
+ * the class loader that will be used as our generated code's parent class
+ * loader. It also requires two paths where temporary files may be written.
+ * <pre>   {@code
+ *
+ *   ClassLoader loader = dexMaker.generateAndLoad(
+ *       Fibonacci.class.getClassLoader(), getDataDirectory(), getDataDirectory());
+ * }</pre>
+ * Finally we'll use reflection to lookup our generated class on its class
+ * loader and invoke its {@code fib()} method: <pre>   {@code
+ *
+ *   Class<?> fibonacciClass = loader.loadClass("com.google.dexmaker.examples.Fibonacci");
+ *   Method fibMethod = fibonacciClass.getMethod("fib", int.class);
+ *   System.out.println(fibMethod.invoke(null, 8));
+ * }</pre>
  */
 public final class DexMaker {
-    private final Map<Type<?>, TypeDeclaration> types
-            = new LinkedHashMap<Type<?>, TypeDeclaration>();
+    private final Map<TypeId<?>, TypeDeclaration> types
+            = new LinkedHashMap<TypeId<?>, TypeDeclaration>();
 
-    private TypeDeclaration getTypeDeclaration(Type<?> type) {
+    private TypeDeclaration getTypeDeclaration(TypeId<?> type) {
         TypeDeclaration result = types.get(type);
         if (result == null) {
             result = new TypeDeclaration(type);
@@ -64,8 +206,8 @@ public final class DexMaker {
     /**
      * @param flags any flags masked by {@link com.android.dx.rop.code.AccessFlags#CLASS_FLAGS}.
      */
-    public void declare(Type<?> type, String sourceFile, int flags,
-            Type<?> supertype, Type<?>... interfaces) {
+    public void declare(TypeId<?> type, String sourceFile, int flags,
+            TypeId<?> supertype, TypeId<?>... interfaces) {
         TypeDeclaration declaration = getTypeDeclaration(type);
         if (declaration.declared) {
             throw new IllegalStateException("already declared: " + type);
@@ -146,7 +288,8 @@ public final class DexMaker {
      *     emitted .dex files before they end up in the cache directory
      * @param dexOptCacheDir where optimized .dex files are to be written
      */
-    public ClassLoader load(ClassLoader parent, File dexOutputDir, File dexOptCacheDir)
+    // TODO: why two directories?
+    public ClassLoader generateAndLoad(ClassLoader parent, File dexOutputDir, File dexOptCacheDir)
             throws IOException {
         byte[] dex = generate();
 
@@ -182,12 +325,12 @@ public final class DexMaker {
     }
 
     private static class TypeDeclaration {
-        private final Type<?> type;
+        private final TypeId<?> type;
 
         /** declared state */
         private boolean declared;
         private int flags;
-        private Type<?> supertype;
+        private TypeId<?> supertype;
         private String sourceFile;
         private TypeList interfaces;
 
@@ -196,7 +339,7 @@ public final class DexMaker {
         private final Map<MethodId, MethodDeclaration> methods
                 = new LinkedHashMap<MethodId, MethodDeclaration>();
 
-        TypeDeclaration(Type<?> type) {
+        TypeDeclaration(TypeId<?> type) {
             this.type = type;
         }
 

@@ -25,10 +25,10 @@ import java.util.List;
  * An immutable of types.
  */
 final class TypeList {
-    final Type<?>[] types;
+    final TypeId<?>[] types;
     final StdTypeList ropTypes;
 
-    TypeList(Type<?>[] types) {
+    TypeList(TypeId<?>[] types) {
         this.types = types.clone();
         this.ropTypes = new StdTypeList(types.length);
         for (int i = 0; i < types.length; i++) {
@@ -39,7 +39,7 @@ final class TypeList {
     /**
      * Returns an immutable list.
      */
-    public List<Type<?>> asList() {
+    public List<TypeId<?>> asList() {
         return Collections.unmodifiableList(Arrays.asList(types));
     }
 

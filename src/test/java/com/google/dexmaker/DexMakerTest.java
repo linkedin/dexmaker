@@ -40,15 +40,15 @@ import junit.framework.TestCase;
  */
 public final class DexMakerTest extends TestCase {
     private DexMaker dexMaker;
-    private static Type<DexMakerTest> TEST_TYPE = Type.get(DexMakerTest.class);
-    private static Type<?> INT_ARRAY = Type.get(int[].class);
-    private static Type<boolean[]> BOOLEAN_ARRAY = Type.get(boolean[].class);
-    private static Type<long[]> LONG_ARRAY = Type.get(long[].class);
-    private static Type<Object[]> OBJECT_ARRAY = Type.get(Object[].class);
-    private static Type<long[][]> LONG_2D_ARRAY = Type.get(long[][].class);
-    private static Type<?> GENERATED = Type.get("LGenerated;");
-    private static Type<Callable> CALLABLE = Type.get(Callable.class);
-    private static MethodId<Callable, Object> CALL = CALLABLE.getMethod(Type.OBJECT, "call");
+    private static TypeId<DexMakerTest> TEST_TYPE = TypeId.get(DexMakerTest.class);
+    private static TypeId<?> INT_ARRAY = TypeId.get(int[].class);
+    private static TypeId<boolean[]> BOOLEAN_ARRAY = TypeId.get(boolean[].class);
+    private static TypeId<long[]> LONG_ARRAY = TypeId.get(long[].class);
+    private static TypeId<Object[]> OBJECT_ARRAY = TypeId.get(Object[].class);
+    private static TypeId<long[][]> LONG_2D_ARRAY = TypeId.get(long[][].class);
+    private static TypeId<?> GENERATED = TypeId.get("LGenerated;");
+    private static TypeId<Callable> CALLABLE = TypeId.get(Callable.class);
+    private static MethodId<Callable, Object> CALL = CALLABLE.getMethod(TypeId.OBJECT, "call");
 
     @Override protected void setUp() throws Exception {
         super.setUp();
@@ -61,7 +61,7 @@ public final class DexMakerTest extends TestCase {
      */
     private void reset() {
         dexMaker = new DexMaker();
-        dexMaker.declare(GENERATED, "Generated.java", PUBLIC, Type.OBJECT);
+        dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
     }
 
     public void testNewInstance() throws Exception {
@@ -71,14 +71,14 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        Type<Constructable> constructable = Type.get(Constructable.class);
+        TypeId<Constructable> constructable = TypeId.get(Constructable.class);
         MethodId<?, Constructable> methodId = GENERATED.getMethod(
-                constructable, "call", Type.LONG, Type.BOOLEAN);
+                constructable, "call", TypeId.LONG, TypeId.BOOLEAN);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Long> localA = code.getParameter(0, Type.LONG);
-        Local<Boolean> localB = code.getParameter(1, Type.BOOLEAN);
+        Local<Long> localA = code.getParameter(0, TypeId.LONG);
+        Local<Boolean> localB = code.getParameter(1, TypeId.BOOLEAN);
         MethodId<Constructable, Void> constructor
-                = constructable.getConstructor(Type.LONG, Type.BOOLEAN);
+                = constructable.getConstructor(TypeId.LONG, TypeId.BOOLEAN);
         Local<Constructable> localResult = code.newLocal(constructable);
         code.newInstance(localResult, constructor, localA, localB);
         code.returnValue(localResult);
@@ -102,7 +102,7 @@ public final class DexMakerTest extends TestCase {
          * public void call() {
          * }
          */
-        MethodId<?, Void> methodId = GENERATED.getMethod(Type.VOID, "call");
+        MethodId<?, Void> methodId = GENERATED.getMethod(TypeId.VOID, "call");
         Code code = dexMaker.declare(methodId, PUBLIC);
         code.returnVoid();
 
@@ -121,12 +121,12 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.INT);
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call", TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localA = code.getParameter(0, Type.INT);
-        Local<Integer> localResult = code.newLocal(Type.INT);
+        Local<Integer> localA = code.getParameter(0, TypeId.INT);
+        Local<Integer> localResult = code.newLocal(TypeId.INT);
         MethodId<?, Integer> staticMethod
-                = TEST_TYPE.getMethod(Type.INT, "staticMethod", Type.INT);
+                = TEST_TYPE.getMethod(TypeId.INT, "staticMethod", TypeId.INT);
         code.invokeStatic(staticMethod, localResult, localA);
         code.returnValue(localResult);
 
@@ -139,8 +139,8 @@ public final class DexMakerTest extends TestCase {
          *   Method method = null;
          * }
          */
-        MethodId<?, Void> methodId = GENERATED.getMethod(Type.VOID, "call", Type.INT);
-        Type<Method> methodType = Type.get(Method.class);
+        MethodId<?, Void> methodId = GENERATED.getMethod(TypeId.VOID, "call", TypeId.INT);
+        TypeId<Method> methodType = TypeId.get(Method.class);
         Code code = dexMaker.declare(methodId, PUBLIC);
         Local<Method> localMethod = code.newLocal(methodType);
         code.loadConstant(localMethod, null);
@@ -166,13 +166,13 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", TEST_TYPE, Type.INT);
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call", TEST_TYPE, TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<DexMakerTest> localInstance = code.getParameter(0, TEST_TYPE);
-        Local<Integer> localA = code.getParameter(1, Type.INT);
-        Local<Integer> localResult = code.newLocal(Type.INT);
+        Local<Integer> localA = code.getParameter(1, TypeId.INT);
+        Local<Integer> localResult = code.newLocal(TypeId.INT);
         MethodId<DexMakerTest, Integer> virtualMethod
-                = TEST_TYPE.getMethod(Type.INT, "virtualMethod", Type.INT);
+                = TEST_TYPE.getMethod(TypeId.INT, "virtualMethod", TypeId.INT);
         code.invokeVirtual(virtualMethod, localResult, localInstance, localA);
         code.returnValue(localResult);
 
@@ -196,17 +196,17 @@ public final class DexMakerTest extends TestCase {
          *   return b;
          * }
          */
-        Type<G> generated = Type.get("LGenerated;");
-        MethodId<G, Integer> directMethodId = generated.getMethod(Type.INT, "directMethod");
+        TypeId<G> generated = TypeId.get("LGenerated;");
+        MethodId<G, Integer> directMethodId = generated.getMethod(TypeId.INT, "directMethod");
         Code directCode = dexMaker.declare(directMethodId, PRIVATE);
         directCode.getThis(generated); // 'this' is unused
-        Local<Integer> localA = directCode.newLocal(Type.INT);
+        Local<Integer> localA = directCode.newLocal(TypeId.INT);
         directCode.loadConstant(localA, 5);
         directCode.returnValue(localA);
 
-        MethodId<G, Integer> methodId = generated.getMethod(Type.INT, "call", generated);
+        MethodId<G, Integer> methodId = generated.getMethod(TypeId.INT, "call", generated);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localB = code.newLocal(Type.INT);
+        Local<Integer> localB = code.newLocal(TypeId.INT);
         Local<G> localG = code.getParameter(0, generated);
         code.invokeDirect(directMethodId, localB, localG);
         code.returnValue(localB);
@@ -229,18 +229,18 @@ public final class DexMakerTest extends TestCase {
          *   return 0;
          * }
          */
-        Type<G> generated = Type.get("LGenerated;");
-        MethodId<Object, Integer> objectHashCode = Type.OBJECT.getMethod(Type.INT, "hashCode");
+        TypeId<G> generated = TypeId.get("LGenerated;");
+        MethodId<Object, Integer> objectHashCode = TypeId.OBJECT.getMethod(TypeId.INT, "hashCode");
         Code superHashCode = dexMaker.declare(
-                GENERATED.getMethod(Type.INT, "superHashCode"), PUBLIC);
-        Local<Integer> localResult = superHashCode.newLocal(Type.INT);
+                GENERATED.getMethod(TypeId.INT, "superHashCode"), PUBLIC);
+        Local<Integer> localResult = superHashCode.newLocal(TypeId.INT);
         Local<G> localThis = superHashCode.getThis(generated);
         superHashCode.invokeSuper(objectHashCode, localResult, localThis);
         superHashCode.returnValue(localResult);
 
         Code generatedHashCode = dexMaker.declare(
-                GENERATED.getMethod(Type.INT, "hashCode"), PUBLIC);
-        Local<Integer> localZero = generatedHashCode.newLocal(Type.INT);
+                GENERATED.getMethod(TypeId.INT, "hashCode"), PUBLIC);
+        Local<Integer> localZero = generatedHashCode.newLocal(TypeId.INT);
         generatedHashCode.loadConstant(localZero, 0);
         generatedHashCode.returnValue(localZero);
 
@@ -259,10 +259,10 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        MethodId<?, Object> methodId = GENERATED.getMethod(Type.OBJECT, "call", CALLABLE);
+        MethodId<?, Object> methodId = GENERATED.getMethod(TypeId.OBJECT, "call", CALLABLE);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Callable> localC = code.getParameter(0, CALLABLE);
-        Local<Object> localResult = code.newLocal(Type.OBJECT);
+        Local<Object> localResult = code.newLocal(TypeId.OBJECT);
         code.invokeInterface(CALL, localResult, localC);
         code.returnValue(localResult);
 
@@ -275,18 +275,18 @@ public final class DexMakerTest extends TestCase {
     }
 
     public void testParameterMismatch() throws Exception {
-        Type<?>[] argTypes = {
-                Type.get(Integer.class), // should fail because the code specifies int
-                Type.OBJECT,
+        TypeId<?>[] argTypes = {
+                TypeId.get(Integer.class), // should fail because the code specifies int
+                TypeId.OBJECT,
         };
-        MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", argTypes);
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call", argTypes);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         try {
-            code.getParameter(0, Type.INT);
+            code.getParameter(0, TypeId.INT);
         } catch (IllegalArgumentException e) {
         }
         try {
-            code.getParameter(2, Type.INT);
+            code.getParameter(2, TypeId.INT);
         } catch (IndexOutOfBoundsException e) {
         }
     }
@@ -299,15 +299,16 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        MethodId<?, Boolean> methodId = GENERATED.getMethod(Type.BOOLEAN, "call", TEST_TYPE);
+        MethodId<?, Boolean> methodId = GENERATED.getMethod(TypeId.BOOLEAN, "call", TEST_TYPE);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<DexMakerTest> localTest = code.getParameter(0, TEST_TYPE);
-        Type<CharSequence> charSequenceType = Type.get(CharSequence.class);
-        MethodId<Object, String> objectToString = Type.OBJECT.getMethod(Type.STRING, "toString");
+        TypeId<CharSequence> charSequenceType = TypeId.get(CharSequence.class);
+        MethodId<Object, String> objectToString
+                = TypeId.OBJECT.getMethod(TypeId.STRING, "toString");
         MethodId<Object, Boolean> objectEquals
-                = Type.OBJECT.getMethod(Type.BOOLEAN, "equals", Type.OBJECT);
+                = TypeId.OBJECT.getMethod(TypeId.BOOLEAN, "equals", TypeId.OBJECT);
         Local<CharSequence> localCs = code.newLocal(charSequenceType);
-        Local<Boolean> localResult = code.newLocal(Type.BOOLEAN);
+        Local<Boolean> localResult = code.newLocal(TypeId.BOOLEAN);
         code.invokeVirtual(objectToString, localCs, localTest);
         code.invokeVirtual(objectEquals, localResult, localCs, localTest);
         code.returnValue(localResult);
@@ -316,10 +317,10 @@ public final class DexMakerTest extends TestCase {
     }
 
     public void testReturnTypeMismatch() {
-        MethodId<?, String> methodId = GENERATED.getMethod(Type.STRING, "call");
+        MethodId<?, String> methodId = GENERATED.getMethod(TypeId.STRING, "call");
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         try {
-            code.returnValue(code.newLocal(Type.BOOLEAN));
+            code.returnValue(code.newLocal(TypeId.BOOLEAN));
             fail();
         } catch (IllegalArgumentException expected) {
         }
@@ -337,8 +338,8 @@ public final class DexMakerTest extends TestCase {
          *   protected static Object b;
          * }
          */
-        dexMaker.declare(GENERATED.getField(Type.INT, "a"), PUBLIC | STATIC, 3);
-        dexMaker.declare(GENERATED.getField(Type.OBJECT, "b"), PROTECTED | STATIC, null);
+        dexMaker.declare(GENERATED.getField(TypeId.INT, "a"), PUBLIC | STATIC, 3);
+        dexMaker.declare(GENERATED.getField(TypeId.OBJECT, "b"), PROTECTED | STATIC, null);
         Class<?> generatedClass = generateAndLoad();
 
         Field a = generatedClass.getField("a");
@@ -358,8 +359,8 @@ public final class DexMakerTest extends TestCase {
          *   protected Object b;
          * }
          */
-        dexMaker.declare(GENERATED.getField(Type.INT, "a"), PUBLIC, null);
-        dexMaker.declare(GENERATED.getField(Type.OBJECT, "b"), PROTECTED, null);
+        dexMaker.declare(GENERATED.getField(TypeId.INT, "a"), PUBLIC, null);
+        dexMaker.declare(GENERATED.getField(TypeId.OBJECT, "b"), PROTECTED, null);
 
         addDefaultConstructor();
 
@@ -389,14 +390,14 @@ public final class DexMakerTest extends TestCase {
          *   }
          * }
          */
-        Type<G> generated = Type.get("LGenerated;");
-        FieldId<G, Integer> fieldId = generated.getField(Type.INT, "a");
+        TypeId<G> generated = TypeId.get("LGenerated;");
+        FieldId<G, Integer> fieldId = generated.getField(TypeId.INT, "a");
         dexMaker.declare(fieldId, PUBLIC | FINAL, null);
-        MethodId<?, Void> constructor = GENERATED.getConstructor(Type.INT);
+        MethodId<?, Void> constructor = GENERATED.getConstructor(TypeId.INT);
         Code code = dexMaker.declareConstructor(constructor, PUBLIC);
         Local<G> thisRef = code.getThis(generated);
-        Local<Integer> parameter = code.getParameter(0, Type.INT);
-        code.invokeDirect(Type.OBJECT.getConstructor(), null, thisRef);
+        Local<Integer> parameter = code.getParameter(0, TypeId.INT);
+        code.invokeDirect(TypeId.OBJECT.getConstructor(), null, thisRef);
         code.iput(fieldId, thisRef, parameter);
         code.returnVoid();
 
@@ -428,7 +429,7 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        Type<T> returnType = Type.get(javaType);
+        TypeId<T> returnType = TypeId.get(javaType);
         Code code = dexMaker.declare(GENERATED.getMethod(returnType, "call"), PUBLIC | STATIC);
         if (value != null) {
             Local<T> i = code.newLocal(returnType);
@@ -487,14 +488,14 @@ public final class DexMakerTest extends TestCase {
          */
         reset();
         MethodId<?, Boolean> methodId = GENERATED.getMethod(
-                Type.BOOLEAN, "call", Type.INT, Type.INT);
+                TypeId.BOOLEAN, "call", TypeId.INT, TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localA = code.getParameter(0, Type.INT);
-        Local<Integer> localB = code.getParameter(1, Type.INT);
-        Local<Boolean> result = code.newLocal(Type.get(boolean.class));
+        Local<Integer> localA = code.getParameter(0, TypeId.INT);
+        Local<Integer> localB = code.getParameter(1, TypeId.INT);
+        Local<Boolean> result = code.newLocal(TypeId.get(boolean.class));
         Label afterIf = code.newLabel();
         Label ifBody = code.newLabel();
-        code.compare(comparison, localA, localB, ifBody);
+        code.compare(comparison, ifBody, localA, localB);
         code.jump(afterIf);
 
         code.mark(ifBody);
@@ -620,13 +621,13 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        Type<?> sourceType = Type.get(source);
-        Type<?> targetType = Type.get(target);
+        TypeId<?> sourceType = TypeId.get(source);
+        TypeId<?> targetType = TypeId.get(target);
         MethodId<?, ?> methodId = GENERATED.getMethod(targetType, "call", sourceType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<?> localSource = code.getParameter(0, sourceType);
         Local<?> localCasted = code.newLocal(targetType);
-        code.numericCast(localSource, localCasted);
+        code.numericCast(localCasted, localSource);
         code.returnValue(localCasted);
         return getMethod();
     }
@@ -651,7 +652,7 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        Type<T> valueType = Type.get(source);
+        TypeId<T> valueType = TypeId.get(source);
         MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", valueType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localSource = code.getParameter(0, valueType);
@@ -692,7 +693,7 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        Type<T> valueType = Type.get(source);
+        TypeId<T> valueType = TypeId.get(source);
         MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", valueType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localSource = code.getParameter(0, valueType);
@@ -847,7 +848,7 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        Type<T> valueType = Type.get(valueClass);
+        TypeId<T> valueType = TypeId.get(valueClass);
         MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", valueType, valueType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localA = code.getParameter(0, valueType);
@@ -929,15 +930,15 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        Type<V> valueType = Type.get(valueClass);
-        Type<Instance> objectType = Type.get(Instance.class);
+        TypeId<V> valueType = TypeId.get(valueClass);
+        TypeId<Instance> objectType = TypeId.get(Instance.class);
         FieldId<Instance, V> fieldId = objectType.getField(valueType, fieldName);
         MethodId<?, V> methodId = GENERATED.getMethod(valueType, "call", objectType, valueType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Instance> localInstance = code.getParameter(0, objectType);
         Local<V> localNewValue = code.getParameter(1, valueType);
         Local<V> localOldValue = code.newLocal(valueType);
-        code.iget(fieldId, localInstance, localOldValue);
+        code.iget(fieldId, localOldValue, localInstance);
         code.iput(fieldId, localInstance, localNewValue);
         code.returnValue(localOldValue);
         return getMethod();
@@ -1012,8 +1013,8 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        Type<V> valueType = Type.get(valueClass);
-        Type<Static> objectType = Type.get(Static.class);
+        TypeId<V> valueType = TypeId.get(valueClass);
+        TypeId<Static> objectType = TypeId.get(Static.class);
         FieldId<Static, V> fieldId = objectType.getField(valueType, fieldName);
         MethodId<?, V> methodId = GENERATED.getMethod(valueType, "call", valueType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
@@ -1031,11 +1032,11 @@ public final class DexMakerTest extends TestCase {
          *   String s = (String) o;
          * }
          */
-        MethodId<?, String> methodId = GENERATED.getMethod(Type.STRING, "call", Type.OBJECT);
+        MethodId<?, String> methodId = GENERATED.getMethod(TypeId.STRING, "call", TypeId.OBJECT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Object> localObject = code.getParameter(0, Type.OBJECT);
-        Local<String> localString = code.newLocal(Type.STRING);
-        code.typeCast(localObject, localString);
+        Local<Object> localObject = code.getParameter(0, TypeId.OBJECT);
+        Local<String> localString = code.newLocal(TypeId.STRING);
+        code.typeCast(localString, localObject);
         code.returnValue(localString);
 
         Method method = getMethod();
@@ -1056,11 +1057,11 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        MethodId<?, Boolean> methodId = GENERATED.getMethod(Type.BOOLEAN, "call", Type.OBJECT);
+        MethodId<?, Boolean> methodId = GENERATED.getMethod(TypeId.BOOLEAN, "call", TypeId.OBJECT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Object> localObject = code.getParameter(0, Type.OBJECT);
-        Local<Boolean> localResult = code.newLocal(Type.BOOLEAN);
-        code.instanceOfType(localResult, localObject, Type.STRING);
+        Local<Object> localObject = code.getParameter(0, TypeId.OBJECT);
+        Local<Boolean> localResult = code.newLocal(TypeId.BOOLEAN);
+        code.instanceOfType(localResult, localObject, TypeId.STRING);
         code.returnValue(localResult);
 
         Method method = getMethod();
@@ -1082,13 +1083,13 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.INT);
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call", TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localCount = code.getParameter(0, Type.INT);
-        Local<Integer> localResult = code.newLocal(Type.INT);
-        Local<Integer> localI = code.newLocal(Type.INT);
-        Local<Integer> local1 = code.newLocal(Type.INT);
-        Local<Integer> local2 = code.newLocal(Type.INT);
+        Local<Integer> localCount = code.getParameter(0, TypeId.INT);
+        Local<Integer> localResult = code.newLocal(TypeId.INT);
+        Local<Integer> localI = code.newLocal(TypeId.INT);
+        Local<Integer> local1 = code.newLocal(TypeId.INT);
+        Local<Integer> local2 = code.newLocal(TypeId.INT);
         code.loadConstant(local1, 1);
         code.loadConstant(local2, 2);
         code.loadConstant(localResult, 1);
@@ -1097,7 +1098,7 @@ public final class DexMakerTest extends TestCase {
         Label loopBody = code.newLabel();
         Label afterLoop = code.newLabel();
         code.mark(loopCondition);
-        code.compare(Comparison.LT, localI, localCount, loopBody);
+        code.compare(Comparison.LT, loopBody, localI, localCount);
         code.jump(afterLoop);
         code.mark(loopBody);
         code.op(BinaryOp.MULTIPLY, localResult, localResult, local2);
@@ -1127,18 +1128,18 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.INT);
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call", TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localMax = code.getParameter(0, Type.INT);
-        Local<Integer> localResult = code.newLocal(Type.INT);
-        Local<Integer> local2 = code.newLocal(Type.INT);
+        Local<Integer> localMax = code.getParameter(0, TypeId.INT);
+        Local<Integer> localResult = code.newLocal(TypeId.INT);
+        Local<Integer> local2 = code.newLocal(TypeId.INT);
         code.loadConstant(localResult, 1);
         code.loadConstant(local2, 2);
         Label loopCondition = code.newLabel();
         Label loopBody = code.newLabel();
         Label afterLoop = code.newLabel();
         code.mark(loopCondition);
-        code.compare(Comparison.LT, localResult, localMax, loopBody);
+        code.compare(Comparison.LT, loopBody, localResult, localMax);
         code.jump(afterLoop);
         code.mark(loopBody);
         code.op(BinaryOp.MULTIPLY, localResult, localResult, local2);
@@ -1172,20 +1173,20 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         MethodId<?, Integer> methodId = GENERATED.getMethod(
-                Type.INT, "call", Type.INT, Type.INT, Type.INT);
+                TypeId.INT, "call", TypeId.INT, TypeId.INT, TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localA = code.getParameter(0, Type.INT);
-        Local<Integer> localB = code.getParameter(1, Type.INT);
-        Local<Integer> localC = code.getParameter(2, Type.INT);
+        Local<Integer> localA = code.getParameter(0, TypeId.INT);
+        Local<Integer> localB = code.getParameter(1, TypeId.INT);
+        Local<Integer> localC = code.getParameter(2, TypeId.INT);
         Label aLessThanB = code.newLabel();
         Label aLessThanC = code.newLabel();
         Label bLessThanC = code.newLabel();
-        code.compare(Comparison.LT, localA, localB, aLessThanB);
-        code.compare(Comparison.LT, localB, localC, bLessThanC);
+        code.compare(Comparison.LT, aLessThanB, localA, localB);
+        code.compare(Comparison.LT, bLessThanC, localB, localC);
         code.returnValue(localC);
         // (a < b)
         code.mark(aLessThanB);
-        code.compare(Comparison.LT, localA, localC, aLessThanC);
+        code.compare(Comparison.LT, aLessThanC, localA, localC);
         code.returnValue(localC);
         // (a < c)
         code.mark(aLessThanC);
@@ -1215,18 +1216,18 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.INT);
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call", TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localA = code.getParameter(0, Type.INT);
-        Local<Integer> local1 = code.newLocal(Type.INT);
-        Local<Integer> local2 = code.newLocal(Type.INT);
-        Local<Integer> localX = code.newLocal(Type.INT);
-        Local<Integer> localY = code.newLocal(Type.INT);
-        Local<Integer> localResult = code.newLocal(Type.INT);
+        Local<Integer> localA = code.getParameter(0, TypeId.INT);
+        Local<Integer> local1 = code.newLocal(TypeId.INT);
+        Local<Integer> local2 = code.newLocal(TypeId.INT);
+        Local<Integer> localX = code.newLocal(TypeId.INT);
+        Local<Integer> localY = code.newLocal(TypeId.INT);
+        Local<Integer> localResult = code.newLocal(TypeId.INT);
         Label baseCase = code.newLabel();
         code.loadConstant(local1, 1);
         code.loadConstant(local2, 2);
-        code.compare(Comparison.LT, localA, local2, baseCase);
+        code.compare(Comparison.LT, baseCase, localA, local2);
         code.op(BinaryOp.SUBTRACT, localA, localA, local1);
         code.invokeStatic(methodId, localX, localA);
         code.op(BinaryOp.SUBTRACT, localA, localA, local1);
@@ -1260,18 +1261,18 @@ public final class DexMakerTest extends TestCase {
          *     return "RE";
          *   }
          */
-        MethodId<?, String> methodId = GENERATED.getMethod(Type.STRING, "call", Type.INT);
+        MethodId<?, String> methodId = GENERATED.getMethod(TypeId.STRING, "call", TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localI = code.getParameter(0, Type.INT);
-        Local<String> result = code.newLocal(Type.STRING);
+        Local<Integer> localI = code.getParameter(0, TypeId.INT);
+        Local<String> result = code.newLocal(TypeId.STRING);
         Label catchIae = code.newLabel();
         Label catchIse = code.newLabel();
         Label catchRe = code.newLabel();
 
-        code.addCatchClause(Type.get(IllegalArgumentException.class), catchIae);
-        code.addCatchClause(Type.get(IllegalStateException.class), catchIse);
-        code.addCatchClause(Type.get(RuntimeException.class), catchRe);
-        MethodId<?, ?> thrower = TEST_TYPE.getMethod(Type.VOID, "thrower", Type.INT);
+        code.addCatchClause(TypeId.get(IllegalArgumentException.class), catchIae);
+        code.addCatchClause(TypeId.get(IllegalStateException.class), catchIse);
+        code.addCatchClause(TypeId.get(RuntimeException.class), catchRe);
+        MethodId<?, ?> thrower = TEST_TYPE.getMethod(TypeId.VOID, "thrower", TypeId.INT);
         code.invokeStatic(thrower, null, localI);
         code.loadConstant(result, "NONE");
         code.returnValue(result);
@@ -1336,19 +1337,19 @@ public final class DexMakerTest extends TestCase {
          *   }
          */
         MethodId<?, String> methodId = GENERATED.getMethod(
-                Type.STRING, "call", Type.INT, Type.INT, Type.INT);
+                TypeId.STRING, "call", TypeId.INT, TypeId.INT, TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localA = code.getParameter(0, Type.INT);
-        Local<Integer> localB = code.getParameter(1, Type.INT);
-        Local<Integer> localC = code.getParameter(2, Type.INT);
-        Local<String> localResult = code.newLocal(Type.STRING);
+        Local<Integer> localA = code.getParameter(0, TypeId.INT);
+        Local<Integer> localB = code.getParameter(1, TypeId.INT);
+        Local<Integer> localC = code.getParameter(2, TypeId.INT);
+        Local<String> localResult = code.newLocal(TypeId.STRING);
         Label catchInner = code.newLabel();
         Label catchOuter = code.newLabel();
 
-        Type<IllegalArgumentException> iaeType = Type.get(IllegalArgumentException.class);
+        TypeId<IllegalArgumentException> iaeType = TypeId.get(IllegalArgumentException.class);
         code.addCatchClause(iaeType, catchOuter);
 
-        MethodId<?, ?> thrower = TEST_TYPE.getMethod(Type.VOID, "thrower", Type.INT);
+        MethodId<?, ?> thrower = TEST_TYPE.getMethod(TypeId.VOID, "thrower", TypeId.INT);
         code.invokeStatic(thrower, null, localA);
 
         // for the inner catch clause, we stash the old label and put it back afterwards.
@@ -1382,9 +1383,9 @@ public final class DexMakerTest extends TestCase {
          *   throw new IllegalStateException();
          * }
          */
-        MethodId<?, Void> methodId = GENERATED.getMethod(Type.VOID, "call");
+        MethodId<?, Void> methodId = GENERATED.getMethod(TypeId.VOID, "call");
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Type<IllegalStateException> iseType = Type.get(IllegalStateException.class);
+        TypeId<IllegalStateException> iseType = TypeId.get(IllegalStateException.class);
         MethodId<IllegalStateException, Void> iseConstructor = iseType.getConstructor();
         Local<IllegalStateException> localIse = code.newLocal(iseType);
         code.newInstance(localIse, iseConstructor);
@@ -1403,14 +1404,14 @@ public final class DexMakerTest extends TestCase {
          * public static void call(int unused1, long unused2, long unused3) {}
          */
         MethodId<?, Void> methodId = GENERATED.getMethod(
-                Type.VOID, "call", Type.INT, Type.LONG, Type.LONG);
+                TypeId.VOID, "call", TypeId.INT, TypeId.LONG, TypeId.LONG);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         code.returnVoid();
         getMethod().invoke(null, 1, 2, 3);
     }
 
     public void testFloatingPointCompare() throws Exception {
-        Method floatG = floatingPointCompareMethod(Type.FLOAT, 1);
+        Method floatG = floatingPointCompareMethod(TypeId.FLOAT, 1);
         assertEquals(-1, floatG.invoke(null, 1.0f, Float.POSITIVE_INFINITY));
         assertEquals(-1, floatG.invoke(null, 1.0f, 2.0f));
         assertEquals(0, floatG.invoke(null, 1.0f, 1.0f));
@@ -1420,7 +1421,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(1, floatG.invoke(null, Float.NaN, Float.NaN));
         assertEquals(1, floatG.invoke(null, Float.NaN, Float.POSITIVE_INFINITY));
 
-        Method floatL = floatingPointCompareMethod(Type.FLOAT, -1);
+        Method floatL = floatingPointCompareMethod(TypeId.FLOAT, -1);
         assertEquals(-1, floatG.invoke(null, 1.0f, Float.POSITIVE_INFINITY));
         assertEquals(-1, floatL.invoke(null, 1.0f, 2.0f));
         assertEquals(0, floatL.invoke(null, 1.0f, 1.0f));
@@ -1430,7 +1431,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(-1, floatL.invoke(null, Float.NaN, Float.NaN));
         assertEquals(-1, floatL.invoke(null, Float.NaN, Float.POSITIVE_INFINITY));
 
-        Method doubleG = floatingPointCompareMethod(Type.DOUBLE, 1);
+        Method doubleG = floatingPointCompareMethod(TypeId.DOUBLE, 1);
         assertEquals(-1, doubleG.invoke(null, 1.0, Double.POSITIVE_INFINITY));
         assertEquals(-1, doubleG.invoke(null, 1.0, 2.0));
         assertEquals(0, doubleG.invoke(null, 1.0, 1.0));
@@ -1440,7 +1441,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(1, doubleG.invoke(null, Double.NaN, Double.NaN));
         assertEquals(1, doubleG.invoke(null, Double.NaN, Double.POSITIVE_INFINITY));
 
-        Method doubleL = floatingPointCompareMethod(Type.DOUBLE, -1);
+        Method doubleL = floatingPointCompareMethod(TypeId.DOUBLE, -1);
         assertEquals(-1, doubleL.invoke(null, 1.0, Double.POSITIVE_INFINITY));
         assertEquals(-1, doubleL.invoke(null, 1.0, 2.0));
         assertEquals(0, doubleL.invoke(null, 1.0, 1.0));
@@ -1452,7 +1453,7 @@ public final class DexMakerTest extends TestCase {
     }
 
     private <T extends Number> Method floatingPointCompareMethod(
-            Type<T> valueType, int nanValue) throws Exception {
+            TypeId<T> valueType, int nanValue) throws Exception {
         /*
          * public static int call(float a, float b) {
          *     int result = a <=> b;
@@ -1460,12 +1461,13 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", valueType, valueType);
+        MethodId<?, Integer> methodId = GENERATED.getMethod(
+                TypeId.INT, "call", valueType, valueType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localA = code.getParameter(0, valueType);
         Local<T> localB = code.getParameter(1, valueType);
-        Local<Integer> localResult = code.newLocal(Type.INT);
-        code.compare(localA, localB, localResult, nanValue);
+        Local<Integer> localResult = code.newLocal(TypeId.INT);
+        code.compare(localResult, localA, localB, nanValue);
         code.returnValue(localResult);
         return getMethod();
     }
@@ -1477,12 +1479,12 @@ public final class DexMakerTest extends TestCase {
          *   return result;
          * }
          */
-        MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", Type.LONG, Type.LONG);
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call", TypeId.LONG, TypeId.LONG);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Long> localA = code.getParameter(0, Type.LONG);
-        Local<Long> localB = code.getParameter(1, Type.LONG);
-        Local<Integer> localResult = code.newLocal(Type.INT);
-        code.compare(localA, localB, localResult);
+        Local<Long> localA = code.getParameter(0, TypeId.LONG);
+        Local<Long> localB = code.getParameter(1, TypeId.LONG);
+        Local<Integer> localResult = code.newLocal(TypeId.INT);
+        code.compare(localResult, localA, localB);
         code.returnValue(localResult);
 
         Method method = getMethod();
@@ -1519,7 +1521,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(5, long2dArrayLength.invoke(null, new Object[] { new long[5][10] }));
     }
 
-    private <T> Method arrayLengthMethod(Type<T> valueType) throws Exception {
+    private <T> Method arrayLengthMethod(TypeId<T> valueType) throws Exception {
         /*
          * public static int call(long[] array) {
          *   int result = array.length;
@@ -1527,11 +1529,11 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        MethodId<?, Integer> methodId = GENERATED.getMethod(Type.INT, "call", valueType);
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call", valueType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localArray = code.getParameter(0, valueType);
-        Local<Integer> localResult = code.newLocal(Type.INT);
-        code.arrayLength(localArray, localResult);
+        Local<Integer> localResult = code.newLocal(TypeId.INT);
+        code.arrayLength(localResult, localArray);
         code.returnValue(localResult);
         return getMethod();
     }
@@ -1561,7 +1563,7 @@ public final class DexMakerTest extends TestCase {
                 Arrays.deepToString((long[][]) new2dLongArray.invoke(null, 3)));
     }
 
-    private <T> Method newArrayMethod(Type<T> valueType) throws Exception {
+    private <T> Method newArrayMethod(TypeId<T> valueType) throws Exception {
         /*
          * public static long[] call(int length) {
          *   long[] result = new long[length];
@@ -1569,32 +1571,32 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", Type.INT);
+        MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", TypeId.INT);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<Integer> localLength = code.getParameter(0, Type.INT);
+        Local<Integer> localLength = code.getParameter(0, TypeId.INT);
         Local<T> localResult = code.newLocal(valueType);
-        code.newArray(localLength, localResult);
+        code.newArray(localResult, localLength);
         code.returnValue(localResult);
         return getMethod();
     }
 
     public void testReadAndWriteArray() throws Exception {
-        Method swapBooleanArray = arraySwapMethod(BOOLEAN_ARRAY, Type.BOOLEAN);
+        Method swapBooleanArray = arraySwapMethod(BOOLEAN_ARRAY, TypeId.BOOLEAN);
         boolean[] booleans = new boolean[3];
         assertEquals(false, swapBooleanArray.invoke(null, booleans, 1, true));
         assertEquals("[false, true, false]", Arrays.toString(booleans));
 
-        Method swapIntArray = arraySwapMethod(INT_ARRAY, Type.INT);
+        Method swapIntArray = arraySwapMethod(INT_ARRAY, TypeId.INT);
         int[] ints = new int[3];
         assertEquals(0, swapIntArray.invoke(null, ints, 1, 5));
         assertEquals("[0, 5, 0]", Arrays.toString(ints));
 
-        Method swapLongArray = arraySwapMethod(LONG_ARRAY, Type.LONG);
+        Method swapLongArray = arraySwapMethod(LONG_ARRAY, TypeId.LONG);
         long[] longs = new long[3];
         assertEquals(0L, swapLongArray.invoke(null, longs, 1, 6L));
         assertEquals("[0, 6, 0]", Arrays.toString(longs));
 
-        Method swapObjectArray = arraySwapMethod(OBJECT_ARRAY, Type.OBJECT);
+        Method swapObjectArray = arraySwapMethod(OBJECT_ARRAY, TypeId.OBJECT);
         Object[] objects = new Object[3];
         assertEquals(null, swapObjectArray.invoke(null, objects, 1, "X"));
         assertEquals("[null, X, null]", Arrays.toString(objects));
@@ -1605,7 +1607,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals("[null, [7], null]", Arrays.deepToString(longs2d));
     }
 
-    private <A, T> Method arraySwapMethod(Type<A> arrayType, Type<T> singleType)
+    private <A, T> Method arraySwapMethod(TypeId<A> arrayType, TypeId<T> singleType)
             throws Exception {
         /*
          * public static long swap(long[] array, int index, long newValue) {
@@ -1616,13 +1618,13 @@ public final class DexMakerTest extends TestCase {
          */
         reset();
         MethodId<?, T> methodId = GENERATED.getMethod(
-                singleType, "call", arrayType, Type.INT, singleType);
+                singleType, "call", arrayType, TypeId.INT, singleType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<A> localArray = code.getParameter(0, arrayType);
-        Local<Integer> localIndex = code.getParameter(1, Type.INT);
+        Local<Integer> localIndex = code.getParameter(1, TypeId.INT);
         Local<T> localNewValue = code.getParameter(2, singleType);
         Local<T> localResult = code.newLocal(singleType);
-        code.aget(localArray, localIndex, localResult);
+        code.aget(localResult, localArray, localIndex);
         code.aput(localArray, localIndex, localNewValue);
         code.returnValue(localResult);
         return getMethod();
@@ -1634,10 +1636,14 @@ public final class DexMakerTest extends TestCase {
 
     // TODO: don't generate multiple times (?)
 
+    // TODO: array types
+
+    // TODO: attempt to generate an interface
+
     private void addDefaultConstructor() {
         Code code = dexMaker.declareConstructor(GENERATED.getConstructor(), PUBLIC);
         Local<?> thisRef = code.getThis(GENERATED);
-        code.invokeDirect(Type.OBJECT.getConstructor(), null, thisRef);
+        code.invokeDirect(TypeId.OBJECT.getConstructor(), null, thisRef);
         code.returnVoid();
     }
 
@@ -1662,7 +1668,7 @@ public final class DexMakerTest extends TestCase {
     }
 
     private Class<?> generateAndLoad() throws Exception {
-        return dexMaker.load(getClass().getClassLoader(),
+        return dexMaker.generateAndLoad(getClass().getClassLoader(),
                 getDataDirectory(), getDataDirectory()).loadClass("Generated");
     }
 }

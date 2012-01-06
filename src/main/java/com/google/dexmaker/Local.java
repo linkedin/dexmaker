@@ -23,16 +23,16 @@ import com.android.dx.rop.code.RegisterSpec;
  */
 public final class Local<T> {
     private final Code code;
-    final Type<T> type;
+    final TypeId<T> type;
     private int reg = -1;
     private RegisterSpec spec;
 
-    private Local(Code code, Type<T> type) {
+    private Local(Code code, TypeId<T> type) {
         this.code = code;
         this.type = type;
     }
 
-    static <T> Local<T> get(Code code, Type<T> type) {
+    static <T> Local<T> get(Code code, TypeId<T> type) {
         return new Local<T>(code, type);
     }
 
@@ -64,7 +64,7 @@ public final class Local<T> {
         return spec;
     }
 
-    public Type getType() {
+    public TypeId getType() {
         return type;
     }
 

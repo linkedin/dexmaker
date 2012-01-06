@@ -18,13 +18,13 @@ package com.google.dexmaker;
 
 import junit.framework.TestCase;
 
-public final class TypeTest extends TestCase {
+public final class TypeIdTest extends TestCase {
     public void testGetType() {
-        assertEquals("Ljava/lang/String;", Type.get(String.class).getName());
-        assertEquals("[Ljava/lang/String;", Type.get(String[].class).getName());
-        assertEquals("[[Ljava/lang/String;", Type.get(String[][].class).getName());
-        assertEquals("I", Type.get(int.class).getName());
-        assertEquals("[I", Type.get(int[].class).getName());
-        assertEquals("[[I", Type.get(int[][].class).getName());
+        assertEquals("Ljava/lang/String;", TypeId.get(String.class).getName());
+        assertEquals("[Ljava/lang/String;", TypeId.get(String[].class).getName());
+        assertEquals("[[Ljava/lang/String;", TypeId.get(String[][].class).getName());
+        assertEquals("I", TypeId.get(int.class).getName());
+        assertEquals("[I", TypeId.get(int[].class).getName());
+        assertEquals("[[I", TypeId.get(int[][].class).getName());
     }
 }

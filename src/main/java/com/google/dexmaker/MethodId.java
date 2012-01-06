@@ -26,8 +26,8 @@ import java.util.List;
  * A method or constructor.
  */
 public final class MethodId<D, R> {
-    final Type<D> declaringType;
-    final Type<R> returnType;
+    final TypeId<D> declaringType;
+    final TypeId<R> returnType;
     final String name;
     final TypeList parameters;
 
@@ -35,7 +35,7 @@ public final class MethodId<D, R> {
     final CstNat nat;
     final CstMethodRef constant;
 
-    MethodId(Type<D> declaringType, Type<R> returnType, String name, TypeList parameters) {
+    MethodId(TypeId<D> declaringType, TypeId<R> returnType, String name, TypeList parameters) {
         if (declaringType == null || returnType == null || name == null || parameters == null) {
             throw new NullPointerException();
         }
@@ -47,11 +47,11 @@ public final class MethodId<D, R> {
         this.constant = new CstMethodRef(declaringType.constant, nat);
     }
 
-    public Type<D> getDeclaringType() {
+    public TypeId<D> getDeclaringType() {
         return declaringType;
     }
 
-    public Type<R> getReturnType() {
+    public TypeId<R> getReturnType() {
         return returnType;
     }
 
@@ -59,7 +59,7 @@ public final class MethodId<D, R> {
         return name;
     }
 
-    public List<Type<?>> getParameters() {
+    public List<TypeId<?>> getParameters() {
         return parameters.asList();
     }
 
@@ -72,7 +72,7 @@ public final class MethodId<D, R> {
         if (includeThis) {
             result.append(declaringType.name);
         }
-        for (Type t : parameters.types) {
+        for (TypeId t : parameters.types) {
             result.append(t.name);
         }
         result.append(")");

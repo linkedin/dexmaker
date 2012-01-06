@@ -69,7 +69,7 @@ public final class Code {
     private final List<Local<?>> parameters = new ArrayList<Local<?>>();
     private final List<Local<?>> locals = new ArrayList<Local<?>>();
     private SourcePosition sourcePosition = SourcePosition.NO_INFO;
-    private final List<Type<?>> catchTypes = new ArrayList<Type<?>>();
+    private final List<TypeId<?>> catchTypes = new ArrayList<TypeId<?>>();
     private final List<Label> catchLabels = new ArrayList<Label>();
     private StdTypeList catches = StdTypeList.EMPTY;
 
@@ -81,14 +81,14 @@ public final class Code {
             thisLocal = Local.get(this, method.declaringType);
             parameters.add(thisLocal);
         }
-        for (Type<?> parameter : method.parameters.types) {
+        for (TypeId<?> parameter : method.parameters.types) {
             parameters.add(Local.get(this, parameter));
         }
         this.currentLabel = newLabel();
         this.currentLabel.marked = true;
     }
 
-    public <T> Local<T> newLocal(Type<T> type) {
+    public <T> Local<T> newLocal(TypeId<T> type) {
         if (localsInitialized) {
             throw new IllegalStateException("Cannot allocate locals after adding instructions");
         }
@@ -97,14 +97,14 @@ public final class Code {
         return result;
     }
 
-    public <T> Local<T> getParameter(int index, Type<T> type) {
+    public <T> Local<T> getParameter(int index, TypeId<T> type) {
         if (thisLocal != null) {
             index++; // adjust for the hidden 'this' parameter
         }
         return coerce(parameters.get(index), type);
     }
 
-    public <T> Local<T> getThis(Type<T> type) {
+    public <T> Local<T> getThis(TypeId<T> type) {
         if (thisLocal == null) {
             throw new IllegalStateException("static methods cannot access 'this'");
         }
@@ -112,7 +112,7 @@ public final class Code {
     }
 
     @SuppressWarnings("unchecked") // guarded by an equals check
-    private <T> Local<T> coerce(Local<?> local, Type<T> expectedType) {
+    private <T> Local<T> coerce(Local<?> local, TypeId<T> expectedType) {
         if (!local.type.equals(expectedType)) {
             throw new IllegalArgumentException(
                     "requested " + expectedType + " but was " + local.type);
@@ -195,7 +195,7 @@ public final class Code {
                 target);
     }
 
-    public void addCatchClause(Type<?> throwable, Label catchClause) {
+    public void addCatchClause(TypeId<?> throwable, Label catchClause) {
         if (catchTypes.contains(throwable)) {
             throw new IllegalArgumentException("Already caught: " + throwable);
         }
@@ -204,7 +204,7 @@ public final class Code {
         catchLabels.add(catchClause);
     }
 
-    public Label removeCatchClause(Type<?> throwable) {
+    public Label removeCatchClause(TypeId<?> throwable) {
         int index = catchTypes.indexOf(throwable);
         if (index == -1) {
             throw new IllegalArgumentException("No catch clause: " + throwable);
@@ -219,7 +219,7 @@ public final class Code {
                 RegisterSpecList.make(throwable.spec()), catches));
     }
 
-    private StdTypeList toTypeList(List<Type<?>> types) {
+    private StdTypeList toTypeList(List<TypeId<?>> types) {
         StdTypeList result = new StdTypeList(types.size());
         for (int i = 0; i < types.size(); i++) {
             result.set(i, types.get(i).ropType);
@@ -314,16 +314,16 @@ public final class Code {
 
     // instructions: unary
 
-    public <T> void negate(Local<T> source, Local<T> target) {
-        unary(Rops.opNeg(source.type.ropType), source, target);
+    public <T> void negate(Local<T> target, Local<T> source) {
+        unary(Rops.opNeg(source.type.ropType), target, source);
     }
 
-    public <T> void not(Local<T> source, Local<T> target) {
-        unary(Rops.opNot(source.type.ropType), source, target);
+    public <T> void not(Local<T> target, Local<T> source) {
+        unary(Rops.opNot(source.type.ropType), target, source);
     }
 
-    public void numericCast(Local<?> source, Local<?> target) {
-        unary(getCastRop(source.type.ropType, target.type.ropType), source, target);
+    public void numericCast(Local<?> target, Local<?> source) {
+        unary(getCastRop(source.type.ropType, target.type.ropType), target, source);
     }
 
     private Rop getCastRop(com.android.dx.rop.type.Type sourceType,
@@ -341,7 +341,7 @@ public final class Code {
         return Rops.opConv(targetType, sourceType);
     }
 
-    private void unary(Rop rop, Local<?> source, Local<?> target) {
+    private void unary(Rop rop, Local<?> target, Local<?> source) {
         addInstruction(new PlainInsn(rop, sourcePosition, target.spec(), source.spec()));
     }
 
@@ -365,7 +365,7 @@ public final class Code {
      * Compare ints. If the comparison is true, execution jumps to {@code
      * trueLabel}. If it is false, execution continues to the next instruction.
      */
-    public <T> void compare(Comparison comparison, Local<T> a, Local<T> b, Label trueLabel) {
+    public <T> void compare(Comparison comparison, Label trueLabel, Local<T> a, Local<T> b) {
         if (trueLabel == null) {
             throw new IllegalArgumentException();
         }
@@ -377,7 +377,7 @@ public final class Code {
     /**
      * Compare floats or doubles.
      */
-    public <T extends Number> void compare(Local<T> a, Local<T> b, Local<Integer> target,
+    public <T extends Number> void compare(Local<Integer> target, Local<T> a, Local<T> b,
             int nanValue) {
         Rop rop;
         if (nanValue == 1) {
@@ -394,14 +394,14 @@ public final class Code {
     /**
      * Compare longs.
      */
-    public <T> void compare(Local<T> a, Local<T> b, Local<?> target) {
+    public <T> void compare(Local<?> target, Local<T> a, Local<T> b) {
         addInstruction(new PlainInsn(Rops.CMPL_LONG, sourcePosition, target.spec(),
                 RegisterSpecList.make(a.spec(), b.spec())));
     }
 
     // instructions: fields
 
-    public <D, V> void iget(FieldId<D, V> fieldId, Local<D> instance, Local<V> target) {
+    public <D, V> void iget(FieldId<D, V> fieldId, Local<V> target, Local<D> instance) {
         addInstruction(new ThrowingCstInsn(Rops.opGetField(target.type.ropType), sourcePosition,
                 RegisterSpecList.make(instance.spec()), catches, fieldId.constant));
         moveResult(target, true);
@@ -470,13 +470,13 @@ public final class Code {
 
     // instructions: types
 
-    public void instanceOfType(Local<?> target, Local<?> source, Type<?> type) {
+    public void instanceOfType(Local<?> target, Local<?> source, TypeId<?> type) {
         addInstruction(new ThrowingCstInsn(Rops.INSTANCE_OF, sourcePosition,
                 RegisterSpecList.make(source.spec()), catches, type.constant));
         moveResult(target, true);
     }
 
-    public void typeCast(Local<?> source, Local<?> target) {
+    public void typeCast(Local<?> target, Local<?> source) {
         addInstruction(new ThrowingCstInsn(Rops.CHECK_CAST, sourcePosition,
                 RegisterSpecList.make(source.spec()), catches, target.type.constant));
         moveResult(target, true);
@@ -484,19 +484,19 @@ public final class Code {
 
     // instructions: arrays
 
-    public <T> void arrayLength(Local<T> array, Local<Integer> target) {
+    public <T> void arrayLength(Local<Integer> target, Local<T> array) {
         addInstruction(new ThrowingInsn(Rops.ARRAY_LENGTH, sourcePosition,
                 RegisterSpecList.make(array.spec()), catches));
         moveResult(target, true);
     }
 
-    public <T> void newArray(Local<Integer> length, Local<T> target) {
+    public <T> void newArray(Local<T> target, Local<Integer> length) {
         addInstruction(new ThrowingCstInsn(Rops.opNewArray(target.type.ropType), sourcePosition,
                 RegisterSpecList.make(length.spec()), catches, target.type.constant));
         moveResult(target, true);
     }
 
-    public void aget(Local<?> array, Local<Integer> index, Local<?> target) {
+    public void aget(Local<?> target, Local<?> array, Local<Integer> index) {
         addInstruction(new ThrowingInsn(Rops.opAget(target.type.ropType), sourcePosition,
                 RegisterSpecList.make(array.spec(), index.spec()), catches));
         moveResult(target, true);
@@ -510,7 +510,7 @@ public final class Code {
     // instructions: return
 
     public void returnVoid() {
-        if (!method.returnType.equals(Type.VOID)) {
+        if (!method.returnType.equals(TypeId.VOID)) {
             throw new IllegalArgumentException("declared " + method.returnType
                     + " but returned void");
         }

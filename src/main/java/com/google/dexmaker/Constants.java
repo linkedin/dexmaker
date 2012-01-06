@@ -38,7 +38,7 @@ final class Constants {
     /**
      * Returns a rop constant for the specified value.
      *
-     * @param value null, a boxed primitive, String, Class, or Type.
+     * @param value null, a boxed primitive, String, Class, or TypeId.
      */
     static TypedConstant getConstant(Object value) {
         if (value == null) {
@@ -62,9 +62,9 @@ final class Constants {
         } else if (value instanceof String) {
             return new CstString((String) value);
         } else if (value instanceof Class) {
-            return new CstType(Type.get((Class<?>) value).ropType);
-        } else if (value instanceof Type) {
-            return new CstType(((Type) value).ropType);
+            return new CstType(TypeId.get((Class<?>) value).ropType);
+        } else if (value instanceof TypeId) {
+            return new CstType(((TypeId) value).ropType);
         } else {
             throw new UnsupportedOperationException("Not a constant: " + value);
         }

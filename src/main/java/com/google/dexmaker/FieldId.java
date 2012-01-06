@@ -24,15 +24,15 @@ import com.android.dx.rop.cst.CstString;
  * A field.
  */
 public final class FieldId<D, V> {
-    final Type<D> declaringType;
-    final Type<V> type;
+    final TypeId<D> declaringType;
+    final TypeId<V> type;
     final String name;
 
     /** cached converted state */
     final CstNat nat;
     final CstFieldRef constant;
 
-    FieldId(Type<D> declaringType, Type<V> type, String name) {
+    FieldId(TypeId<D> declaringType, TypeId<V> type, String name) {
         if (declaringType == null || type == null || name == null) {
             throw new NullPointerException();
         }
@@ -43,11 +43,11 @@ public final class FieldId<D, V> {
         this.constant = new CstFieldRef(declaringType.constant, nat);
     }
 
-    public Type<D> getDeclaringType() {
+    public TypeId<D> getDeclaringType() {
         return declaringType;
     }
 
-    public Type<V> getType() {
+    public TypeId<V> getType() {
         return type;
     }
 

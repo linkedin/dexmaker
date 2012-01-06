@@ -23,7 +23,7 @@ import com.google.dexmaker.FieldId;
 import com.google.dexmaker.Label;
 import com.google.dexmaker.Local;
 import com.google.dexmaker.MethodId;
-import com.google.dexmaker.Type;
+import com.google.dexmaker.TypeId;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -117,6 +117,7 @@ public final class ProxyBuilder<T> {
     private static final String FIELD_NAME_METHODS = "$__methodArray";
 
     private final Class<T> baseClass;
+    // TODO: make DexMaker do the defaulting here
     private ClassLoader parentClassLoader = ProxyBuilder.class.getClassLoader();
     private InvocationHandler handler;
     private File dexCache;
@@ -178,13 +179,13 @@ public final class ProxyBuilder<T> {
                 "constructorArgValues.length != constructorArgTypes.length");
         DexMaker dexMaker = new DexMaker();
         String generatedName = getMethodNameForProxyOf(baseClass);
-        Type<? extends T> generatedType = Type.get("L" + generatedName + ";");
-        Type<T> superType = Type.get(baseClass);
+        TypeId<? extends T> generatedType = TypeId.get("L" + generatedName + ";");
+        TypeId<T> superType = TypeId.get(baseClass);
         generateConstructorsAndFields(dexMaker, generatedType, superType, baseClass);
         Method[] methodsToProxy = getMethodsToProxy(baseClass);
         generateCodeForAllMethods(dexMaker, generatedType, methodsToProxy, superType);
         dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType);
-        ClassLoader classLoader = dexMaker.load(parentClassLoader, dexCache, dexCache);
+        ClassLoader classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache, dexCache);
         Class<? extends T> proxyClass;
         try {
             proxyClass = loadClass(classLoader, generatedName);
@@ -288,17 +289,17 @@ public final class ProxyBuilder<T> {
     }
 
     private static <T, G extends T> void generateCodeForAllMethods(DexMaker dexMaker,
-            Type<G> generatedType, Method[] methodsToProxy, Type<T> superclassType) {
-        Type<InvocationHandler> handlerType = Type.get(InvocationHandler.class);
-        Type<Method[]> methodArrayType = Type.get(Method[].class);
+            TypeId<G> generatedType, Method[] methodsToProxy, TypeId<T> superclassType) {
+        TypeId<InvocationHandler> handlerType = TypeId.get(InvocationHandler.class);
+        TypeId<Method[]> methodArrayType = TypeId.get(Method[].class);
         FieldId<G, InvocationHandler> handlerField =
                 generatedType.getField(handlerType, FIELD_NAME_HANDLER);
         FieldId<G, Method[]> allMethods =
                 generatedType.getField(methodArrayType, FIELD_NAME_METHODS);
-        Type<Method> methodType = Type.get(Method.class);
-        Type<Object[]> objectArrayType = Type.get(Object[].class);
-        MethodId<InvocationHandler, Object> methodInvoke = handlerType.getMethod(Type.OBJECT,
-                "invoke", Type.OBJECT, methodType, objectArrayType);
+        TypeId<Method> methodType = TypeId.get(Method.class);
+        TypeId<Object[]> objectArrayType = TypeId.get(Object[].class);
+        MethodId<InvocationHandler, Object> methodInvoke = handlerType.getMethod(TypeId.OBJECT,
+                "invoke", TypeId.OBJECT, methodType, objectArrayType);
         for (int m = 0; m < methodsToProxy.length; ++m) {
             /*
              * If the 5th method on the superclass Example that can be overridden were to look like
@@ -346,30 +347,30 @@ public final class ProxyBuilder<T> {
             Method method = methodsToProxy[m];
             String name = method.getName();
             Class<?>[] argClasses = method.getParameterTypes();
-            Type<?>[] argTypes = new Type<?>[argClasses.length];
+            TypeId<?>[] argTypes = new TypeId<?>[argClasses.length];
             for (int i = 0; i < argTypes.length; ++i) {
-                argTypes[i] = Type.get(argClasses[i]);
+                argTypes[i] = TypeId.get(argClasses[i]);
             }
             Class<?> returnType = method.getReturnType();
-            Type<?> resultType = Type.get(returnType);
+            TypeId<?> resultType = TypeId.get(returnType);
             MethodId<T, ?> superMethod = superclassType.getMethod(resultType, name, argTypes);
             MethodId<?, ?> methodId = generatedType.getMethod(resultType, name, argTypes);
             Code code = dexMaker.declare(methodId, PUBLIC);
             Local<G> localThis = code.getThis(generatedType);
             Local<InvocationHandler> localHandler = code.newLocal(handlerType);
-            Local<Object> invokeResult = code.newLocal(Type.OBJECT);
-            Local<Integer> intValue = code.newLocal(Type.INT);
+            Local<Object> invokeResult = code.newLocal(TypeId.OBJECT);
+            Local<Integer> intValue = code.newLocal(TypeId.INT);
             Local<Object[]> args = code.newLocal(objectArrayType);
-            Local<Integer> argsLength = code.newLocal(Type.INT);
-            Local<Object> temp = code.newLocal(Type.OBJECT);
+            Local<Integer> argsLength = code.newLocal(TypeId.INT);
+            Local<Object> temp = code.newLocal(TypeId.OBJECT);
             Local<?> resultHolder = code.newLocal(resultType);
             Local<Method[]> methodArray = code.newLocal(methodArrayType);
             Local<Method> thisMethod = code.newLocal(methodType);
-            Local<Integer> methodIndex = code.newLocal(Type.INT);
+            Local<Integer> methodIndex = code.newLocal(TypeId.INT);
             Class<?> aBoxedClass = PRIMITIVE_TO_BOXED.get(returnType);
             Local<?> aBoxedResult = null;
             if (aBoxedClass != null) {
-                aBoxedResult = code.newLocal(Type.get(aBoxedClass));
+                aBoxedResult = code.newLocal(TypeId.get(aBoxedClass));
             }
             Local<?>[] superArgs2 = new Local<?>[argClasses.length];
             Local<?> superResult2 = code.newLocal(resultType);
@@ -377,15 +378,15 @@ public final class ProxyBuilder<T> {
 
             code.loadConstant(methodIndex, m);
             code.sget(allMethods, methodArray);
-            code.aget(methodArray, methodIndex, thisMethod);
+            code.aget(thisMethod, methodArray, methodIndex);
             code.loadConstant(argsLength, argTypes.length);
-            code.newArray(argsLength, args);
-            code.iget(handlerField, localThis, localHandler);
+            code.newArray(args, argsLength);
+            code.iget(handlerField, localHandler, localThis);
 
             // if (proxy == null)
             code.loadConstant(nullHandler, null);
             Label handlerNullCase = code.newLabel();
-            code.compare(Comparison.EQ, nullHandler, localHandler, handlerNullCase);
+            code.compare(Comparison.EQ, handlerNullCase, nullHandler, localHandler);
 
             // This code is what we execute when we have a valid proxy: delegate to invocation
             // handler.
@@ -473,9 +474,9 @@ public final class ProxyBuilder<T> {
     }
 
     private static <T, G extends T> void generateConstructorsAndFields(DexMaker dexMaker,
-            Type<G> generatedType, Type<T> superType, Class<T> superClass) {
-        Type<InvocationHandler> handlerType = Type.get(InvocationHandler.class);
-        Type<Method[]> methodArrayType = Type.get(Method[].class);
+            TypeId<G> generatedType, TypeId<T> superType, Class<T> superClass) {
+        TypeId<InvocationHandler> handlerType = TypeId.get(InvocationHandler.class);
+        TypeId<Method[]> methodArrayType = TypeId.get(Method[].class);
         FieldId<G, InvocationHandler> handlerField = generatedType.getField(
                 handlerType, FIELD_NAME_HANDLER);
         dexMaker.declare(handlerField, PRIVATE, null);
@@ -486,7 +487,7 @@ public final class ProxyBuilder<T> {
             if (constructor.getModifiers() == Modifier.FINAL) {
                 continue;
             }
-            Type<?>[] types = classArrayToTypeArray(constructor.getParameterTypes());
+            TypeId<?>[] types = classArrayToTypeArray(constructor.getParameterTypes());
             MethodId<?, ?> method = generatedType.getConstructor(types);
             Code constructorCode = dexMaker.declareConstructor(method, PUBLIC);
             Local<G> thisRef = constructorCode.getThis(generatedType);
@@ -542,10 +543,10 @@ public final class ProxyBuilder<T> {
         return clazz.getSimpleName() + "_Proxy";
     }
 
-    private static Type<?>[] classArrayToTypeArray(Class<?>[] input) {
-        Type<?>[] result = new Type[input.length];
+    private static TypeId<?>[] classArrayToTypeArray(Class<?>[] input) {
+        TypeId<?>[] result = new TypeId[input.length];
         for (int i = 0; i < input.length; ++i) {
-            result[i] = Type.get(input[i]);
+            result[i] = TypeId.get(input[i]);
         }
         return result;
     }
@@ -561,14 +562,14 @@ public final class ProxyBuilder<T> {
     private static void generateCodeForReturnStatement(Code code, Class methodReturnType,
             Local localForResultOfInvoke, Local localOfMethodReturnType, Local aBoxedResult) {
         if (PRIMITIVE_TO_UNBOX_METHOD.containsKey(methodReturnType)) {
-            code.typeCast(localForResultOfInvoke, aBoxedResult);
+            code.typeCast(aBoxedResult, localForResultOfInvoke);
             MethodId unboxingMethodFor = getUnboxMethodForPrimitive(methodReturnType);
             code.invokeVirtual(unboxingMethodFor, localOfMethodReturnType, aBoxedResult);
             code.returnValue(localOfMethodReturnType);
         } else if (void.class.equals(methodReturnType)) {
             code.returnVoid();
         } else {
-            code.typeCast(localForResultOfInvoke, localOfMethodReturnType);
+            code.typeCast(localOfMethodReturnType, localForResultOfInvoke);
             code.returnValue(localOfMethodReturnType);
         }
     }
@@ -590,12 +591,12 @@ public final class ProxyBuilder<T> {
         PRIMITIVE_TO_BOXED.put(char.class, Character.class);
     }
 
-    private static final Map<Type<?>, MethodId<?, ?>> PRIMITIVE_TYPE_TO_UNBOX_METHOD;
+    private static final Map<TypeId<?>, MethodId<?, ?>> PRIMITIVE_TYPE_TO_UNBOX_METHOD;
     static {
-        PRIMITIVE_TYPE_TO_UNBOX_METHOD = new HashMap<Type<?>, MethodId<?, ?>>();
+        PRIMITIVE_TYPE_TO_UNBOX_METHOD = new HashMap<TypeId<?>, MethodId<?, ?>>();
         for (Map.Entry<Class<?>, Class<?>> entry : PRIMITIVE_TO_BOXED.entrySet()) {
-            Type<?> primitiveType = Type.get(entry.getKey());
-            Type<?> boxedType = Type.get(entry.getValue());
+            TypeId<?> primitiveType = TypeId.get(entry.getKey());
+            TypeId<?> boxedType = TypeId.get(entry.getValue());
             MethodId<?, ?> valueOfMethod = boxedType.getMethod(boxedType, "valueOf", primitiveType);
             PRIMITIVE_TYPE_TO_UNBOX_METHOD.put(primitiveType, valueOfMethod);
         }
@@ -611,14 +612,14 @@ public final class ProxyBuilder<T> {
     private static final Map<Class<?>, MethodId<?, ?>> PRIMITIVE_TO_UNBOX_METHOD;
     static {
         Map<Class<?>, MethodId<?, ?>> map = new HashMap<Class<?>, MethodId<?, ?>>();
-        map.put(boolean.class, Type.get(Boolean.class).getMethod(Type.BOOLEAN, "booleanValue"));
-        map.put(int.class, Type.get(Integer.class).getMethod(Type.INT, "intValue"));
-        map.put(byte.class, Type.get(Byte.class).getMethod(Type.BYTE, "byteValue"));
-        map.put(long.class, Type.get(Long.class).getMethod(Type.LONG, "longValue"));
-        map.put(short.class, Type.get(Short.class).getMethod(Type.SHORT, "shortValue"));
-        map.put(float.class, Type.get(Float.class).getMethod(Type.FLOAT, "floatValue"));
-        map.put(double.class, Type.get(Double.class).getMethod(Type.DOUBLE, "doubleValue"));
-        map.put(char.class, Type.get(Character.class).getMethod(Type.CHAR, "charValue"));
+        map.put(boolean.class, TypeId.get(Boolean.class).getMethod(TypeId.BOOLEAN, "booleanValue"));
+        map.put(int.class, TypeId.get(Integer.class).getMethod(TypeId.INT, "intValue"));
+        map.put(byte.class, TypeId.get(Byte.class).getMethod(TypeId.BYTE, "byteValue"));
+        map.put(long.class, TypeId.get(Long.class).getMethod(TypeId.LONG, "longValue"));
+        map.put(short.class, TypeId.get(Short.class).getMethod(TypeId.SHORT, "shortValue"));
+        map.put(float.class, TypeId.get(Float.class).getMethod(TypeId.FLOAT, "floatValue"));
+        map.put(double.class, TypeId.get(Double.class).getMethod(TypeId.DOUBLE, "doubleValue"));
+        map.put(char.class, TypeId.get(Character.class).getMethod(TypeId.CHAR, "charValue"));
         PRIMITIVE_TO_UNBOX_METHOD = map;
     }
 

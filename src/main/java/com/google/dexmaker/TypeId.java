@@ -23,44 +23,44 @@ import java.util.Map;
 /**
  * A primitive type, interface or class.
  */
-public final class Type<T> {
+public final class TypeId<T> {
     /** The {@code boolean} primitive type. */
-    public static final Type<Boolean> BOOLEAN
-            = new Type<Boolean>(com.android.dx.rop.type.Type.BOOLEAN);
+    public static final TypeId<Boolean> BOOLEAN
+            = new TypeId<Boolean>(com.android.dx.rop.type.Type.BOOLEAN);
 
     /** The {@code byte} primitive type. */
-    public static final Type<Byte> BYTE = new Type<Byte>(com.android.dx.rop.type.Type.BYTE);
+    public static final TypeId<Byte> BYTE = new TypeId<Byte>(com.android.dx.rop.type.Type.BYTE);
 
     /** The {@code char} primitive type. */
-    public static final Type<Character> CHAR
-            = new Type<Character>(com.android.dx.rop.type.Type.CHAR);
+    public static final TypeId<Character> CHAR
+            = new TypeId<Character>(com.android.dx.rop.type.Type.CHAR);
 
     /** The {@code double} primitive type. */
-    public static final Type<Double> DOUBLE = new Type<Double>(com.android.dx.rop.type.Type.DOUBLE);
+    public static final TypeId<Double> DOUBLE = new TypeId<Double>(com.android.dx.rop.type.Type.DOUBLE);
 
     /** The {@code float} primitive type. */
-    public static final Type<Float> FLOAT = new Type<Float>(com.android.dx.rop.type.Type.FLOAT);
+    public static final TypeId<Float> FLOAT = new TypeId<Float>(com.android.dx.rop.type.Type.FLOAT);
 
     /** The {@code int} primitive type. */
-    public static final Type<Integer> INT = new Type<Integer>(com.android.dx.rop.type.Type.INT);
+    public static final TypeId<Integer> INT = new TypeId<Integer>(com.android.dx.rop.type.Type.INT);
 
     /** The {@code long} primitive type. */
-    public static final Type<Long> LONG = new Type<Long>(com.android.dx.rop.type.Type.LONG);
+    public static final TypeId<Long> LONG = new TypeId<Long>(com.android.dx.rop.type.Type.LONG);
 
     /** The {@code short} primitive type. */
-    public static final Type<Short> SHORT = new Type<Short>(com.android.dx.rop.type.Type.SHORT);
+    public static final TypeId<Short> SHORT = new TypeId<Short>(com.android.dx.rop.type.Type.SHORT);
 
     /** The {@code void} primitive type. Only used as a return type. */
-    public static final Type<Void> VOID = new Type<Void>(com.android.dx.rop.type.Type.VOID);
+    public static final TypeId<Void> VOID = new TypeId<Void>(com.android.dx.rop.type.Type.VOID);
 
     /** The {@code Object} type. */
-    public static final Type<Object> OBJECT = new Type<Object>(com.android.dx.rop.type.Type.OBJECT);
+    public static final TypeId<Object> OBJECT = new TypeId<Object>(com.android.dx.rop.type.Type.OBJECT);
 
     /** The {@code String} type. */
-    public static final Type<String> STRING = new Type<String>(com.android.dx.rop.type.Type.STRING);
+    public static final TypeId<String> STRING = new TypeId<String>(com.android.dx.rop.type.Type.STRING);
 
-    private static final Map<Class<?>, Type<?>> PRIMITIVE_TO_TYPE
-            = new HashMap<Class<?>, Type<?>>();
+    private static final Map<Class<?>, TypeId<?>> PRIMITIVE_TO_TYPE
+            = new HashMap<Class<?>, TypeId<?>>();
     static {
         PRIMITIVE_TO_TYPE.put(boolean.class, BOOLEAN);
         PRIMITIVE_TO_TYPE.put(byte.class, BYTE);
@@ -79,11 +79,11 @@ public final class Type<T> {
     final com.android.dx.rop.type.Type ropType;
     final CstType constant;
 
-    Type(com.android.dx.rop.type.Type ropType) {
+    TypeId(com.android.dx.rop.type.Type ropType) {
         this(ropType.getDescriptor(), ropType);
     }
 
-    Type(String name, com.android.dx.rop.type.Type ropType) {
+    TypeId(String name, com.android.dx.rop.type.Type ropType) {
         if (name == null || ropType == null) {
             throw new NullPointerException();
         }
@@ -95,29 +95,29 @@ public final class Type<T> {
     /**
      * @param name a descriptor like "Ljava/lang/Class;".
      */
-    public static <T> Type<T> get(String name) {
-        return new Type<T>(name, com.android.dx.rop.type.Type.internReturnType(name));
+    public static <T> TypeId<T> get(String name) {
+        return new TypeId<T>(name, com.android.dx.rop.type.Type.internReturnType(name));
     }
 
-    public static <T> Type<T> get(Class<T> type) {
+    public static <T> TypeId<T> get(Class<T> type) {
         if (type.isPrimitive()) {
             @SuppressWarnings("unchecked") // guarded by equals
-            Type<T> result = (Type<T>) PRIMITIVE_TO_TYPE.get(type);
+                    TypeId<T> result = (TypeId<T>) PRIMITIVE_TO_TYPE.get(type);
             return result;
         }
         String name = type.getName().replace('.', '/');
         return get(type.isArray() ? name : 'L' + name + ';');
     }
 
-    public <V> FieldId<T, V> getField(Type<V> type, String name) {
+    public <V> FieldId<T, V> getField(TypeId<V> type, String name) {
         return new FieldId<T, V>(this, type, name);
     }
 
-    public MethodId<T, Void> getConstructor(Type<?>... parameters) {
+    public MethodId<T, Void> getConstructor(TypeId<?>... parameters) {
         return new MethodId<T, Void>(this, VOID, "<init>", new TypeList(parameters));
     }
 
-    public <R> MethodId<T, R> getMethod(Type<R> returnType, String name, Type<?>... parameters) {
+    public <R> MethodId<T, R> getMethod(TypeId<R> returnType, String name, TypeId<?>... parameters) {
         return new MethodId<T, R>(this, returnType, name, new TypeList(parameters));
     }
 
@@ -126,8 +126,8 @@ public final class Type<T> {
     }
 
     @Override public boolean equals(Object o) {
-        return o instanceof Type
-                && ((Type) o).name.equals(name);
+        return o instanceof TypeId
+                && ((TypeId) o).name.equals(name);
     }
 
     @Override public int hashCode() {

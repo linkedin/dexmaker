@@ -64,7 +64,7 @@ import java.util.jar.JarOutputStream;
  *
  * <h3>Example: Fibonacci</h3>
  * To illustrate how this API is used, we'll use DexMaker to generate a class
- * equivalent to the following Java source: <pre>   {@code
+ * equivalent to the following Java source: <pre> {@code
  *
  * package com.publicobject.fib;
  *
@@ -117,12 +117,12 @@ import java.util.jar.JarOutputStream;
  *   return i;
  * }</pre>
  *
- * <p>We lookup the {@code MethodId} for the method on the declaring type. This
- * takes the method's return type (possibly {@link TypeId#VOID}), its name, and
- * its parameters. Next we declare the method, specifying its modifiers by ORing
- * constants from {@link java.lang.reflect.Modifier}. The declare call returns a
- * {@link Code} object, which we'll use to define the method's instructions.
- * <pre>   {@code
+ * <p>We look up the {@code MethodId} for the method on the declaring type. This
+ * takes the method's return type (possibly {@link TypeId#VOID}), its name and
+ * its parameters types. Next we declare the method, specifying its modifiers by
+ * bitwise ORing constants from {@link java.lang.reflect.Modifier}. The declare
+ * call returns a {@link Code} object, which we'll use to define the method's
+ * instructions. <pre>   {@code
  *
  *   MethodId<?, Integer> fib = fibonacci.getMethod(TypeId.INT, "fib", TypeId.INT);
  *   Code code = dexMaker.declare(fib, Modifier.PUBLIC | Modifier.STATIC);
@@ -130,11 +130,11 @@ import java.util.jar.JarOutputStream;
  *
  * <p>One limitation of {@code DexMaker}'s API is that it requires all local
  * variables to be created before any instructions are emitted. Use {@link
- * Code#newLocal} to create a new local variable. The method's parameters are
- * exposed as locals using {@link Code#getParameter}. For non-static methods the
- * 'this' pointer is exposed using {@link Code#getThis}. Here we declare all of
- * the local variables that we'll need for our {@code fib()} method:
- * <pre>   {@code
+ * Code#newLocal newLocal()} to create a new local variable. The method's
+ * parameters are exposed as locals using {@link Code#getParameter
+ * getParameter()}. For non-static methods the {@code this} pointer is exposed
+ * using {@link Code#getThis getThis()}. Here we declare all of the local
+ * variables that we'll need for our {@code fib()} method: <pre>   {@code
  *
  *   Local<Integer> i = code.getParameter(0, TypeId.INT);
  *   Local<Integer> constant1 = code.newLocal(TypeId.INT);
@@ -146,12 +146,12 @@ import java.util.jar.JarOutputStream;
  *   Local<Integer> result = code.newLocal(TypeId.INT);
  * }</pre>
  *
- * <p>Notice that {@link Local} has a type parameter. This is useful for
- * generating code that works with existing types like {@code String} and {@code
- * Integer}, but it can be a hindrance when generating code that involves new
- * types. For this reason you may prefer to use raw types only and add
- * {@code @SuppressWarnings("unsafe")} on your calling code. This will yield the
- * same result but you won't get a compiler warning if you make a type error.
+ * <p>Notice that {@link Local} has a type parameter of {@code Integer}. This is
+ * useful for generating code that works with existing types like {@code String}
+ * and {@code Integer}, but it can be a hindrance when generating code that
+ * involves new types. For this reason you may prefer to use raw types only and
+ * add {@code @SuppressWarnings("unsafe")} on your calling code. This will yield
+ * the same result but you won't get IDE support if you make a type error.
  *
  * <p>We're ready to start defining our method's instructions: <pre>   {@code
  *
@@ -169,8 +169,8 @@ import java.util.jar.JarOutputStream;
  *   code.returnValue(i);
  * }</pre>
  *
- * <p>We're done defining the instructions! We just need to write the dex to the
- * file system or load it into the current process. For this example we'll load
+ * <p>We're done defining the dex file. We just need to write it to the
+ * filesystem or load it into the current process. For this example we'll load
  * the generated code into the current process. This only works when the current
  * process is running on Android. We use {@link #generateAndLoad} which takes
  * the class loader that will be used as our generated code's parent class

@@ -493,8 +493,8 @@ public final class DexMakerTest extends TestCase {
         Local<Integer> localA = code.getParameter(0, TypeId.INT);
         Local<Integer> localB = code.getParameter(1, TypeId.INT);
         Local<Boolean> result = code.newLocal(TypeId.get(boolean.class));
-        Label afterIf = code.newLabel();
-        Label ifBody = code.newLabel();
+        Label afterIf = new Label();
+        Label ifBody = new Label();
         code.compare(comparison, ifBody, localA, localB);
         code.jump(afterIf);
 
@@ -1094,9 +1094,9 @@ public final class DexMakerTest extends TestCase {
         code.loadConstant(local2, 2);
         code.loadConstant(localResult, 1);
         code.loadConstant(localI, 0);
-        Label loopCondition = code.newLabel();
-        Label loopBody = code.newLabel();
-        Label afterLoop = code.newLabel();
+        Label loopCondition = new Label();
+        Label loopBody = new Label();
+        Label afterLoop = new Label();
         code.mark(loopCondition);
         code.compare(Comparison.LT, loopBody, localI, localCount);
         code.jump(afterLoop);
@@ -1135,9 +1135,9 @@ public final class DexMakerTest extends TestCase {
         Local<Integer> local2 = code.newLocal(TypeId.INT);
         code.loadConstant(localResult, 1);
         code.loadConstant(local2, 2);
-        Label loopCondition = code.newLabel();
-        Label loopBody = code.newLabel();
-        Label afterLoop = code.newLabel();
+        Label loopCondition = new Label();
+        Label loopBody = new Label();
+        Label afterLoop = new Label();
         code.mark(loopCondition);
         code.compare(Comparison.LT, loopBody, localResult, localMax);
         code.jump(afterLoop);
@@ -1178,9 +1178,9 @@ public final class DexMakerTest extends TestCase {
         Local<Integer> localA = code.getParameter(0, TypeId.INT);
         Local<Integer> localB = code.getParameter(1, TypeId.INT);
         Local<Integer> localC = code.getParameter(2, TypeId.INT);
-        Label aLessThanB = code.newLabel();
-        Label aLessThanC = code.newLabel();
-        Label bLessThanC = code.newLabel();
+        Label aLessThanB = new Label();
+        Label aLessThanC = new Label();
+        Label bLessThanC = new Label();
         code.compare(Comparison.LT, aLessThanB, localA, localB);
         code.compare(Comparison.LT, bLessThanC, localB, localC);
         code.returnValue(localC);
@@ -1224,7 +1224,7 @@ public final class DexMakerTest extends TestCase {
         Local<Integer> localX = code.newLocal(TypeId.INT);
         Local<Integer> localY = code.newLocal(TypeId.INT);
         Local<Integer> localResult = code.newLocal(TypeId.INT);
-        Label baseCase = code.newLabel();
+        Label baseCase = new Label();
         code.loadConstant(local1, 1);
         code.loadConstant(local2, 2);
         code.compare(Comparison.LT, baseCase, localA, local2);
@@ -1265,9 +1265,9 @@ public final class DexMakerTest extends TestCase {
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Integer> localI = code.getParameter(0, TypeId.INT);
         Local<String> result = code.newLocal(TypeId.STRING);
-        Label catchIae = code.newLabel();
-        Label catchIse = code.newLabel();
-        Label catchRe = code.newLabel();
+        Label catchIae = new Label();
+        Label catchIse = new Label();
+        Label catchRe = new Label();
 
         code.addCatchClause(TypeId.get(IllegalArgumentException.class), catchIae);
         code.addCatchClause(TypeId.get(IllegalStateException.class), catchIse);
@@ -1343,8 +1343,8 @@ public final class DexMakerTest extends TestCase {
         Local<Integer> localB = code.getParameter(1, TypeId.INT);
         Local<Integer> localC = code.getParameter(2, TypeId.INT);
         Local<String> localResult = code.newLocal(TypeId.STRING);
-        Label catchInner = code.newLabel();
-        Label catchOuter = code.newLabel();
+        Label catchInner = new Label();
+        Label catchOuter = new Label();
 
         TypeId<IllegalArgumentException> iaeType = TypeId.get(IllegalArgumentException.class);
         code.addCatchClause(iaeType, catchOuter);
@@ -1639,6 +1639,10 @@ public final class DexMakerTest extends TestCase {
     // TODO: array types
 
     // TODO: attempt to generate an interface
+
+    // TODO: declare native method or abstract method
+
+    // TODO: synchronized or declared synchronized?
 
     private void addDefaultConstructor() {
         Code code = dexMaker.declareConstructor(GENERATED.getConstructor(), PUBLIC);

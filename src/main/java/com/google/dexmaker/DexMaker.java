@@ -25,7 +25,6 @@ import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedField;
 import com.android.dx.dex.file.EncodedMethod;
-import com.android.dx.rop.code.AccessFlags;
 import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
 import com.android.dx.rop.code.LocalVariableInfo;
 import com.android.dx.rop.code.RopMethod;
@@ -36,6 +35,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import static java.lang.reflect.Modifier.PRIVATE;
 import static java.lang.reflect.Modifier.STATIC;
 import java.util.LinkedHashMap;
@@ -157,7 +157,7 @@ import java.util.jar.JarOutputStream;
  *
  *   code.loadConstant(constant1, 1);
  *   code.loadConstant(constant2, 2);
- *   Label baseCase = code.newLabel();
+ *   Label baseCase = new Label();
  *   code.compare(Comparison.LT, baseCase, i, constant2);
  *   code.op(BinaryOp.SUBTRACT, a, i, constant1);
  *   code.op(BinaryOp.SUBTRACT, b, i, constant2);
@@ -201,10 +201,11 @@ public final class DexMaker {
         return result;
     }
 
-    // TODO: describe the legal flags without referring to a non-public API AccessFlags
-
     /**
-     * @param flags any flags masked by {@link com.android.dx.rop.code.AccessFlags#CLASS_FLAGS}.
+     * Declares {@code type}.
+     *
+     * @param flags a bitwise combination of {@link Modifier#PUBLIC}, {@link
+     *     Modifier#FINAL} and {@link Modifier#ABSTRACT}.
      */
     public void declare(TypeId<?> type, String sourceFile, int flags,
             TypeId<?> supertype, TypeId<?>... interfaces) {
@@ -220,14 +221,23 @@ public final class DexMaker {
     }
 
     /**
-     * @param flags any flags masked by {@link com.android.dx.rop.code.AccessFlags#METHOD_FLAGS}.
+     * Declares a constructor. The name of {@code method} must be "<init>",
+     * as it is on all instances returned by {@link TypeId#getConstructor}.
+     *
+     * @param flags a bitwise combination of {@link Modifier#PUBLIC}, {@link
+     *     Modifier#PRIVATE}, {@link Modifier#PROTECTED}, {@link Modifier#STATIC},
+     *     {@link Modifier#FINAL}, and {@link Modifier#VARARGS}.
      */
     public Code declareConstructor(MethodId<?, ?> method, int flags) {
         return declare(method, flags | ACC_CONSTRUCTOR);
     }
 
     /**
-     * @param flags any flags masked by {@link com.android.dx.rop.code.AccessFlags#METHOD_FLAGS}.
+     * Declares a method. The name of {@code method} must not be "<init>".
+     *
+     * @param flags a bitwise combination of {@link Modifier#PUBLIC}, {@link
+     *     Modifier#PRIVATE}, {@link Modifier#PROTECTED}, {@link Modifier#STATIC},
+     *     {@link Modifier#FINAL}, and {@link Modifier#VARARGS}.
      */
     public Code declare(MethodId<?, ?> method, int flags) {
         TypeDeclaration typeDeclaration = getTypeDeclaration(method.declaringType);
@@ -240,7 +250,12 @@ public final class DexMaker {
     }
 
     /**
-     * @param flags any flags masked by {@link AccessFlags#FIELD_FLAGS}.
+     * Declares a field.
+     *
+     * @param flags a bitwise combination of {@link Modifier#PUBLIC}, {@link
+     *     Modifier#PRIVATE}, {@link Modifier#PROTECTED}, {@link Modifier#STATIC},
+     *     {@link Modifier#FINAL}, {@link Modifier#VOLATILE}, and {@link
+     *     Modifier#TRANSIENT}.
      */
     public void declare(FieldId<?, ?> fieldId, int flags, Object staticValue) {
         TypeDeclaration typeDeclaration = getTypeDeclaration(fieldId.declaringType);
@@ -252,7 +267,7 @@ public final class DexMaker {
     }
 
     /**
-     * Returns a .dex formatted file.
+     * Generates a dex file and returns its bytes.
      */
     public byte[] generate() {
         DexOptions options = new DexOptions();
@@ -271,15 +286,14 @@ public final class DexMaker {
     }
 
     /**
-     * Loads the generated types into the current process.
+     * Generates a dex file and loads its types into the current process.
      *
-     * <p>All parameters are optional, you may pass {@code null} and suitable
+     * <p>All parameters are optional; you may pass {@code null} and suitable
      * defaults will be used.
      *
-     * <p>If you opt to provide your own output directories, take care to
-     * ensure that they are not world-readable, otherwise a malicious app will
-     * be able to inject code to run.  A suitable parameter for these output
-     * directories would be something like this:
+     * <p>If you opt to provide your own {@code dexDir}, take care to ensure
+     * that it is not world-writable, otherwise a malicious app may be able
+     * to inject code into your process.  A suitable parameter is:
      * {@code getApplicationContext().getDir("dx", Context.MODE_PRIVATE); }
      *
      * @param parent the parent ClassLoader to be used when loading

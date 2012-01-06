@@ -84,7 +84,8 @@ public final class Code {
         for (TypeId<?> parameter : method.parameters.types) {
             parameters.add(Local.get(this, parameter));
         }
-        this.currentLabel = newLabel();
+        this.currentLabel = new Label();
+        adopt(this.currentLabel);
         this.currentLabel.marked = true;
     }
 
@@ -167,19 +168,24 @@ public final class Code {
     // labels
 
     /**
-     * Creates a new label for use as a branch target. The new label must have
-     * code attached to it later by calling {@link #mark(Label)}.
+     * Assigns {@code target} to this code.
      */
-    public Label newLabel() {
-        Label result = new Label();
-        labels.add(result);
-        return result;
+    private void adopt(Label target) {
+        if (target.code == this) {
+            return; // already adopted
+        }
+        if (target.code != null) {
+            throw new IllegalArgumentException("Cannot adopt label; it belongs to another Code");
+        }
+        target.code = this;
+        labels.add(target);
     }
 
     /**
      * Start defining instructions for the named label.
      */
     public void mark(Label label) {
+        adopt(label);
         if (label.marked) {
             throw new IllegalStateException("already marked");
         }
@@ -191,6 +197,7 @@ public final class Code {
     }
 
     public void jump(Label target) {
+        adopt(target);
         addInstruction(new PlainInsn(Rops.GOTO, sourcePosition, null, RegisterSpecList.EMPTY),
                 target);
     }
@@ -199,6 +206,7 @@ public final class Code {
         if (catchTypes.contains(throwable)) {
             throw new IllegalArgumentException("Already caught: " + throwable);
         }
+        adopt(catchClause);
         catchTypes.add(throwable);
         catches = toTypeList(catchTypes);
         catchLabels.add(catchClause);
@@ -288,7 +296,8 @@ public final class Code {
      * @param catchLabels an immutable list of catch labels
      */
     private void splitCurrentLabel(Label alternateSuccessor, List<Label> catchLabels) {
-        Label newLabel = newLabel();
+        Label newLabel = new Label();
+        adopt(newLabel);
         currentLabel.primarySuccessor = newLabel;
         currentLabel.alternateSuccessor = alternateSuccessor;
         currentLabel.catchLabels = catchLabels;
@@ -366,9 +375,7 @@ public final class Code {
      * trueLabel}. If it is false, execution continues to the next instruction.
      */
     public <T> void compare(Comparison comparison, Label trueLabel, Local<T> a, Local<T> b) {
-        if (trueLabel == null) {
-            throw new IllegalArgumentException();
-        }
+        adopt(trueLabel);
         Rop rop = comparison.rop(StdTypeList.make(a.type.ropType, b.type.ropType));
         addInstruction(new PlainInsn(rop, sourcePosition, null,
                 RegisterSpecList.make(a.spec(), b.spec())), trueLabel);

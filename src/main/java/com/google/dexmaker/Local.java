@@ -19,7 +19,7 @@ package com.google.dexmaker;
 import com.android.dx.rop.code.RegisterSpec;
 
 /**
- * A temporary variable that holds a single value.
+ * A temporary variable that holds a single value of a known type.
  */
 public final class Local<T> {
     private final Code code;

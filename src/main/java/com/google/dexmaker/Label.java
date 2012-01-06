@@ -31,6 +31,8 @@ public final class Label {
 
     final List<Insn> instructions = new ArrayList<Insn>();
 
+    Code code;
+
     boolean marked = false;
 
     /** an immutable list of labels corresponding to the types in the catch list */
@@ -44,7 +46,7 @@ public final class Label {
 
     int id = -1;
 
-    Label() {}
+    public Label() {}
 
     boolean isEmpty() {
         return instructions.isEmpty();

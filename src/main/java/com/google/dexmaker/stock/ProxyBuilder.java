@@ -385,7 +385,7 @@ public final class ProxyBuilder<T> {
 
             // if (proxy == null)
             code.loadConstant(nullHandler, null);
-            Label handlerNullCase = code.newLabel();
+            Label handlerNullCase = new Label();
             code.compare(Comparison.EQ, handlerNullCase, nullHandler, localHandler);
 
             // This code is what we execute when we have a valid proxy: delegate to invocation

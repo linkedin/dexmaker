@@ -21,7 +21,7 @@ import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
 
 /**
- * A field.
+ * Identifies a field.
  */
 public final class FieldId<D, V> {
     final TypeId<D> declaringType;

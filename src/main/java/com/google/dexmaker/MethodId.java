@@ -23,7 +23,7 @@ import com.android.dx.rop.type.Prototype;
 import java.util.List;
 
 /**
- * A method or constructor.
+ * Identifies a method or constructor.
  */
 public final class MethodId<D, R> {
     final TypeId<D> declaringType;
@@ -55,6 +55,9 @@ public final class MethodId<D, R> {
         return returnType;
     }
 
+    /**
+     * Returns the method's name. This is "<init>" if this is a constructor.
+     */
     public String getName() {
         return name;
     }

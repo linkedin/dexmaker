@@ -47,7 +47,7 @@ public final class FibonacciMaker {
         Local<Integer> result = code.newLocal(TypeId.INT);
         code.loadConstant(constant1, 1);
         code.loadConstant(constant2, 2);
-        Label baseCase = code.newLabel();
+        Label baseCase = new Label();
         code.compare(Comparison.LT, baseCase, i, constant2);
         code.op(BinaryOp.SUBTRACT, a, i, constant1);
         code.op(BinaryOp.SUBTRACT, b, i, constant2);

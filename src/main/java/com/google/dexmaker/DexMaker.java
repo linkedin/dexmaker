@@ -45,7 +45,7 @@ import java.util.jar.JarOutputStream;
 
 /**
  * Generates a </i><strong>D</strong>alvik <strong>EX</strong>ecutable (dex)
- * file for execution on Android. dex files defines classes and interfaces,
+ * file for execution on Android. Dex files define classes and interfaces,
  * including their member methods and fields, executable code, and debugging
  * information. They also define annotations, though this API currently has no
  * facility to create a dex file that contains annotations.
@@ -153,7 +153,8 @@ import java.util.jar.JarOutputStream;
  * add {@code @SuppressWarnings("unsafe")} on your calling code. This will yield
  * the same result but you won't get IDE support if you make a type error.
  *
- * <p>We're ready to start defining our method's instructions: <pre>   {@code
+ * <p>We're ready to start defining our method's instructions. The {@link Code}
+ * class catalogs the available instructions and their use. <pre>   {@code
  *
  *   code.loadConstant(constant1, 1);
  *   code.loadConstant(constant2, 2);

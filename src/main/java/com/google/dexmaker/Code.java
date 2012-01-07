@@ -43,6 +43,21 @@ import java.util.List;
 /**
  * Builds a sequence of instructions.
  */
+/*
+ * TODO: documentation:
+ * UnaryOp, BinaryOp
+ * Try/catch
+ * Arrays
+ * Comparisons
+ * Locals
+ * Fields
+ * Type: Instanceof, cast, typeCast, numericCast
+ * Invoke
+ * Jump
+ * Constants
+ * NewInstance
+ * Return
+ */
 public final class Code {
     private final MethodId<?, ?> method;
     /**
@@ -323,15 +338,12 @@ public final class Code {
 
     // instructions: unary
 
-    public <T> void negate(Local<T> target, Local<T> source) {
-        unary(Rops.opNeg(source.type.ropType), target, source);
-    }
-
-    public <T> void not(Local<T> target, Local<T> source) {
-        unary(Rops.opNot(source.type.ropType), target, source);
+    public <T> void op(UnaryOp op, Local<T> target, Local<T> source) {
+        unary(op.rop(source.type), target, source);
     }
 
     public void numericCast(Local<?> target, Local<?> source) {
+        // TODO: overload the cast op?
         unary(getCastRop(source.type.ropType, target.type.ropType), target, source);
     }
 

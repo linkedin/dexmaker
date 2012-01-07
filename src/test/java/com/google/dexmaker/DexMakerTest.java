@@ -656,7 +656,7 @@ public final class DexMakerTest extends TestCase {
         MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", valueType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localSource = code.getParameter(0, valueType);
-        code.not(localSource, localSource);
+        code.op(UnaryOp.NOT, localSource, localSource);
         code.returnValue(localSource);
         return getMethod();
     }
@@ -697,7 +697,7 @@ public final class DexMakerTest extends TestCase {
         MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", valueType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<T> localSource = code.getParameter(0, valueType);
-        code.negate(localSource, localSource);
+        code.op(UnaryOp.NEGATE, localSource, localSource);
         code.returnValue(localSource);
         return getMethod();
     }

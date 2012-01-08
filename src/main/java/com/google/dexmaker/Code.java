@@ -51,12 +51,14 @@ import java.util.List;
  * Comparisons
  * Locals
  * Fields
- * Type: Instanceof, cast, typeCast, numericCast
+ * Type: Instanceof, cast
  * Invoke
  * Jump
  * Constants
  * NewInstance
  * Return
+ *
+ * TODO: rename compareOps
  */
 public final class Code {
     private final MethodId<?, ?> method;
@@ -339,31 +341,8 @@ public final class Code {
     // instructions: unary
 
     public <T> void op(UnaryOp op, Local<T> target, Local<T> source) {
-        unary(op.rop(source.type), target, source);
-    }
-
-    public void numericCast(Local<?> target, Local<?> source) {
-        // TODO: overload the cast op?
-        unary(getCastRop(source.type.ropType, target.type.ropType), target, source);
-    }
-
-    private Rop getCastRop(com.android.dx.rop.type.Type sourceType,
-            com.android.dx.rop.type.Type targetType) {
-        if (sourceType.getBasicType() == BT_INT) {
-            switch (targetType.getBasicType()) {
-            case BT_SHORT:
-                return Rops.TO_SHORT;
-            case BT_CHAR:
-                return Rops.TO_CHAR;
-            case BT_BYTE:
-                return Rops.TO_BYTE;
-            }
-        }
-        return Rops.opConv(targetType, sourceType);
-    }
-
-    private void unary(Rop rop, Local<?> target, Local<?> source) {
-        addInstruction(new PlainInsn(rop, sourcePosition, target.spec(), source.spec()));
+        addInstruction(new PlainInsn(op.rop(source.type), sourcePosition,
+                target.spec(), source.spec()));
     }
 
     // instructions: binary
@@ -495,10 +474,59 @@ public final class Code {
         moveResult(target, true);
     }
 
-    public void typeCast(Local<?> target, Local<?> source) {
-        addInstruction(new ThrowingCstInsn(Rops.CHECK_CAST, sourcePosition,
-                RegisterSpecList.make(source.spec()), catches, target.type.constant));
-        moveResult(target, true);
+    /**
+     * Performs either a numeric cast or a type cast.
+     *
+     * <h3>Numeric Casts</h3>
+     * Converts a primitive to a different representation. Numeric casts may
+     * be lossy. For example, converting the double {@code 1.8d} to an integer
+     * yields {@code 1}, losing the fractional part. Converting the integer
+     * {@code 0x12345678} to a short yields {@code 0x5678}, losing the high
+     * bytes. The following numeric casts are supported:
+     *
+     * <p><table border="1">
+     * <tr><th>From</th><th>To</th></tr>
+     * <tr><td>int</td><td>byte, char, short, long, float, double</td></tr>
+     * <tr><td>long</td><td>int, float, double</td></tr>
+     * <tr><td>float</td><td>int, long, double</td></tr>
+     * <tr><td>double</td><td>int, long, float</td></tr>
+     * </table>
+     *
+     * <p>For some primitive conversions it will be necessary to chain multiple
+     * cast operations. For example, to go from float to short one would first
+     * cast float to int and then int to short.
+     *
+     * <p>Numeric casts never throw {@link ClassCastException}.
+     *
+     * <h3>Type Casts</h3>
+     * Checks that a reference value is assignable to the target type. If it is
+     * assignable it is copied to the target local. If it is not assignable a
+     * {@link ClassCastException} is thrown.
+     */
+    public void cast(Local<?> target, Local<?> source) {
+        if (source.getType().ropType.isReference()) {
+            addInstruction(new ThrowingCstInsn(Rops.CHECK_CAST, sourcePosition,
+                    RegisterSpecList.make(source.spec()), catches, target.type.constant));
+            moveResult(target, true);
+        } else {
+            addInstruction(new PlainInsn(getCastRop(source.type.ropType, target.type.ropType),
+                    sourcePosition, target.spec(), source.spec()));
+        }
+    }
+
+    private Rop getCastRop(com.android.dx.rop.type.Type sourceType,
+            com.android.dx.rop.type.Type targetType) {
+        if (sourceType.getBasicType() == BT_INT) {
+            switch (targetType.getBasicType()) {
+            case BT_SHORT:
+                return Rops.TO_SHORT;
+            case BT_CHAR:
+                return Rops.TO_CHAR;
+            case BT_BYTE:
+                return Rops.TO_BYTE;
+            }
+        }
+        return Rops.opConv(targetType, sourceType);
     }
 
     // instructions: arrays

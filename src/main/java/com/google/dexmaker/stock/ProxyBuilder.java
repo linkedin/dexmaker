@@ -562,14 +562,14 @@ public final class ProxyBuilder<T> {
     private static void generateCodeForReturnStatement(Code code, Class methodReturnType,
             Local localForResultOfInvoke, Local localOfMethodReturnType, Local aBoxedResult) {
         if (PRIMITIVE_TO_UNBOX_METHOD.containsKey(methodReturnType)) {
-            code.typeCast(aBoxedResult, localForResultOfInvoke);
+            code.cast(aBoxedResult, localForResultOfInvoke);
             MethodId unboxingMethodFor = getUnboxMethodForPrimitive(methodReturnType);
             code.invokeVirtual(unboxingMethodFor, localOfMethodReturnType, aBoxedResult);
             code.returnValue(localOfMethodReturnType);
         } else if (void.class.equals(methodReturnType)) {
             code.returnVoid();
         } else {
-            code.typeCast(localOfMethodReturnType, localForResultOfInvoke);
+            code.cast(localOfMethodReturnType, localForResultOfInvoke);
             code.returnValue(localOfMethodReturnType);
         }
     }

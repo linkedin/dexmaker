@@ -627,7 +627,7 @@ public final class DexMakerTest extends TestCase {
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<?> localSource = code.getParameter(0, sourceType);
         Local<?> localCasted = code.newLocal(targetType);
-        code.numericCast(localCasted, localSource);
+        code.cast(localCasted, localSource);
         code.returnValue(localCasted);
         return getMethod();
     }
@@ -1036,7 +1036,7 @@ public final class DexMakerTest extends TestCase {
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
         Local<Object> localObject = code.getParameter(0, TypeId.OBJECT);
         Local<String> localString = code.newLocal(TypeId.STRING);
-        code.typeCast(localString, localObject);
+        code.cast(localString, localObject);
         code.returnValue(localString);
 
         Method method = getMethod();
@@ -1630,15 +1630,21 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    // TODO: cast primitive to non-primitive
+    // TODO: cast non-primitive to primitive
+    // TODO: cast byte to integer
+    // TODO: cast byte to long
+    // TODO: cast long to byte
+
     // TODO: fail if a label is unreachable (never navigated to)
 
     // TODO: more strict type parameters: Integer on methods
 
     // TODO: don't generate multiple times (?)
 
-    // TODO: array types
+    // TODO: test array types
 
-    // TODO: attempt to generate an interface
+    // TODO: test generating an interface
 
     // TODO: declare native method or abstract method
 

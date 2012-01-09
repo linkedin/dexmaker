@@ -25,6 +25,7 @@ import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedField;
 import com.android.dx.dex.file.EncodedMethod;
+import com.android.dx.rop.code.AccessFlags;
 import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
 import com.android.dx.rop.code.LocalVariableInfo;
 import com.android.dx.rop.code.RopMethod;
@@ -227,7 +228,12 @@ public final class DexMaker {
      *
      * @param flags a bitwise combination of {@link Modifier#PUBLIC}, {@link
      *     Modifier#PRIVATE}, {@link Modifier#PROTECTED}, {@link Modifier#STATIC},
-     *     {@link Modifier#FINAL}, and {@link Modifier#VARARGS}.
+     *     {@link Modifier#FINAL}, {@link Modifier#SYNCHRONIZED} and {@link
+     *     Modifier#VARARGS}.
+     *     <p><strong>Warning:</strong> the {@link Modifier#SYNCHRONIZED} flag
+     *     is insufficient to generate a synchronized method. You must also use
+     *     {@link Code#monitorEnter} and {@link Code#monitorExit} to acquire
+     *     a monitor.
      */
     public Code declareConstructor(MethodId<?, ?> method, int flags) {
         return declare(method, flags | ACC_CONSTRUCTOR);
@@ -238,12 +244,21 @@ public final class DexMaker {
      *
      * @param flags a bitwise combination of {@link Modifier#PUBLIC}, {@link
      *     Modifier#PRIVATE}, {@link Modifier#PROTECTED}, {@link Modifier#STATIC},
-     *     {@link Modifier#FINAL}, and {@link Modifier#VARARGS}.
+     *     {@link Modifier#FINAL}, {@link Modifier#SYNCHRONIZED} and {@link
+     *     Modifier#VARARGS}.
+     *     <p><strong>Warning:</strong> the {@link Modifier#SYNCHRONIZED} flag
+     *     is insufficient to generate a synchronized method. You must also use
+     *     {@link Code#monitorEnter} and {@link Code#monitorExit} to acquire
+     *     a monitor.
      */
     public Code declare(MethodId<?, ?> method, int flags) {
         TypeDeclaration typeDeclaration = getTypeDeclaration(method.declaringType);
         if (typeDeclaration.methods.containsKey(method)) {
             throw new IllegalStateException("already declared: " + method);
+        }
+        // replace the SYNCHRONIZED flag with the DECLARED_SYNCHRONIZED flag
+        if ((flags & Modifier.SYNCHRONIZED) != 0) {
+            flags = (flags & ~Modifier.SYNCHRONIZED) | AccessFlags.ACC_DECLARED_SYNCHRONIZED;
         }
         MethodDeclaration methodDeclaration = new MethodDeclaration(method, flags);
         typeDeclaration.methods.put(method, methodDeclaration);

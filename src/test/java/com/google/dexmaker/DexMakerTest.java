@@ -21,11 +21,13 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import static java.lang.reflect.Modifier.FINAL;
 import static java.lang.reflect.Modifier.PRIVATE;
 import static java.lang.reflect.Modifier.PROTECTED;
 import static java.lang.reflect.Modifier.PUBLIC;
 import static java.lang.reflect.Modifier.STATIC;
+import static java.lang.reflect.Modifier.SYNCHRONIZED;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -274,6 +276,29 @@ public final class DexMakerTest extends TestCase {
         assertEquals("abc", getMethod().invoke(null, callable));
     }
 
+    public void testInvokeVoidMethodIgnoresTargetLocal() throws Exception {
+        /*
+         * public static int call() {
+         *   int result = 5;
+         *   DexMakerTest.voidMethod();
+         *   return result;
+         * }
+         */
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call");
+        MethodId<?, Void> voidMethod = TEST_TYPE.getMethod(TypeId.VOID, "voidMethod");
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
+        Local<Integer> result = code.newLocal(TypeId.INT);
+        code.loadConstant(result, 5);
+        code.invokeStatic(voidMethod, null);
+        code.returnValue(result);
+
+        assertEquals(5, getMethod().invoke(null));
+    }
+
+    @SuppressWarnings("unused") // called by generated code
+    public static void voidMethod() {
+    }
+
     public void testParameterMismatch() throws Exception {
         TypeId<?>[] argTypes = {
                 TypeId.get(Integer.class), // should fail because the code specifies int
@@ -407,7 +432,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(0xabcd, a.get(instance));
     }
 
-    public void testReturnBoolean() throws Exception {
+    public void testReturnType() throws Exception {
         testReturnType(boolean.class, true);
         testReturnType(byte.class, (byte) 5);
         testReturnType(char.class, 'E');
@@ -1630,6 +1655,63 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    public void testSynchronizedFlagImpactsDeclarationOnly() throws Exception {
+        /*
+         * public synchronized void call() {
+         *   wait(100L);
+         * }
+         */
+        MethodId<?, Void> methodId = GENERATED.getMethod(TypeId.VOID, "call");
+        MethodId<Object, Void> wait = TypeId.OBJECT.getMethod(TypeId.VOID, "wait", TypeId.LONG);
+        Code code = dexMaker.declare(methodId, PUBLIC | SYNCHRONIZED);
+        Local<?> thisLocal = code.getThis(GENERATED);
+        Local<Long> timeout = code.newLocal(TypeId.LONG);
+        code.loadConstant(timeout, 100L);
+        code.invokeVirtual(wait, null, thisLocal, timeout);
+        code.returnVoid();
+
+        addDefaultConstructor();
+
+        Class<?> generatedClass = generateAndLoad();
+        Object instance = generatedClass.newInstance();
+        Method method = generatedClass.getMethod("call");
+        assertTrue(Modifier.isSynchronized(method.getModifiers()));
+        try {
+            method.invoke(instance);
+            fail();
+        } catch (InvocationTargetException expected) {
+            assertTrue(expected.getCause() instanceof IllegalMonitorStateException);
+        }
+    }
+
+    public void testMonitorEnterMonitorExit() throws Exception {
+        /*
+         * public synchronized void call() {
+         *   synchronized (this) {
+         *     wait(100L);
+         *   }
+         * }
+         */
+        MethodId<?, Void> methodId = GENERATED.getMethod(TypeId.VOID, "call");
+        MethodId<Object, Void> wait = TypeId.OBJECT.getMethod(TypeId.VOID, "wait", TypeId.LONG);
+        Code code = dexMaker.declare(methodId, PUBLIC);
+        Local<?> thisLocal = code.getThis(GENERATED);
+        Local<Long> timeout = code.newLocal(TypeId.LONG);
+        code.monitorEnter(thisLocal);
+        code.loadConstant(timeout, 100L);
+        code.invokeVirtual(wait, null, thisLocal, timeout);
+        code.monitorExit(thisLocal);
+        code.returnVoid();
+
+        addDefaultConstructor();
+
+        Class<?> generatedClass = generateAndLoad();
+        Object instance = generatedClass.newInstance();
+        Method method = generatedClass.getMethod("call");
+        assertFalse(Modifier.isSynchronized(method.getModifiers()));
+        method.invoke(instance); // will take 100ms
+    }
+
     // TODO: cast primitive to non-primitive
     // TODO: cast non-primitive to primitive
     // TODO: cast byte to integer
@@ -1648,14 +1730,9 @@ public final class DexMakerTest extends TestCase {
 
     // TODO: declare native method or abstract method
 
-    // TODO: synchronized or declared synchronized?
-
     // TODO: get a thrown exception 'e' into a local
 
     // TODO: move a primitive or reference
-    // TODO: return void - target local can be null?
-
-    // TODO: declaring constructor calling superconstructor
 
     private void addDefaultConstructor() {
         Code code = dexMaker.declareConstructor(GENERATED.getConstructor(), PUBLIC);

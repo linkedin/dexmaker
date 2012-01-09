@@ -125,11 +125,11 @@ import java.util.List;
  * <ul>
  *     <li>{@link #invokeStatic} is used for static methods.</li>
  *     <li>{@link #invokeDirect} is used for private instance methods and
- *         constructors</li>
+ *         for constructors to call their superclass's constructor.</li>
  *     <li>{@link #invokeInterface} is used to invoke a method whose declaring
  *         type is an interface.</li>
  *     <li>{@link #invokeVirtual} is used to invoke any other method. The target
- *         must not be static, private, a constructor method, or an interface
+ *         must not be static, private, a constructor, or an interface
  *         method.</li>
  *     <li>{@link #invokeSuper} is used to invoke the closest superclass's
  *         virtual method. The target must not be static, private, a constructor
@@ -155,6 +155,17 @@ import java.util.List;
  * Use {@link #cast} to perform either a <strong>numeric cast</strong> or a
  * <strong>type cast</strong>. Interrogate the type of a value in a local using
  * {@link #instanceOfType}.
+ *
+ * <h3>Synchronization</h3>
+ * Acquire a monitor using {@link #monitorEnter}; release it with {@link
+ * #monitorExit}. It is the caller's responsibility to guarantee that enter and
+ * exit calls are balanced, even in the presence of exceptions thrown.
+ *
+ * <strong>Warning:</strong> Even if a method has the {@code synchronized} flag,
+ * dex requires instructions to acquire and release monitors manually. A method
+ * declared with {@link java.lang.reflect.Modifier#SYNCHRONIZED SYNCHRONIZED}
+ * but without manual calls to {@code monitorEnter()} and {@code monitorExit()}
+ * will not be synchronized when executed.
  */
 public final class Code {
     private final MethodId<?, ?> method;
@@ -676,6 +687,18 @@ public final class Code {
                 ? Rops.opMoveResultPseudo(target.type.ropType)
                 : Rops.opMoveResult(target.type.ropType);
         addInstruction(new PlainInsn(rop, sourcePosition, target.spec(), RegisterSpecList.EMPTY));
+    }
+
+    // instructions; synchronized
+
+    public void monitorEnter(Local<?> monitor) {
+        addInstruction(new ThrowingInsn(Rops.MONITOR_ENTER, sourcePosition,
+                RegisterSpecList.make(monitor.spec()), catches));
+    }
+
+    public void monitorExit(Local<?> monitor) {
+        addInstruction(new ThrowingInsn(Rops.MONITOR_ENTER, sourcePosition,
+                RegisterSpecList.make(monitor.spec()), catches));
     }
 
     // produce BasicBlocks for dex

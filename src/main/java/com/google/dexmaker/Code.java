@@ -42,23 +42,84 @@ import java.util.List;
 
 /**
  * Builds a sequence of instructions.
- */
-/*
- * TODO: documentation:
- * UnaryOp, BinaryOp
- * Try/catch
- * Arrays
- * Comparisons
- * Locals
- * Fields
- * Type: Instanceof, cast
- * Invoke
- * Jump
- * Constants
- * NewInstance
- * Return
  *
- * TODO: rename compareOps
+ * <h3>Locals</h3>
+ * All data manipulation takes place in local variables. Each parameter gets its
+ * own local by default; access these using {@link #getParameter}. Non-static
+ * methods and constructors also have a {@code this} parameter; it's available
+ * as {@link #getThis}. Allocate a new local variable using {@link #newLocal},
+ * and assign a default value to it with {@link #loadConstant}. Every local
+ * variable has a fixed type. This is either a primitive type (of any size) or a
+ * reference type. This class emits instructions appropriate to the types they
+ * operate on. Not all operations are local on all types; attempting to emit
+ * such an operation will fail with an unchecked exception.
+ *
+ * <h3>Math and Bit Operations</h3>
+ * Transform a single value into another related value using {@link
+ * #op(UnaryOp,Local,Local)}. Transform two values into a third value using
+ * {@link #op(BinaryOp,Local,Local,Local)}. In either overload the first {@code
+ * Local} parameter is where the result will be sent; the other {@code Local}
+ * parameters are the inputs.
+ *
+ * <h3>Compare</h3>
+ * There are three different comparison operations each with different
+ * constraints:
+ * <ul>
+ *     <li>{@link #compareLongs(Local,Local,Local)} compares two locals each
+ *         containing a {@code long} primitive. This is the only operation that
+ *         can compare longs. The result of the comparison is written to another
+ *         {@code int} local.</li>
+ *     <li>{@link #compareFloatingPoint(Local,Local,Local,int)} compares two
+ *         locals; both {@code float} primitives or both {@code double}
+ *         primitives. This is the only operation that can compare floating
+ *         point values. This comparison takes an extra parameter that sets
+ *         the desired result if either parameter is {@code NaN}. The result of
+ *         the comparison is wrtten to another {@code int} local.
+ *     <li>{@link #compare(Comparison,Label,Local,Local)} compares two locals.
+ *         The {@link Comparison#EQ} and {@link Comparison#NE} options compare
+ *         either {@code int} primitives or references. The other options
+ *         compare only {@code int} primitives. This comparison takes a {@link
+ *         Label} that will be jumped to if the comparison is true. If the
+ *         comparison is false the next instruction in sequence will be
+ *         executed.
+ * </ul>
+ * There's no single operation to compare longs and jump, or to compare ints and
+ * store the result in a local. Accomplish these goals by chaining multiple
+ * operations together.
+ *
+ * <h3>Branches and Labels</h3>
+ * All control flow is created with branches and labels.
+ */
+/* TDODO: document these below
+ *
+ * new Label()
+ * jump()
+ * mark()
+ * return()
+ *
+ * <h3>Try/Catch blocks</h3>
+ * addCatchClause()
+ * removeCatchClause()
+ *
+ * <h3>Invoke</h3>
+ * invokeXxx
+ * newInstance()
+ *
+ * <h3>Fields</h3>
+ * iget()
+ * iput()
+ * sget()
+ * sput()
+ *
+ * <h3>Arrays</h3>
+ * aget()
+ * aput()
+ * arrayLength()
+ * newArray()
+ *
+ * <h3>Types and Casts</h3>
+ * cast()
+ * instanceOfType()
  */
 public final class Code {
     private final MethodId<?, ?> method;
@@ -338,14 +399,12 @@ public final class Code {
         }
     }
 
-    // instructions: unary
+    // instructions: unary and binary
 
     public <T> void op(UnaryOp op, Local<T> target, Local<T> source) {
         addInstruction(new PlainInsn(op.rop(source.type), sourcePosition,
                 target.spec(), source.spec()));
     }
-
-    // instructions: binary
 
     public <T> void op(BinaryOp op, Local<T> target, Local<T> a, Local<T> b) {
         Rop rop = op.rop(StdTypeList.make(a.type.ropType, b.type.ropType));
@@ -362,11 +421,13 @@ public final class Code {
     // instructions: branches
 
     /**
-     * Compare ints. If the comparison is true, execution jumps to {@code
-     * trueLabel}. If it is false, execution continues to the next instruction.
+     * Compare ints or references. If the comparison is true, execution jumps to
+     * {@code trueLabel}. If it is false, execution continues to the next
+     * instruction.
      */
     public <T> void compare(Comparison comparison, Label trueLabel, Local<T> a, Local<T> b) {
         adopt(trueLabel);
+        // TODO: ops to compare with zero/null: just omit the 2nd local in StdTypeList.make()
         Rop rop = comparison.rop(StdTypeList.make(a.type.ropType, b.type.ropType));
         addInstruction(new PlainInsn(rop, sourcePosition, null,
                 RegisterSpecList.make(a.spec(), b.spec())), trueLabel);
@@ -375,8 +436,8 @@ public final class Code {
     /**
      * Compare floats or doubles.
      */
-    public <T extends Number> void compare(Local<Integer> target, Local<T> a, Local<T> b,
-            int nanValue) {
+    public <T extends Number> void compareFloatingPoint(
+            Local<Integer> target, Local<T> a, Local<T> b, int nanValue) {
         Rop rop;
         if (nanValue == 1) {
             rop = Rops.opCmpg(a.type.ropType);
@@ -392,7 +453,7 @@ public final class Code {
     /**
      * Compare longs.
      */
-    public <T> void compare(Local<?> target, Local<T> a, Local<T> b) {
+    public void compareLongs(Local<Integer> target, Local<Long> a, Local<Long> b) {
         addInstruction(new PlainInsn(Rops.CMPL_LONG, sourcePosition, target.spec(),
                 RegisterSpecList.make(a.spec(), b.spec())));
     }

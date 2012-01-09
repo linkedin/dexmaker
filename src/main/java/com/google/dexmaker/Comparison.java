@@ -25,42 +25,42 @@ import com.android.dx.rop.type.TypeList;
  */
 public enum Comparison {
 
-    /** {@code a < b} */
+    /** {@code a < b}. Supports int only. */
     LT() {
         @Override Rop rop(TypeList types) {
             return Rops.opIfLt(types);
         }
     },
 
-    /** {@code a <= b} */
+    /** {@code a <= b}. Supports int only. */
     LE() {
         @Override Rop rop(TypeList types) {
             return Rops.opIfLe(types);
         }
     },
 
-    /** {@code a == b} */
+    /** {@code a == b}. Supports int and reference types. */
     EQ() {
         @Override Rop rop(TypeList types) {
             return Rops.opIfEq(types);
         }
     },
 
-    /** {@code a >= b} */
+    /** {@code a >= b}. Supports int only. */
     GE() {
         @Override Rop rop(TypeList types) {
             return Rops.opIfGe(types);
         }
     },
 
-    /** {@code a > b} */
+    /** {@code a > b}. Supports int only. */
     GT() {
         @Override Rop rop(TypeList types) {
             return Rops.opIfGt(types);
         }
     },
 
-    /** {@code a != b} */
+    /** {@code a != b}. Supports int and reference types. */
     NE() {
         @Override Rop rop(TypeList types) {
             return Rops.opIfNe(types);

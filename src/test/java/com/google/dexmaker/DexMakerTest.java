@@ -1467,7 +1467,7 @@ public final class DexMakerTest extends TestCase {
         Local<T> localA = code.getParameter(0, valueType);
         Local<T> localB = code.getParameter(1, valueType);
         Local<Integer> localResult = code.newLocal(TypeId.INT);
-        code.compare(localResult, localA, localB, nanValue);
+        code.compareFloatingPoint(localResult, localA, localB, nanValue);
         code.returnValue(localResult);
         return getMethod();
     }
@@ -1484,7 +1484,7 @@ public final class DexMakerTest extends TestCase {
         Local<Long> localA = code.getParameter(0, TypeId.LONG);
         Local<Long> localB = code.getParameter(1, TypeId.LONG);
         Local<Integer> localResult = code.newLocal(TypeId.INT);
-        code.compare(localResult, localA, localB);
+        code.compareLongs(localResult, localA, localB);
         code.returnValue(localResult);
 
         Method method = getMethod();
@@ -1649,6 +1649,10 @@ public final class DexMakerTest extends TestCase {
     // TODO: declare native method or abstract method
 
     // TODO: synchronized or declared synchronized?
+
+    // TODO: get a thrown exception 'e' into a local
+
+    // TODO: move a primitive or reference
 
     private void addDefaultConstructor() {
         Code code = dexMaker.declareConstructor(GENERATED.getConstructor(), PUBLIC);

@@ -24,14 +24,14 @@ import com.android.dx.rop.code.Rops;
  */
 public enum UnaryOp {
 
-    /** {@code ~a}. Supports int or long. */
+    /** {@code ~a}. Supports int and long. */
     NOT() {
         @Override Rop rop(TypeId<?> type) {
             return Rops.opNot(type.ropType);
         }
     },
 
-    /** {@code -a}. Supports int, long, float or double. */
+    /** {@code -a}. Supports int, long, float and double. */
     NEGATE() {
         @Override Rop rop(TypeId<?> type) {
             return Rops.opNeg(type.ropType);

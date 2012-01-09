@@ -1653,6 +1653,9 @@ public final class DexMakerTest extends TestCase {
     // TODO: get a thrown exception 'e' into a local
 
     // TODO: move a primitive or reference
+    // TODO: return void - target local can be null?
+
+    // TODO: declaring constructor calling superconstructor
 
     private void addDefaultConstructor() {
         Code code = dexMaker.declareConstructor(GENERATED.getConstructor(), PUBLIC);

@@ -61,7 +61,7 @@ import java.util.List;
  * Local} parameter is where the result will be sent; the other {@code Local}
  * parameters are the inputs.
  *
- * <h3>Compare</h3>
+ * <h3>Comparisons</h3>
  * There are three different comparison operations each with different
  * constraints:
  * <ul>
@@ -87,39 +87,74 @@ import java.util.List;
  * store the result in a local. Accomplish these goals by chaining multiple
  * operations together.
  *
- * <h3>Branches and Labels</h3>
- * All control flow is created with branches and labels.
- */
-/* TDODO: document these below
+ * <h3>Branches, Labels and Returns</h3>
+ * Basic control flow is expressed using jumps and labels. Each label must be
+ * marked exactly once and may be jumped to any number of times. Create a label
+ * using its constructor: {@code new Label()}, and mark it using {@link #mark}.
+ * All jumps to a label will execute instructions starting from that label. You
+ * can jump to a label that hasn't yet been marked (jumping forward) or to a
+ * label that has already been marked (jumping backward). Jump unconditionally
+ * with {@link #jump} or conditionally based on a comparison using {@link
+ * #compare(Comparison,Label,Local,Local)}.
  *
- * new Label()
- * jump()
- * mark()
- * return()
+ * <p>Most methods should contain either a return instruction. Void methods
+ * should use {@link #returnVoid}; non-void methods should use {@link
+ * #returnValue} with a local whose return type matches the method's return
+ * type. Constructors are considered void methods and should call {@link
+ * #returnVoid()}. Methods may make multiple returns. Methods containing no
+ * return statements must either loop infinitely or throw unconditionally; it is
+ * not legal to end a sequence of instructions without a jump, return or throw.
  *
- * <h3>Try/Catch blocks</h3>
- * addCatchClause()
- * removeCatchClause()
+ * <h3>Throwing and Catching</h3>
+ * This API uses labels to handle thrown exceptions, errors and throwables. Call
+ * {@link #addCatchClause} to register the target label and throwable class. All
+ * statements that follow will jump to that catch clause if they throw a {@link
+ * Throwable} assignable to that type. Use {@link #removeCatchClause} to
+ * unregister the throwable class.
  *
- * <h3>Invoke</h3>
- * invokeXxx
- * newInstance()
+ * <p>Throw an throwable by first assigning it to a local and then calling
+ * {@link #throwValue}. Control flow will jump to the nearest label assigned to
+ * a type assignable to the thrown type. In this context, "nearest" means the
+ * label requiring the fewest stack frames to be popped.
  *
- * <h3>Fields</h3>
- * iget()
- * iput()
- * sget()
- * sput()
+ * <h3>Calling methods</h3>
+ * A method's caller must know its return type, name, parameters, and invoke
+ * kind. Lookup a method on a type using {@link TypeId#getMethod}. This is more
+ * onerous than Java language invokes, which can infer the target method using
+ * the target object and parameters. There are four invoke kinds:
+ * <ul>
+ *     <li>{@link #invokeStatic} is used for static methods.</li>
+ *     <li>{@link #invokeDirect} is used for private instance methods and
+ *         constructors</li>
+ *     <li>{@link #invokeInterface} is used to invoke a method whose declaring
+ *         type is an interface.</li>
+ *     <li>{@link #invokeVirtual} is used to invoke any other method. The target
+ *         must not be static, private, a constructor method, or an interface
+ *         method.</li>
+ *     <li>{@link #invokeSuper} is used to invoke the closest superclass's
+ *         virtual method. The target must not be static, private, a constructor
+ *         method, or an interface method.</li>
+ *     <li>{@link #newInstance} is used to invoke a constructor.</li>
+
+ * </ul>
+ * All invoke methods take a local for the return value. For void methods this
+ * local is unused and may be null.
  *
- * <h3>Arrays</h3>
- * aget()
- * aput()
- * arrayLength()
- * newArray()
+ * <h3>Field Access</h3>
+ * Read static fields using {@link #sget}; write them using {@link #sput}. For
+ * instance values you'll need to specify the declaring instance; use {@link
+ * #getThis} in an instance method to use {@code this}. Read instance values
+ * using {@link #iget} and write them with {@link #iput}.
  *
- * <h3>Types and Casts</h3>
- * cast()
- * instanceOfType()
+ * <h3>Array Access</h3>
+ * Allocate an array using {@link #newArray}. Read an array's length with {@link
+ * #arrayLength} and its elements with {@link #aget}. Write an array's elements
+ * with {@link #aput}.
+ *
+ * <h3>Types</h3>
+ * Use {@link #cast} to perform either a <strong>numeric cast</strong> or a
+ * <strong>type cast</strong>. Interrogate the type of a value in a local using
+ * {@link #instanceOfType}.
  */
 public final class Code {
     private final MethodId<?, ?> method;

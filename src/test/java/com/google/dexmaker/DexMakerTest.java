@@ -1534,7 +1534,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(5, intArrayLength.invoke(null, new Object[] { new int[5] }));
 
         Method longArrayLength = arrayLengthMethod(LONG_ARRAY);
-        assertEquals(0, longArrayLength.invoke(null, new Object[] { new long[0] }));
+        assertEquals(0, longArrayLength.invoke(null, new Object[]{new long[0]}));
         assertEquals(5, longArrayLength.invoke(null, new Object[] { new long[5] }));
 
         Method objectArrayLength = arrayLengthMethod(OBJECT_ARRAY);
@@ -1712,6 +1712,26 @@ public final class DexMakerTest extends TestCase {
         method.invoke(instance); // will take 100ms
     }
 
+    public void testMoveInt() throws Exception {
+        /*
+         * public static int call(int a) {
+         *   int b = a;
+         *   int c = a + b;
+         *   return c;
+         * }
+         */
+        MethodId<?, Integer> methodId = GENERATED.getMethod(TypeId.INT, "call", TypeId.INT);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
+        Local<Integer> a = code.getParameter(0, TypeId.INT);
+        Local<Integer> b = code.newLocal(TypeId.INT);
+        Local<Integer> c = code.newLocal(TypeId.INT);
+        code.move(b, a);
+        code.op(BinaryOp.ADD, c, a, b);
+        code.returnValue(c);
+
+        assertEquals(6, getMethod().invoke(null, 3));
+    }
+
     // TODO: cast primitive to non-primitive
     // TODO: cast non-primitive to primitive
     // TODO: cast byte to integer
@@ -1724,10 +1744,7 @@ public final class DexMakerTest extends TestCase {
 
     // TODO: don't generate multiple times (?)
 
-    // TODO: test array types
-
     // TODO: test generating an interface
-
     // TODO: declare native method or abstract method
 
     // TODO: get a thrown exception 'e' into a local

@@ -429,7 +429,7 @@ public final class Code {
         currentLabel.marked = true;
     }
 
-    // instructions: constants
+    // instructions: locals
 
     public <T> void loadConstant(Local<T> target, T value) {
         Rop rop = value == null
@@ -443,6 +443,14 @@ public final class Code {
                     RegisterSpecList.EMPTY, catches, Constants.getConstant(value)));
             moveResult(target, true);
         }
+    }
+
+    /**
+     * Copies the value in {@code source} to {@code target}.
+     */
+    public <T> void move(Local<T> target, Local<T> source) {
+        addInstruction(new PlainInsn(Rops.opMove(source.type.ropType),
+                sourcePosition, target.spec(), source.spec()));
     }
 
     // instructions: unary and binary
@@ -480,7 +488,10 @@ public final class Code {
     }
 
     /**
-     * Compare floats or doubles.
+     * Compare floats or doubles. This stores -1 in {@code target} if {@code
+     * a < b}, 0 in {@code target} if {@code a == b} and 1 in target if {@code
+     * a > b}. This stores {@code nanValue} in {@code target} if either value
+     * is {@code NaN}.
      */
     public <T extends Number> void compareFloatingPoint(
             Local<Integer> target, Local<T> a, Local<T> b, int nanValue) {
@@ -497,7 +508,9 @@ public final class Code {
     }
 
     /**
-     * Compare longs.
+     * Compare longs. This stores -1 in {@code target} if {@code
+     * a < b}, 0 in {@code target} if {@code a == b} and 1 in target if {@code
+     * a > b}.
      */
     public void compareLongs(Local<Integer> target, Local<Long> a, Local<Long> b) {
         addInstruction(new PlainInsn(Rops.CMPL_LONG, sourcePosition, target.spec(),

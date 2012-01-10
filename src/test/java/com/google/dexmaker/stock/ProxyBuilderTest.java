@@ -17,7 +17,6 @@
 package com.google.dexmaker.stock;
 
 import com.google.dexmaker.DexMakerTest;
-import dalvik.system.PathClassLoader;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -551,19 +550,26 @@ public class ProxyBuilderTest extends TestCase {
     }
 
     public void testClassNotCachedWithDifferentParentClassLoaders() throws Exception {
-        ClassLoader classLoaderA = new PathClassLoader("", getClass().getClassLoader());
+        ClassLoader classLoaderA = newPathClassLoader();
         SimpleClass a = proxyFor(SimpleClass.class)
                 .parentClassLoader(classLoaderA)
                 .build();
         assertEquals(classLoaderA, a.getClass().getClassLoader().getParent());
 
-        ClassLoader classLoaderB = new PathClassLoader("", getClass().getClassLoader());
+        ClassLoader classLoaderB = newPathClassLoader();
         SimpleClass b = proxyFor(SimpleClass.class)
                 .parentClassLoader(classLoaderB)
                 .build();
         assertEquals(classLoaderB, b.getClass().getClassLoader().getParent());
 
         assertTrue(a.getClass() != b.getClass());
+    }
+
+    private ClassLoader newPathClassLoader() throws Exception {
+        return (ClassLoader) Class.forName("dalvik.system.PathClassLoader")
+                .getConstructor(String.class, ClassLoader.class)
+                .newInstance("", getClass().getClassLoader());
+
     }
 
     public void testSubclassOfRandom() throws Exception {

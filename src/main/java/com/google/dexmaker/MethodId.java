@@ -56,6 +56,13 @@ public final class MethodId<D, R> {
     }
 
     /**
+     * Returns true if this method is a constructor for its declaring class.
+     */
+    public boolean isConstructor() {
+        return name.equals("<init>");
+    }
+
+    /**
      * Returns the method's name. This is "<init>" if this is a constructor.
      */
     public String getName() {

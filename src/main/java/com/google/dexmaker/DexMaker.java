@@ -212,6 +212,11 @@ public final class DexMaker {
     public void declare(TypeId<?> type, String sourceFile, int flags,
             TypeId<?> supertype, TypeId<?>... interfaces) {
         TypeDeclaration declaration = getTypeDeclaration(type);
+        int supportedFlags = Modifier.PUBLIC | Modifier.FINAL | Modifier.ABSTRACT;
+        if ((flags & ~supportedFlags) != 0) {
+            throw new IllegalArgumentException("Unexpected flag: "
+                    + Integer.toHexString(flags));
+        }
         if (declaration.declared) {
             throw new IllegalStateException("already declared: " + type);
         }
@@ -223,29 +228,11 @@ public final class DexMaker {
     }
 
     /**
-     * Declares a constructor. The name of {@code method} must be "<init>",
-     * as it is on all instances returned by {@link TypeId#getConstructor}.
+     * Declares a method or constructor.
      *
      * @param flags a bitwise combination of {@link Modifier#PUBLIC}, {@link
      *     Modifier#PRIVATE}, {@link Modifier#PROTECTED}, {@link Modifier#STATIC},
-     *     {@link Modifier#FINAL}, {@link Modifier#SYNCHRONIZED} and {@link
-     *     Modifier#VARARGS}.
-     *     <p><strong>Warning:</strong> the {@link Modifier#SYNCHRONIZED} flag
-     *     is insufficient to generate a synchronized method. You must also use
-     *     {@link Code#monitorEnter} and {@link Code#monitorExit} to acquire
-     *     a monitor.
-     */
-    public Code declareConstructor(MethodId<?, ?> method, int flags) {
-        return declare(method, flags | ACC_CONSTRUCTOR);
-    }
-
-    /**
-     * Declares a method. The name of {@code method} must not be "<init>".
-     *
-     * @param flags a bitwise combination of {@link Modifier#PUBLIC}, {@link
-     *     Modifier#PRIVATE}, {@link Modifier#PROTECTED}, {@link Modifier#STATIC},
-     *     {@link Modifier#FINAL}, {@link Modifier#SYNCHRONIZED} and {@link
-     *     Modifier#VARARGS}.
+     *     {@link Modifier#FINAL} and {@link Modifier#SYNCHRONIZED}.
      *     <p><strong>Warning:</strong> the {@link Modifier#SYNCHRONIZED} flag
      *     is insufficient to generate a synchronized method. You must also use
      *     {@link Code#monitorEnter} and {@link Code#monitorExit} to acquire
@@ -256,10 +243,23 @@ public final class DexMaker {
         if (typeDeclaration.methods.containsKey(method)) {
             throw new IllegalStateException("already declared: " + method);
         }
+
+        int supportedFlags = Modifier.PUBLIC | Modifier.PRIVATE | Modifier.PROTECTED
+                | Modifier.STATIC | Modifier.FINAL | Modifier.SYNCHRONIZED;
+        if ((flags & ~supportedFlags) != 0) {
+            throw new IllegalArgumentException("Unexpected flag: "
+                    + Integer.toHexString(flags));
+        }
+
         // replace the SYNCHRONIZED flag with the DECLARED_SYNCHRONIZED flag
         if ((flags & Modifier.SYNCHRONIZED) != 0) {
             flags = (flags & ~Modifier.SYNCHRONIZED) | AccessFlags.ACC_DECLARED_SYNCHRONIZED;
         }
+
+        if (method.isConstructor()) {
+            flags |= ACC_CONSTRUCTOR;
+        }
+
         MethodDeclaration methodDeclaration = new MethodDeclaration(method, flags);
         typeDeclaration.methods.put(method, methodDeclaration);
         return methodDeclaration.code;
@@ -272,12 +272,27 @@ public final class DexMaker {
      *     Modifier#PRIVATE}, {@link Modifier#PROTECTED}, {@link Modifier#STATIC},
      *     {@link Modifier#FINAL}, {@link Modifier#VOLATILE}, and {@link
      *     Modifier#TRANSIENT}.
+     * @param staticValue a constant representing the initial value for the
+     *     static field, possibly null. This must be null if this field is
+     *     non-static.
      */
     public void declare(FieldId<?, ?> fieldId, int flags, Object staticValue) {
         TypeDeclaration typeDeclaration = getTypeDeclaration(fieldId.declaringType);
         if (typeDeclaration.fields.containsKey(fieldId)) {
             throw new IllegalStateException("already declared: " + fieldId);
         }
+
+        int supportedFlags = Modifier.PUBLIC | Modifier.PRIVATE | Modifier.PROTECTED
+                | Modifier.STATIC | Modifier.FINAL | Modifier.VOLATILE | Modifier.TRANSIENT;
+        if ((flags & ~supportedFlags) != 0) {
+            throw new IllegalArgumentException("Unexpected flag: "
+                    + Integer.toHexString(flags));
+        }
+
+        if ((flags & Modifier.STATIC) == 0 && staticValue != null) {
+            throw new IllegalArgumentException("staticValue is non-null, but field is not static");
+        }
+
         FieldDeclaration fieldDeclaration = new FieldDeclaration(fieldId, flags, staticValue);
         typeDeclaration.fields.put(fieldId, fieldDeclaration);
     }

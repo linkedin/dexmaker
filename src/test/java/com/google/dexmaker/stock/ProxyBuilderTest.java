@@ -17,6 +17,7 @@
 package com.google.dexmaker.stock;
 
 import com.google.dexmaker.DexMakerTest;
+import dalvik.system.PathClassLoader;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -507,17 +508,62 @@ public class ProxyBuilderTest extends TestCase {
     }
 
     public void testCaching() throws Exception {
-        SimpleClass proxy1 = proxyFor(SimpleClass.class).build();
-        SimpleClass proxy2 = proxyFor(SimpleClass.class).build();
-        assertSame(proxy1.getClass(), proxy2.getClass());
+        SimpleClass a = proxyFor(SimpleClass.class).build();
+        SimpleClass b = proxyFor(SimpleClass.class).build();
+        assertSame(a.getClass(), b.getClass());
     }
 
     public void testCachingWithMultipleConstructors() throws Exception {
-        fail("TODO");
+        HasMultipleConstructors a = ProxyBuilder.forClass(HasMultipleConstructors.class)
+                .constructorArgTypes()
+                .constructorArgValues()
+                .handler(fakeHandler)
+                .dexCache(DexMakerTest.getDataDirectory()).build();
+        assertEquals("no args", a.calledConstructor);
+        HasMultipleConstructors b = ProxyBuilder.forClass(HasMultipleConstructors.class)
+                .constructorArgTypes(int.class)
+                .constructorArgValues(2)
+                .handler(fakeHandler)
+                .dexCache(DexMakerTest.getDataDirectory()).build();
+        assertEquals("int 2", b.calledConstructor);
+        assertEquals(a.getClass(), b.getClass());
+
+        HasMultipleConstructors c = ProxyBuilder.forClass(HasMultipleConstructors.class)
+                .constructorArgTypes(Integer.class)
+                .constructorArgValues(3)
+                .handler(fakeHandler)
+                .dexCache(DexMakerTest.getDataDirectory()).build();
+        assertEquals("Integer 3", c.calledConstructor);
+        assertEquals(a.getClass(), c.getClass());
     }
 
-    public void testCachingWithDifferentParentClassLoaders() throws Exception {
-        fail("TODO");
+    public static class HasMultipleConstructors {
+        private final String calledConstructor;
+        public HasMultipleConstructors() {
+            calledConstructor = "no args";
+        }
+        public HasMultipleConstructors(int b) {
+            calledConstructor = "int " + b;
+        }
+        public HasMultipleConstructors(Integer c) {
+            calledConstructor = "Integer " + c;
+        }
+    }
+
+    public void testClassNotCachedWithDifferentParentClassLoaders() throws Exception {
+        ClassLoader classLoaderA = new PathClassLoader("", getClass().getClassLoader());
+        SimpleClass a = proxyFor(SimpleClass.class)
+                .parentClassLoader(classLoaderA)
+                .build();
+        assertEquals(classLoaderA, a.getClass().getClassLoader().getParent());
+
+        ClassLoader classLoaderB = new PathClassLoader("", getClass().getClassLoader());
+        SimpleClass b = proxyFor(SimpleClass.class)
+                .parentClassLoader(classLoaderB)
+                .build();
+        assertEquals(classLoaderB, b.getClass().getClassLoader().getParent());
+
+        assertTrue(a.getClass() != b.getClass());
     }
 
     public void testSubclassOfRandom() throws Exception {

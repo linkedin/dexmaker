@@ -180,7 +180,7 @@ import java.util.jar.JarOutputStream;
  * temporary files can be written. <pre>   {@code
  *
  *   ClassLoader loader = dexMaker.generateAndLoad(
- *       Fibonacci.class.getClassLoader(), getDataDirectory());
+ *       FibonacciMaker.class.getClassLoader(), getDataDirectory());
  * }</pre>
  * Finally we'll use reflection to lookup our generated class on its class
  * loader and invoke its {@code fib()} method: <pre>   {@code

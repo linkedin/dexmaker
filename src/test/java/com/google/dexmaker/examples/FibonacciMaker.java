@@ -30,13 +30,15 @@ import java.lang.reflect.Modifier;
 
 public final class FibonacciMaker {
     public static void main(String[] args) throws Exception {
-        DexMaker dexMaker = new DexMaker();
         TypeId<?> fibonacci = TypeId.get("Lcom/google/dexmaker/examples/Fibonacci;");
+
         String fileName = "Fibonacci.generated";
+        DexMaker dexMaker = new DexMaker();
         dexMaker.declare(fibonacci, fileName, Modifier.PUBLIC, TypeId.OBJECT);
 
         MethodId<?, Integer> fib = fibonacci.getMethod(TypeId.INT, "fib", TypeId.INT);
         Code code = dexMaker.declare(fib, Modifier.PUBLIC | Modifier.STATIC);
+
         Local<Integer> i = code.getParameter(0, TypeId.INT);
         Local<Integer> constant1 = code.newLocal(TypeId.INT);
         Local<Integer> constant2 = code.newLocal(TypeId.INT);
@@ -45,6 +47,7 @@ public final class FibonacciMaker {
         Local<Integer> c = code.newLocal(TypeId.INT);
         Local<Integer> d = code.newLocal(TypeId.INT);
         Local<Integer> result = code.newLocal(TypeId.INT);
+
         code.loadConstant(constant1, 1);
         code.loadConstant(constant2, 2);
         Label baseCase = new Label();
@@ -60,6 +63,7 @@ public final class FibonacciMaker {
 
         ClassLoader loader = dexMaker.generateAndLoad(
                 FibonacciMaker.class.getClassLoader(), getDataDirectory());
+
         Class<?> fibonacciClass = loader.loadClass("com.google.dexmaker.examples.Fibonacci");
         Method fibMethod = fibonacciClass.getMethod("fib", int.class);
         System.out.println(fibMethod.invoke(null, 8));

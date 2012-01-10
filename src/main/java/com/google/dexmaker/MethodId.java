@@ -24,6 +24,9 @@ import java.util.List;
 
 /**
  * Identifies a method or constructor.
+ *
+ * @param <D> the type declaring this field
+ * @param <R> the return type of this method
  */
 public final class MethodId<D, R> {
     final TypeId<D> declaringType;

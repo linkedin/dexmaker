@@ -22,6 +22,9 @@ import com.android.dx.rop.cst.CstString;
 
 /**
  * Identifies a field.
+ *
+ * @param <D> the type declaring this field
+ * @param <V> the type of value this field holds
  */
 public final class FieldId<D, V> {
     final TypeId<D> declaringType;

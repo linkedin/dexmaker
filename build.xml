@@ -40,6 +40,7 @@
         <mkdir dir="build/api"/>
 		<javadoc destdir="build/api" windowtitle="dexmaker" source="1.5">
 			<packageset dir="src/main/java"/>
+            <link href="http://download.oracle.com/javase/6/docs/api/"/>
 		</javadoc>
 	</target>
 

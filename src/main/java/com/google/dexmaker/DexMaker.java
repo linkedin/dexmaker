@@ -174,10 +174,10 @@ import java.util.jar.JarOutputStream;
  * <p>We're done defining the dex file. We just need to write it to the
  * filesystem or load it into the current process. For this example we'll load
  * the generated code into the current process. This only works when the current
- * process is running on Android. We use {@link #generateAndLoad} which takes
- * the class loader that will be used as our generated code's parent class
- * loader. It also requires a directory where temporary files can be written.
- * <pre>   {@code
+ * process is running on Android. We use {@link #generateAndLoad
+ * generateAndLoad()} which takes the class loader that will be used as our
+ * generated code's parent class loader. It also requires a directory where
+ * temporary files can be written. <pre>   {@code
  *
  *   ClassLoader loader = dexMaker.generateAndLoad(
  *       Fibonacci.class.getClassLoader(), getDataDirectory());
@@ -193,6 +193,13 @@ import java.util.jar.JarOutputStream;
 public final class DexMaker {
     private final Map<TypeId<?>, TypeDeclaration> types
             = new LinkedHashMap<TypeId<?>, TypeDeclaration>();
+
+    /**
+     * Creates a new {@code DexMaker} instance, which can be used to create a
+     * single dex file.
+     */
+    public DexMaker() {
+    }
 
     private TypeDeclaration getTypeDeclaration(TypeId<?> type) {
         TypeDeclaration result = types.get(type);

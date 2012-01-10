@@ -22,6 +22,14 @@ import java.util.Map;
 
 /**
  * A primitive type, interface or class.
+ *
+ * <p><strong>Warning:</strong> Use care when dealing with boxed primitive
+ * types. Java's lack of support for parameterized primitive types means that
+ * a primitive type like {@code int} and its boxed type {@code
+ * java.lang.Integer} have the same type parameter: {@code TypeId<Integer>}.
+ * These types are different and it will be a runtime error if the boxed type
+ * {@code java.lang.Integer} is used where the primitive type {@code int} is
+ * expected.
  */
 public final class TypeId<T> {
     /** The {@code boolean} primitive type. */

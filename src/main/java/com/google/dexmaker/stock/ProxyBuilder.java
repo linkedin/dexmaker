@@ -37,6 +37,7 @@ import static java.lang.reflect.Modifier.PUBLIC;
 import static java.lang.reflect.Modifier.STATIC;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -116,6 +117,14 @@ public final class ProxyBuilder<T> {
     private static final String FIELD_NAME_HANDLER = "$__handler";
     private static final String FIELD_NAME_METHODS = "$__methodArray";
 
+    /**
+     * A cache of all proxy classes ever generated. At the time of writing,
+     * Android's runtime doesn't support class unloading so there's little
+     * value in using weak references.
+     */
+    private static final Map<Class<?>, Class<?>> generatedProxyClasses
+            = Collections.synchronizedMap(new HashMap<Class<?>, Class<?>>());
+
     private final Class<T> baseClass;
     // TODO: make DexMaker do the defaulting here
     private ClassLoader parentClassLoader = ProxyBuilder.class.getClassLoader();
@@ -177,31 +186,12 @@ public final class ProxyBuilder<T> {
         check(handler != null, "handler == null");
         check(constructorArgTypes.length == constructorArgValues.length,
                 "constructorArgValues.length != constructorArgTypes.length");
-        DexMaker dexMaker = new DexMaker();
-        String generatedName = getMethodNameForProxyOf(baseClass);
-        TypeId<? extends T> generatedType = TypeId.get("L" + generatedName + ";");
-        TypeId<T> superType = TypeId.get(baseClass);
-        generateConstructorsAndFields(dexMaker, generatedType, superType, baseClass);
-        Method[] methodsToProxy = getMethodsToProxy(baseClass);
-        generateCodeForAllMethods(dexMaker, generatedType, methodsToProxy, superType);
-        dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType);
-        ClassLoader classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache);
-        Class<? extends T> proxyClass;
-        try {
-            proxyClass = loadClass(classLoader, generatedName);
-        } catch (IllegalAccessError e) {
-            // Thrown when the base class is not accessible.
-            throw new UnsupportedOperationException("cannot proxy inaccessible classes", e);
-        } catch (ClassNotFoundException e) {
-            // Should not be thrown, we're sure to have generated this class.
-            throw new AssertionError(e);
-        }
-        setMethodsStaticField(proxyClass, methodsToProxy);
+        Class<? extends T> proxyClass = getProxyClass();
         Constructor<? extends T> constructor;
         try {
             constructor = proxyClass.getConstructor(constructorArgTypes);
         } catch (NoSuchMethodException e) {
-            // Thrown when the ctor to be called does not exist.
+            // Thrown when the constructor to be called does not exist.
             throw new IllegalArgumentException("could not find matching constructor", e);
         }
         T result;
@@ -214,11 +204,43 @@ public final class ProxyBuilder<T> {
             // Should not be thrown, the generated constructor is accessible.
             throw new AssertionError(e);
         } catch (InvocationTargetException e) {
-            // Thrown when the base class ctor throws an exception.
+            // Thrown when the base class constructor throws an exception.
             throw launderCause(e);
         }
         setHandlerInstanceField(result, handler);
         return result;
+    }
+
+    private Class<? extends T> getProxyClass() throws IOException {
+        // try the cache to see if we've generated this one before
+        @SuppressWarnings("unchecked") // we only populate the map with matching types
+        Class<? extends T> proxyClass = (Class) generatedProxyClasses.get(baseClass);
+        if (proxyClass != null && proxyClass.getClassLoader().getParent() == parentClassLoader) {
+            return proxyClass; // cache hit!
+        }
+
+        // the cache missed; generate the class
+        DexMaker dexMaker = new DexMaker();
+        String generatedName = getMethodNameForProxyOf(baseClass);
+        TypeId<? extends T> generatedType = TypeId.get("L" + generatedName + ";");
+        TypeId<T> superType = TypeId.get(baseClass);
+        generateConstructorsAndFields(dexMaker, generatedType, superType, baseClass);
+        Method[] methodsToProxy = getMethodsToProxy(baseClass);
+        generateCodeForAllMethods(dexMaker, generatedType, methodsToProxy, superType);
+        dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType);
+        ClassLoader classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache);
+        try {
+            proxyClass = loadClass(classLoader, generatedName);
+        } catch (IllegalAccessError e) {
+            // Thrown when the base class is not accessible.
+            throw new UnsupportedOperationException("cannot proxy inaccessible classes", e);
+        } catch (ClassNotFoundException e) {
+            // Should not be thrown, we're sure to have generated this class.
+            throw new AssertionError(e);
+        }
+        setMethodsStaticField(proxyClass, methodsToProxy);
+        generatedProxyClasses.put(baseClass, proxyClass);
+        return proxyClass;
     }
 
     // The type cast is safe: the generated type will extend the base class type.

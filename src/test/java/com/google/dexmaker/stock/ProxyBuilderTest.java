@@ -398,10 +398,15 @@ public class ProxyBuilderTest extends TestCase {
 
     public void testIllegalCacheDirectory() throws Exception {
         try {
-          proxyFor(Object.class).dexCache(new File("//////")).build();
+          proxyFor(ProxyForIllegalCacheDirectory.class)
+                  .dexCache(new File("/poop/"))
+                  .build();
           fail();
         } catch (IOException expected) {
         }
+    }
+
+    public static class ProxyForIllegalCacheDirectory {
     }
 
     public void testInvalidConstructorSpecification() throws Exception {
@@ -501,9 +506,18 @@ public class ProxyBuilderTest extends TestCase {
         } catch (ClassCastException expected) {}
     }
 
-    public void testCaching_ShouldWork() {
-        // TODO: We're not supporting caching yet.  But we should as soon as possible.
-        fail();
+    public void testCaching() throws Exception {
+        SimpleClass proxy1 = proxyFor(SimpleClass.class).build();
+        SimpleClass proxy2 = proxyFor(SimpleClass.class).build();
+        assertSame(proxy1.getClass(), proxy2.getClass());
+    }
+
+    public void testCachingWithMultipleConstructors() throws Exception {
+        fail("TODO");
+    }
+
+    public void testCachingWithDifferentParentClassLoaders() throws Exception {
+        fail("TODO");
     }
 
     public void testSubclassOfRandom() throws Exception {

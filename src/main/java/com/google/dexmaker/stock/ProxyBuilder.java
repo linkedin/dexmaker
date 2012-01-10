@@ -489,7 +489,7 @@ public final class ProxyBuilder<T> {
             }
             TypeId<?>[] types = classArrayToTypeArray(constructor.getParameterTypes());
             MethodId<?, ?> method = generatedType.getConstructor(types);
-            Code constructorCode = dexMaker.declareConstructor(method, PUBLIC);
+            Code constructorCode = dexMaker.declare(method, PUBLIC);
             Local<G> thisRef = constructorCode.getThis(generatedType);
             Local<?>[] params = new Local[types.length];
             for (int i = 0; i < params.length; ++i) {

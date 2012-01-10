@@ -22,7 +22,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import static java.lang.reflect.Modifier.ABSTRACT;
 import static java.lang.reflect.Modifier.FINAL;
+import static java.lang.reflect.Modifier.NATIVE;
 import static java.lang.reflect.Modifier.PRIVATE;
 import static java.lang.reflect.Modifier.PROTECTED;
 import static java.lang.reflect.Modifier.PUBLIC;
@@ -419,7 +421,7 @@ public final class DexMakerTest extends TestCase {
         FieldId<G, Integer> fieldId = generated.getField(TypeId.INT, "a");
         dexMaker.declare(fieldId, PUBLIC | FINAL, null);
         MethodId<?, Void> constructor = GENERATED.getConstructor(TypeId.INT);
-        Code code = dexMaker.declareConstructor(constructor, PUBLIC);
+        Code code = dexMaker.declare(constructor, PUBLIC);
         Local<G> thisRef = code.getThis(generated);
         Local<Integer> parameter = code.getParameter(0, TypeId.INT);
         code.invokeDirect(TypeId.OBJECT.getConstructor(), null, thisRef);
@@ -1534,7 +1536,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(5, intArrayLength.invoke(null, new Object[] { new int[5] }));
 
         Method longArrayLength = arrayLengthMethod(LONG_ARRAY);
-        assertEquals(0, longArrayLength.invoke(null, new Object[]{new long[0]}));
+        assertEquals(0, longArrayLength.invoke(null, new Object[] { new long[0] }));
         assertEquals(5, longArrayLength.invoke(null, new Object[] { new long[5] }));
 
         Method objectArrayLength = arrayLengthMethod(OBJECT_ARRAY);
@@ -1732,27 +1734,67 @@ public final class DexMakerTest extends TestCase {
         assertEquals(6, getMethod().invoke(null, 3));
     }
 
+    public void testPrivateClassesAreUnsupported() {
+        try {
+            dexMaker.declare(TypeId.get("LPrivateClass;"), "PrivateClass.generated", PRIVATE,
+                    TypeId.OBJECT);
+            fail();
+        } catch (IllegalArgumentException expected) {
+        }
+    }
+
+    public void testAbstractMethodsAreUnsupported() {
+        MethodId<?, Void> methodId = GENERATED.getMethod(TypeId.VOID, "call");
+        try {
+            dexMaker.declare(methodId, ABSTRACT);
+            fail();
+        } catch (IllegalArgumentException expected) {
+        }
+    }
+
+    public void testNativeMethodsAreUnsupported() {
+        MethodId<?, Void> methodId = GENERATED.getMethod(TypeId.VOID, "call");
+        try {
+            dexMaker.declare(methodId, NATIVE);
+            fail();
+        } catch (IllegalArgumentException expected) {
+        }
+    }
+
+    public void testSynchronizedFieldsAreUnsupported() {
+        try {
+            FieldId<?, ?> fieldId = GENERATED.getField(TypeId.OBJECT, "synchronizedField");
+            dexMaker.declare(fieldId, SYNCHRONIZED, null);
+            fail();
+        } catch (IllegalArgumentException expected) {
+        }
+    }
+
+    public void testInitialValueWithNonStaticField() {
+        try {
+            FieldId<?, ?> fieldId = GENERATED.getField(TypeId.OBJECT, "nonStaticField");
+            dexMaker.declare(fieldId, 0, 1);
+            fail();
+        } catch (IllegalArgumentException expected) {
+        }
+    }
+
     // TODO: cast primitive to non-primitive
     // TODO: cast non-primitive to primitive
     // TODO: cast byte to integer
     // TODO: cast byte to long
     // TODO: cast long to byte
-
     // TODO: fail if a label is unreachable (never navigated to)
-
     // TODO: more strict type parameters: Integer on methods
-
     // TODO: don't generate multiple times (?)
-
+    // TODO: test array types
     // TODO: test generating an interface
     // TODO: declare native method or abstract method
-
     // TODO: get a thrown exception 'e' into a local
-
     // TODO: move a primitive or reference
 
     private void addDefaultConstructor() {
-        Code code = dexMaker.declareConstructor(GENERATED.getConstructor(), PUBLIC);
+        Code code = dexMaker.declare(GENERATED.getConstructor(), PUBLIC);
         Local<?> thisRef = code.getThis(GENERATED);
         code.invokeDirect(TypeId.OBJECT.getConstructor(), null, thisRef);
         code.returnVoid();

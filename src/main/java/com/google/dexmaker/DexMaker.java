@@ -326,20 +326,42 @@ public final class DexMaker {
     /**
      * Generates a dex file and loads its types into the current process.
      *
-     * <p>All parameters are optional; you may pass {@code null} and suitable
-     * defaults will be used.
+     * <h3>Picking a dex cache directory</h3>
+     * The {@code dexCache} should be an application-private directory. If
+     * you pass a world-writable directory like {@code /sdcard} a malicious app
+     * could inject code into your process. Most applications should use this:
+     * <pre>   {@code
      *
-     * <p>If you opt to provide your own {@code dexDir}, take care to ensure
-     * that it is not world-writable, otherwise a malicious app may be able
-     * to inject code into your process.  A suitable parameter is:
-     * {@code getApplicationContext().getDir("dx", Context.MODE_PRIVATE); }
+     *     File dexCache = getApplicationContext().getDir("dx", Context.MODE_PRIVATE);
+     * }</pre>
+     * If the {@code dexCache} is null, this method will consult the {@code
+     * dexmaker.dexcache} system property. If that exists, it will be used for
+     * the dex cache. If it doesn't exist, this method will attempt to guess
+     * the application's private data directory as a last resort. If that fails,
+     * this method will fail with an unchecked exception. You can avoid the
+     * exception by either providing a non-null value or setting the system
+     * property.
      *
-     * @param parent the parent ClassLoader to be used when loading
-     *     our generated types
-     * @param dexDir the destination directory where generated and
-     *     optimized dex files will be written.
+     * @param parent the parent ClassLoader to be used when loading our
+     *     generated types
+     * @param dexCache the destination directory where generated and optimized
+     *     dex files will be written. If null, this class will try to guess the
+     *     application's private data dir.
      */
-    public ClassLoader generateAndLoad(ClassLoader parent, File dexDir) throws IOException {
+    public ClassLoader generateAndLoad(ClassLoader parent, File dexCache) throws IOException {
+        if (dexCache == null) {
+            String property = System.getProperty("dexmaker.dexcache");
+            if (property != null) {
+                dexCache = new File(property);
+            } else {
+                dexCache = new AppDataDirGuesser().guess();
+                if (dexCache == null) {
+                    throw new IllegalArgumentException("dexcache == null (and no default could be"
+                            + " found; consider setting the 'dexmaker.dexcache' system property)");
+                }
+            }
+        }
+
         byte[] dex = generate();
 
         /*
@@ -349,7 +371,7 @@ public final class DexMaker {
          *
          * TODO: load the dex from memory where supported.
          */
-        File result = File.createTempFile("Generated", ".jar", dexDir);
+        File result = File.createTempFile("Generated", ".jar", dexCache);
         result.deleteOnExit();
         JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(result));
         jarOut.putNextEntry(new JarEntry(DexFormat.DEX_IN_JAR_NAME));
@@ -359,7 +381,7 @@ public final class DexMaker {
         try {
             return (ClassLoader) Class.forName("dalvik.system.DexClassLoader")
                     .getConstructor(String.class, String.class, String.class, ClassLoader.class)
-                    .newInstance(result.getPath(), dexDir.getAbsolutePath(), null, parent);
+                    .newInstance(result.getPath(), dexCache.getAbsolutePath(), null, parent);
         } catch (ClassNotFoundException e) {
             throw new UnsupportedOperationException("load() requires a Dalvik VM", e);
         } catch (InvocationTargetException e) {

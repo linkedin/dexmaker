@@ -126,7 +126,6 @@ public final class ProxyBuilder<T> {
             = Collections.synchronizedMap(new HashMap<Class<?>, Class<?>>());
 
     private final Class<T> baseClass;
-    // TODO: make DexMaker do the defaulting here
     private ClassLoader parentClassLoader = ProxyBuilder.class.getClassLoader();
     private InvocationHandler handler;
     private File dexCache;
@@ -156,6 +155,11 @@ public final class ProxyBuilder<T> {
         return this;
     }
 
+    /**
+     * Sets the directory where executable code is stored. See {@link
+     * DexMaker#generateAndLoad DexMaker.generateAndLoad()} for guidance on
+     * choosing a secure location for the dex cache.
+     */
     public ProxyBuilder<T> dexCache(File dexCache) {
         this.dexCache = dexCache;
         return this;
@@ -307,6 +311,19 @@ public final class ProxyBuilder<T> {
         } catch (IllegalAccessException e) {
             // Should not be thrown, we just set the field to accessible.
             throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Returns true if {@code c} is a proxy class created by this builder.
+     */
+    public static boolean isProxyClass(Class<?> c) {
+        // TODO: use a marker interface instead?
+        try {
+            c.getDeclaredField(FIELD_NAME_HANDLER);
+            return true;
+        } catch (NoSuchFieldException e) {
+            return false;
         }
     }
 

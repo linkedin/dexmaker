@@ -195,8 +195,8 @@ public final class ProxyBuilder<T> {
         try {
             constructor = proxyClass.getConstructor(constructorArgTypes);
         } catch (NoSuchMethodException e) {
-            // Thrown when the constructor to be called does not exist.
-            throw new IllegalArgumentException("could not find matching constructor", e);
+            throw new IllegalArgumentException("No constructor for " + proxyClass.getName()
+                    + " with parameter types " + Arrays.toString(constructorArgTypes));
         }
         T result;
         try {

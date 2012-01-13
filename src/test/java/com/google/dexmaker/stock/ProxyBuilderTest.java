@@ -22,7 +22,10 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
@@ -164,7 +167,7 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals(false, proxy.equals(proxy));
     }
 
-    public static class AllPrimitiveMethods {
+    public static class AllReturnTypes {
         public boolean getBoolean() { return true; }
         public int getInt() { return 1; }
         public byte getByte() { return 2; }
@@ -173,10 +176,12 @@ public class ProxyBuilderTest extends TestCase {
         public float getFloat() { return 5f; }
         public double getDouble() { return 6.0; }
         public char getChar() { return 'c'; }
+        public int[] getIntArray() { return new int[] { 8, 9 }; }
+        public String[] getStringArray() { return new String[] { "d", "e" }; }
     }
 
-    public void testAllPrimitiveReturnTypes() throws Throwable {
-        AllPrimitiveMethods proxy = proxyFor(AllPrimitiveMethods.class).build();
+    public void testAllReturnTypes() throws Throwable {
+        AllReturnTypes proxy = proxyFor(AllReturnTypes.class).build();
         fakeHandler.setFakeResult(false);
         assertEquals(false, proxy.getBoolean());
         fakeHandler.setFakeResult(8);
@@ -193,9 +198,13 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals(13.0, proxy.getDouble());
         fakeHandler.setFakeResult('z');
         assertEquals('z', proxy.getChar());
+        fakeHandler.setFakeResult(new int[] { -1, -2 });
+        assertEquals("[-1, -2]", Arrays.toString(proxy.getIntArray()));
+        fakeHandler.setFakeResult(new String[] { "x", "y" });
+        assertEquals("[x, y]", Arrays.toString(proxy.getStringArray()));
     }
 
-    public static class PassThroughAllPrimitives {
+    public static class PassThroughAllTypes {
         public boolean getBoolean(boolean input) { return input; }
         public int getInt(int input) { return input; }
         public byte getByte(byte input) { return input; }
@@ -215,8 +224,8 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
-    public void testPassThroughWorksForAllPrimitives() throws Exception {
-        PassThroughAllPrimitives proxy = proxyFor(PassThroughAllPrimitives.class)
+    public void testPassThroughWorksForAllTypes() throws Exception {
+        PassThroughAllTypes proxy = proxyFor(PassThroughAllTypes.class)
                 .handler(new InvokeSuperHandler())
                 .build();
         assertEquals(false, proxy.getBoolean(false));
@@ -244,12 +253,12 @@ public class ProxyBuilderTest extends TestCase {
         proxy.getNothing();
     }
 
-    public static class ExtendsAllPrimitiveMethods extends AllPrimitiveMethods {
+    public static class ExtendsAllReturnTypes extends AllReturnTypes {
         public int example() { return 0; }
     }
 
     public void testProxyWorksForSuperclassMethodsAlso() throws Throwable {
-        ExtendsAllPrimitiveMethods proxy = proxyFor(ExtendsAllPrimitiveMethods.class).build();
+        ExtendsAllReturnTypes proxy = proxyFor(ExtendsAllReturnTypes.class).build();
         fakeHandler.setFakeResult(99);
         assertEquals(99, proxy.example());
         assertEquals(99, proxy.getInt());
@@ -342,7 +351,7 @@ public class ProxyBuilderTest extends TestCase {
 
     public void testDefaultProxyHasSuperMethodToAccessOriginal() throws Exception {
         Object objectProxy = proxyFor(Object.class).build();
-        assertNotNull(objectProxy.getClass().getMethod("super_hashCode"));
+        assertNotNull(objectProxy.getClass().getMethod("super$hashCode$int"));
     }
 
     public static class PrintsOddAndValue {
@@ -370,6 +379,31 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals("odd 1", proxy.method(1));
         assertEquals("even 2", proxy.method(2));
         assertEquals("odd 3", proxy.method(3));
+    }
+    
+    public void testCallSuperThrows() throws Exception {
+        InvocationHandler handler = new InvocationHandler() {
+            public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+                return ProxyBuilder.callSuper(o, method, objects);
+            }
+        };
+
+        FooThrows fooThrows = proxyFor(FooThrows.class)
+                .handler(handler)
+                .build();
+
+        try {
+            fooThrows.foo();
+            fail();
+        } catch (IllegalStateException expected) {
+            assertEquals("boom!", expected.getMessage());
+        }
+    }
+    
+    public static class FooThrows {
+        public void foo() {
+            throw new IllegalStateException("boom!");
+        }
     }
 
     public static class DoubleReturn {
@@ -564,7 +598,166 @@ public class ProxyBuilderTest extends TestCase {
 
         assertTrue(a.getClass() != b.getClass());
     }
+    
+    public void testAbstractClassWithUndeclaredInterfaceMethod() throws Throwable {
+        DeclaresInterface declaresInterface = proxyFor(DeclaresInterface.class)
+                .build();
+        assertEquals("fake result", declaresInterface.call());
+        try {
+            ProxyBuilder.callSuper(declaresInterface, Callable.class.getMethod("call"));
+            fail();
+        } catch (AbstractMethodError expected) {
+        }
+    }
+    
+    public static abstract class DeclaresInterface implements Callable<String> {
+    }
 
+    public void testImplementingInterfaces() throws Throwable {
+        SimpleClass simpleClass = proxyFor(SimpleClass.class)
+                .implementing(Callable.class)
+                .implementing(Comparable.class)
+                .build();
+        assertEquals("fake result", simpleClass.simpleMethod());
+
+        Callable<?> asCallable = (Callable<?>) simpleClass;
+        assertEquals("fake result", asCallable.call());
+
+        Comparable<?> asComparable = (Comparable<?>) simpleClass;
+        fakeHandler.fakeResult = 3;
+        assertEquals(3, asComparable.compareTo(null));
+    }
+
+    public void testCallSuperWithInterfaceMethod() throws Throwable {
+        SimpleClass simpleClass = proxyFor(SimpleClass.class)
+                .implementing(Callable.class)
+                .build();
+        try {
+            ProxyBuilder.callSuper(simpleClass, Callable.class.getMethod("call"));
+            fail();
+        } catch (AbstractMethodError expected) {
+        } catch (NoSuchMethodError expected) {
+        }
+    }
+
+    public void testImplementInterfaceCallingThroughConcreteClass() throws Throwable {
+        InvocationHandler invocationHandler = new InvocationHandler() {
+            public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+                assertEquals("a", ProxyBuilder.callSuper(o, method, objects));
+                return "b";
+            }
+        };
+        ImplementsCallable proxy = proxyFor(ImplementsCallable.class)
+                .implementing(Callable.class)
+                .handler(invocationHandler)
+                .build();
+        assertEquals("b", proxy.call());
+        assertEquals("a", ProxyBuilder.callSuper(
+                proxy, ImplementsCallable.class.getMethod("call")));
+    }
+    
+    /**
+     * This test is a bit unintuitive because it exercises the synthetic methods
+     * that support covariant return types. Calling 'Object call()' on the
+     * interface bridges to 'String call()', and so the super method appears to
+     * also be proxied.
+     */
+    public void testImplementInterfaceCallingThroughInterface() throws Throwable {
+        final AtomicInteger count = new AtomicInteger();
+
+        InvocationHandler invocationHandler = new InvocationHandler() {
+            public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+                count.incrementAndGet();
+                return ProxyBuilder.callSuper(o, method, objects);
+            }
+        };
+
+        Callable<?> proxy = proxyFor(ImplementsCallable.class)
+                .implementing(Callable.class)
+                .handler(invocationHandler)
+                .build();
+
+        // the invocation handler is called twice!
+        assertEquals("a", proxy.call());
+        assertEquals(2, count.get());
+
+        // the invocation handler is called, even though this is a callSuper() call!
+        assertEquals("a", ProxyBuilder.callSuper(proxy, Callable.class.getMethod("call")));
+        assertEquals(3, count.get());
+    }
+    
+    public static class ImplementsCallable implements Callable<String> {
+        public String call() throws Exception {
+            return "a";
+        }
+    }
+
+    /**
+     * This test shows that our generated proxies follow the bytecode convention
+     * where methods can have the same name but unrelated return types. This is
+     * different from javac's convention where return types must be assignable
+     * in one direction or the other.
+     */
+    public void testInterfacesSameNamesDifferentReturnTypes() throws Throwable {
+        InvocationHandler handler = new InvocationHandler() {
+            public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+                if (method.getReturnType() == void.class) {
+                    return null;
+                } else if (method.getReturnType() == String.class) {
+                    return "X";
+                } else if (method.getReturnType() == int.class) {
+                    return 3;
+                } else {
+                    throw new AssertionFailedError();
+                }
+            }
+        };
+        
+        Object o = proxyFor(Object.class)
+                .implementing(FooReturnsVoid.class, FooReturnsString.class, FooReturnsInt.class)
+                .handler(handler)
+                .build();
+        
+        FooReturnsVoid a = (FooReturnsVoid) o;
+        a.foo();
+        
+        FooReturnsString b = (FooReturnsString) o;
+        assertEquals("X", b.foo());
+        
+        FooReturnsInt c = (FooReturnsInt) o;
+        assertEquals(3, c.foo());
+    }
+    
+    public void testInterfacesSameNamesSameReturnType() throws Throwable {
+        Object o = proxyFor(Object.class)
+                .implementing(FooReturnsInt.class, FooReturnsInt2.class)
+                .build();
+        
+        fakeHandler.setFakeResult(3);
+
+        FooReturnsInt a = (FooReturnsInt) o;
+        assertEquals(3, a.foo());
+
+        FooReturnsInt2 b = (FooReturnsInt2) o;
+        assertEquals(3, b.foo());
+    }
+    
+    public interface FooReturnsVoid {
+        void foo();
+    }
+
+    public interface FooReturnsString {
+        String foo();
+    }
+
+    public interface FooReturnsInt {
+        int foo();
+    }
+    
+    public interface FooReturnsInt2 {
+        int foo();
+    }
+    
     private ClassLoader newPathClassLoader() throws Exception {
         return (ClassLoader) Class.forName("dalvik.system.PathClassLoader")
                 .getConstructor(String.class, ClassLoader.class)

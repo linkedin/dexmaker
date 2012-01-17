@@ -587,7 +587,7 @@ public final class Code {
     }
 
     /**
-     * Copies the value in {@code target} to the static field {@code fieldId}.
+     * Copies the value in the static field {@code fieldId} to {@code target}.
      */
     public <V> void sget(FieldId<?, V> fieldId, Local<V> target) {
         addInstruction(new ThrowingCstInsn(Rops.opGetStatic(target.type.ropType), sourcePosition,
@@ -782,8 +782,7 @@ public final class Code {
     }
 
     /**
-     * Assigns {@code target} to the element of {@code array} at index {@code
-     * index}.
+     * Assigns the element at {@code index} in {@code array} to {@code target}.
      */
     public void aget(Local<?> target, Local<?> array, Local<Integer> index) {
         addInstruction(new ThrowingInsn(Rops.opAget(target.type.ropType), sourcePosition,
@@ -792,8 +791,7 @@ public final class Code {
     }
 
     /**
-     * Sets the element at {@code index} in {@code array} the value in {@code
-     * source}.
+     * Assigns {@code source} to the element at {@code index} in {@code array}.
      */
     public void aput(Local<?> array, Local<Integer> index, Local<?> source) {
         addInstruction(new ThrowingInsn(Rops.opAput(source.type.ropType), sourcePosition,

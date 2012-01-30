@@ -13,6 +13,16 @@
             <compilerarg value="-Xlint"/>
             <classpath>
                 <pathelement location="build/dx/classes" />
+                <pathelement location="lib/mockito-core-1.9.1-SNAPSHOT.jar" />
+            </classpath>
+        </javac>
+        <mkdir dir="build/mockito/classes"/>
+        <javac srcdir="src/mockito/java" includes="**" destdir="build/mockito/classes"
+               debug="on" source="1.5" target="1.5" includeantruntime="false">
+            <compilerarg value="-Xlint"/>
+            <classpath>
+                <pathelement location="build/main/classes" />
+                <pathelement location="lib/mockito-core-1.9.1-SNAPSHOT.jar" />
             </classpath>
         </javac>
         <mkdir dir="build/test/classes"/>
@@ -32,6 +42,8 @@
         <jarjar jarfile="build/dexmaker.jar">
             <fileset dir="build/dx/classes"/>
             <fileset dir="build/main/classes"/>
+            <fileset dir="build/mockito/classes"/>
+            <fileset dir="src/mockito/resources"/>
             <rule pattern="com.android.dx.**" result="com.google.dexmaker.dx.@1"/>
         </jarjar>
     </target>

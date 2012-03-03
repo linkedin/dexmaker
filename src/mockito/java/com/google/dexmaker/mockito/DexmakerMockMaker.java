@@ -33,10 +33,6 @@ public final class DexmakerMockMaker implements MockMaker {
 
     public <T> T createMock(Class<T> typeToMock, Class<?>[] extraInterfaces,
             MockitoInvocationHandler handler, MockSettingsInfo settings) {
-        // TODO
-        System.setProperty("dexmaker.dexcache", "/data/vogar"); // TODO
-        // TODO
-        
         InvocationHandler invocationHandler = new InvocationHandlerAdapter(handler);
 
         if (typeToMock.isInterface()) {

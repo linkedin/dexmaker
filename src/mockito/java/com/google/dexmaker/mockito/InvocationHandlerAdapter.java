@@ -19,22 +19,22 @@ package com.google.dexmaker.mockito;
 import com.google.dexmaker.stock.ProxyBuilder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import org.mockito.internal.invocation.Invocation;
+import org.mockito.internal.invocation.InvocationImpl;
 import org.mockito.internal.invocation.MockitoMethod;
 import org.mockito.internal.invocation.realmethod.RealMethod;
 import org.mockito.internal.progress.SequenceNumber;
 import org.mockito.internal.util.ObjectMethodsGuru;
-import org.mockito.plugins.MockitoInvocationHandler;
+import org.mockito.invocation.MockHandler;
 
 /**
  * Handles proxy method invocations to dexmaker's InvocationHandler by calling
  * a MockitoInvocationHandler.
  */
 final class InvocationHandlerAdapter implements InvocationHandler {
-    private MockitoInvocationHandler handler;
+    private MockHandler handler;
     private final ObjectMethodsGuru objectMethodsGuru = new ObjectMethodsGuru();
 
-    public InvocationHandlerAdapter(MockitoInvocationHandler handler) {
+    public InvocationHandlerAdapter(MockHandler handler) {
         this.handler = handler;
     }
 
@@ -51,15 +51,15 @@ final class InvocationHandlerAdapter implements InvocationHandler {
 
 
         ProxiedMethod proxiedMethod = new ProxiedMethod(method);
-        return handler.handle(new Invocation(proxy, proxiedMethod, args, SequenceNumber.next(),
+        return handler.handle(new InvocationImpl(proxy, proxiedMethod, args, SequenceNumber.next(),
                 proxiedMethod));
     }
 
-    public MockitoInvocationHandler getHandler() {
+    public MockHandler getHandler() {
         return handler;
     }
 
-    public void setHandler(MockitoInvocationHandler handler) {
+    public void setHandler(MockHandler handler) {
         this.handler = handler;
     }
 

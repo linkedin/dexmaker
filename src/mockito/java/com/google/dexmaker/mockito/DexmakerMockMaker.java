@@ -20,10 +20,11 @@ import com.google.dexmaker.stock.ProxyBuilder;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.util.Set;
 import org.mockito.exceptions.base.MockitoException;
+import org.mockito.invocation.MockHandler;
+import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
-import org.mockito.plugins.MockSettingsInfo;
-import org.mockito.plugins.MockitoInvocationHandler;
 
 /**
  * Generates mock instances on Android's runtime.
@@ -31,8 +32,10 @@ import org.mockito.plugins.MockitoInvocationHandler;
 public final class DexmakerMockMaker implements MockMaker {
     private final UnsafeAllocator unsafeAllocator = UnsafeAllocator.create();
 
-    public <T> T createMock(Class<T> typeToMock, Class<?>[] extraInterfaces,
-            MockitoInvocationHandler handler, MockSettingsInfo settings) {
+    public <T> T createMock(MockCreationSettings<T> settings, MockHandler handler) {
+        Class<T> typeToMock = settings.getTypeToMock();
+        Set<Class> interfacesSet = settings.getExtraInterfaces();
+        Class<?>[] extraInterfaces = interfacesSet.toArray(new Class[interfacesSet.size()]);
         InvocationHandler invocationHandler = new InvocationHandlerAdapter(handler);
 
         if (typeToMock.isInterface()) {
@@ -64,16 +67,16 @@ public final class DexmakerMockMaker implements MockMaker {
         }
     }
 
-    public void resetMock(Object mock, MockitoInvocationHandler newHandler, MockSettingsInfo settings) {
+    public void resetMock(Object mock, MockHandler newHandler, MockCreationSettings settings) {
         InvocationHandlerAdapter adapter = getInvocationHandlerAdapter(mock);
         adapter.setHandler(newHandler);
     }
 
-    public MockitoInvocationHandler getHandler(Object mock) {
+    public MockHandler getHandler(Object mock) {
         InvocationHandlerAdapter adapter = getInvocationHandlerAdapter(mock);
         return adapter != null ? adapter.getHandler() : null;
     }
-    
+
     private InvocationHandlerAdapter getInvocationHandlerAdapter(Object mock) {
         if (Proxy.isProxyClass(mock.getClass())) {
             InvocationHandler invocationHandler = Proxy.getInvocationHandler(mock);

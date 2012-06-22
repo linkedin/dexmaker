@@ -80,6 +80,10 @@ public final class AppDataDirGuesserTest extends TestCase {
                     public boolean isWriteableDirectory(File file) {
                         return !notWriteable.contains(file.getAbsolutePath());
                     }
+                    @Override
+                    boolean fileOrDirExists(File file) {
+                        return true;
+                    }
                 };
                 File[] results = guesser.guessPath(path);
                 assertNotNull("Null results for " + path, results);

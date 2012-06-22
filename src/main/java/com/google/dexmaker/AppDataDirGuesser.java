@@ -71,12 +71,23 @@ class AppDataDirGuesser {
             if (dash != -1) {
                 end = dash;
             }
-            File file = new File("/data/data/" + potential.substring(start, end) + "/cache");
-            if (isWriteableDirectory(file)) {
-                results.add(file);
+            String packageName = potential.substring(start, end);
+            File dataDir = new File("/data/data/" + packageName);
+            if (isWriteableDirectory(dataDir)) {
+                File cacheDir = new File(dataDir, "cache");
+                // The cache directory might not exist -- create if necessary
+                if (fileOrDirExists(cacheDir) || cacheDir.mkdir()) {
+                    if (isWriteableDirectory(cacheDir)) {
+                        results.add(cacheDir);
+                    }
+                }
             }
         }
         return results.toArray(new File[results.size()]);
+    }
+
+    boolean fileOrDirExists(File file) {
+        return file.exists();
     }
 
     boolean isWriteableDirectory(File file) {

@@ -17,6 +17,7 @@
 package com.google.dexmaker;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +32,7 @@ class AppDataDirGuesser {
             Class<?> clazz = Class.forName("dalvik.system.PathClassLoader");
             clazz.cast(classLoader);
             // Use the toString() method to calculate the data directory.
-            String pathFromThisClassLoader = getPathFromThisClassLoader(classLoader);
+            String pathFromThisClassLoader = getPathFromThisClassLoader(classLoader, clazz);
             File[] results = guessPath(pathFromThisClassLoader);
             if (results.length > 0) {
                 return results[0];
@@ -46,7 +47,19 @@ class AppDataDirGuesser {
         return AppDataDirGuesser.class.getClassLoader();
     }
 
-    private String getPathFromThisClassLoader(ClassLoader classLoader) {
+    private String getPathFromThisClassLoader(ClassLoader classLoader,
+            Class<?> pathClassLoaderClass) {
+        // Prior to ICS, we can simply read the "path" field of the
+        // PathClassLoader.
+        try {
+            Field pathField = pathClassLoaderClass.getDeclaredField("path");
+            pathField.setAccessible(true);
+            return (String) pathField.get(classLoader);
+        } catch (NoSuchFieldException ignored) {
+        } catch (IllegalAccessException ignored) {
+        } catch (ClassCastException ignored) {
+        }
+
         // Parsing toString() method: yuck.  But no other way to get the path.
         // Strip out the bit between angle brackets, that's our path.
         String result = classLoader.toString();

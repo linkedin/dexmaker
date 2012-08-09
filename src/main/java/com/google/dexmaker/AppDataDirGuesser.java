@@ -71,6 +71,12 @@ class AppDataDirGuesser {
 
     File[] guessPath(String input) {
         List<File> results = new ArrayList<File>();
+        // Post JB, the system property is set to the applications private data cache
+        // directory.
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        if (isWriteableDirectory(tmpDir)) {
+            results.add(tmpDir);
+        }
         for (String potential : input.split(":")) {
             if (!potential.startsWith("/data/app/")) {
                 continue;

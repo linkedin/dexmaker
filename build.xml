@@ -13,7 +13,7 @@
             <compilerarg value="-Xlint"/>
             <classpath>
                 <pathelement location="build/dx/classes" />
-                <pathelement location="lib/mockito-core-1.9.1-SNAPSHOT.jar" />
+                <pathelement location="lib/mockito-core-1.9.8.jar" />
             </classpath>
         </javac>
         <mkdir dir="build/mockito/classes"/>
@@ -22,7 +22,7 @@
             <compilerarg value="-Xlint"/>
             <classpath>
                 <pathelement location="build/main/classes" />
-                <pathelement location="lib/mockito-core-1.9.1-SNAPSHOT.jar" />
+                <pathelement location="lib/mockito-core-1.9.8.jar" />
             </classpath>
         </javac>
         <mkdir dir="build/test/classes"/>

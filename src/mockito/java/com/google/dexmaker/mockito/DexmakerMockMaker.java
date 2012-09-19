@@ -22,14 +22,16 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.Set;
 import org.mockito.exceptions.base.MockitoException;
+import org.mockito.exceptions.stacktrace.StackTraceCleaner;
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
+import org.mockito.plugins.StackTraceCleanerProvider;
 
 /**
  * Generates mock instances on Android's runtime.
  */
-public final class DexmakerMockMaker implements MockMaker {
+public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProvider {
     private final UnsafeAllocator unsafeAllocator = UnsafeAllocator.create();
 
     public <T> T createMock(MockCreationSettings<T> settings, MockHandler handler) {
@@ -93,5 +95,16 @@ public final class DexmakerMockMaker implements MockMaker {
         }
 
         return null;
+    }
+
+    public StackTraceCleaner getStackTraceCleaner(final StackTraceCleaner defaultCleaner) {
+        return new StackTraceCleaner() {
+            public boolean isOut(StackTraceElement candidate) {
+                return defaultCleaner.isOut(candidate)
+                        || candidate.getClassName().endsWith("_Proxy") // dexmaker class proxies
+                        || candidate.getClassName().startsWith("$Proxy") // dalvik interface proxies
+                        || candidate.getClassName().startsWith("com.google.dexmaker.mockito.");
+            }
+        };
     }
 }

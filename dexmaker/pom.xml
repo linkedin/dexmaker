@@ -60,7 +60,7 @@
                         </goals>
                         <configuration>
                             <includes>
-                                <include>com.google.dexmaker:dexmaker</include>
+                                <include>com.google.dexmaker:dexmaker-library</include>
                                 <include>com.google.dexmaker:dexmaker-mockito</include>
                                 <include>com.google.dexmaker:dexmaker-dx</include>
                             </includes>

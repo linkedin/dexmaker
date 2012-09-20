@@ -18,75 +18,61 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
+        <groupId>com.google.dexmaker</groupId>
+        <artifactId>dexmaker-parent</artifactId>
+        <version>0.9</version>
+        <relativePath>parent.pom</relativePath>
     </parent>
 
     <groupId>com.google.dexmaker</groupId>
-    <artifactId>dexmaker-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <artifactId>dexmaker</artifactId>
+    <name>dexmaker</name>
+    <packaging>jar</packaging>
 
-    <name>dexmaker parent</name>
-    <url>http://code.google.com/p/dexmaker</url>
-
-    <modules>
-        <module>dx</module>
-        <module>library</module>
-        <module>mockito</module>
-        <module>dexmaker</module>
-    </modules>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!-- Compilation -->
-        <java.version>1.5</java.version>
-
-        <!-- Test Dependencies -->
-        <junit.version>3.8.1</junit.version>
-    </properties>
-
-    <scm>
-        <connection>scm:git:https://code.google.com/p/dexmaker/</connection>
-        <developerConnection>scm:git:https://code.google.com/p/dexmaker/</developerConnection>
-        <url>http://code.google.com/p/dexmaker/source/browse</url>
-    </scm>
-
-    <issueManagement>
-        <system>code.google.com</system>
-        <url>http://code.google.com/p/dexmaker/issues</url>
-    </issueManagement>
-
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.google.dexmaker</groupId>
+            <artifactId>dexmaker-library</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.dexmaker</groupId>
+            <artifactId>dexmaker-dx</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.dexmaker</groupId>
+            <artifactId>dexmaker-mockito</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>jarjar-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jarjar</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>com.google.dexmaker:dexmaker-library</include>
+                                <include>com.google.dexmaker:dexmaker-mockito</include>
+                                <include>com.google.dexmaker:dexmaker-dx</include>
+                            </includes>
+                            <rules>
+                                <rule>
+                                    <pattern>com.android.dx.**</pattern>
+                                    <result>com.google.dexmaker.dx.@1</result>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

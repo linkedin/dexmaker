@@ -21,18 +21,19 @@
         <groupId>com.google.dexmaker</groupId>
         <artifactId>dexmaker-parent</artifactId>
         <version>0.9</version>
-        <relativePath>../parent.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.google.dexmaker</groupId>
-    <artifactId>dexmaker-library</artifactId>
-    <name>dexmaker library</name>
+    <artifactId>dexmaker</artifactId>
+    <name>dexmaker</name>
 
     <dependencies>
         <dependency>
             <groupId>com.google.dexmaker</groupId>
             <artifactId>dexmaker-dx</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -46,6 +47,29 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>jarjar-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jarjar</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>com.google.dexmaker:dexmaker-dx</include>
+                            </includes>
+                            <rules>
+                                <rule>
+                                    <pattern>com.android.dx.**</pattern>
+                                    <result>com.google.dexmaker.dx.@1</result>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

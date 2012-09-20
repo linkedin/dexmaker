@@ -21,7 +21,7 @@
         <groupId>com.google.dexmaker</groupId>
         <artifactId>dexmaker-parent</artifactId>
         <version>0.9</version>
-        <relativePath>../parent.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.google.dexmaker</groupId>
@@ -32,7 +32,7 @@
     <dependencies>
         <dependency>
             <groupId>com.google.dexmaker</groupId>
-            <artifactId>dexmaker-library</artifactId>
+            <artifactId>dexmaker</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

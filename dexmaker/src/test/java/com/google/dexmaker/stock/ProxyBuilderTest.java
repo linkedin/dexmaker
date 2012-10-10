@@ -771,6 +771,17 @@ public class ProxyBuilderTest extends TestCase {
                 .build();
     }
 
+    public static class FinalToString {
+        @Override public final String toString() {
+            return "no proxy";
+        }
+    }
+
+    // https://code.google.com/p/dexmaker/issues/detail?id=12
+    public void testFinalToString() throws Throwable {
+        assertEquals("no proxy", proxyFor(FinalToString.class).build().toString());
+    }
+
     /** Simple helper to add the most common args for this test to the proxy builder. */
     private <T> ProxyBuilder<T> proxyFor(Class<T> clazz) throws Exception {
         return ProxyBuilder.forClass(clazz)

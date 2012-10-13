@@ -595,11 +595,12 @@ public final class ProxyBuilder<T> {
      */
     private Method[] getMethodsToProxyRecursive() {
         Set<MethodSetEntry> methodsToProxy = new HashSet<MethodSetEntry>();
+        Set<MethodSetEntry> seenFinalMethods = new HashSet<MethodSetEntry>();
         for (Class<?> c = baseClass; c != null; c = c.getSuperclass()) {
-            getMethodsToProxy(methodsToProxy, c);
+            getMethodsToProxy(methodsToProxy, seenFinalMethods, c);
         }
         for (Class<?> c : interfaces) {
-            getMethodsToProxy(methodsToProxy, c);
+            getMethodsToProxy(methodsToProxy, seenFinalMethods, c);
         }
 
         Method[] results = new Method[methodsToProxy.size()];
@@ -610,10 +611,14 @@ public final class ProxyBuilder<T> {
         return results;
     }
 
-    private void getMethodsToProxy(Set<MethodSetEntry> sink, Class<?> c) {
+    private void getMethodsToProxy(Set<MethodSetEntry> sink, Set<MethodSetEntry> seenFinalMethods,
+            Class<?> c) {
         for (Method method : c.getDeclaredMethods()) {
             if ((method.getModifiers() & Modifier.FINAL) != 0) {
-                // Skip final methods, we can't override them.
+                // Skip final methods, we can't override them. We
+                // also need to remember them, in case the same
+                // method exists in a parent class.
+                seenFinalMethods.add(new MethodSetEntry(method));
                 continue;
             }
             if ((method.getModifiers() & STATIC) != 0) {
@@ -624,11 +629,17 @@ public final class ProxyBuilder<T> {
                 // Skip finalize method, it's likely important that it execute as normal.
                 continue;
             }
-            sink.add(new MethodSetEntry(method));
+            MethodSetEntry entry = new MethodSetEntry(method);
+            if (seenFinalMethods.contains(entry)) {
+                // This method is final in a child class.
+                // We can't override it.
+                continue;
+            }
+            sink.add(entry);
         }
-        
+
         for (Class<?> i : c.getInterfaces()) {
-            getMethodsToProxy(sink, i);
+            getMethodsToProxy(sink, seenFinalMethods, i);
         }
     }
 

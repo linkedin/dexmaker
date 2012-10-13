@@ -100,7 +100,7 @@ import java.util.List;
  * unconditionally with {@link #jump jump(Label)} or conditionally based on a
  * comparison using {@link #compare compare()}.
  *
- * <p>Most methods should contain either a return instruction. Void methods
+ * <p>Most methods should contain a return instruction. Void methods
  * should use {@link #returnVoid()}; non-void methods should use {@link
  * #returnValue returnValue()} with a local whose return type matches the
  * method's return type. Constructors are considered void methods and should
@@ -506,9 +506,12 @@ public final class Code {
     }
 
     /**
-     * Executes {@code op} and sets {@code target} to the result.
+     * Executes {@code op} and sets {@code target} to the result. For most
+     * binary operations, the types of {@code a} and {@code b} must be the same.
+     * Shift operations (like {@link BinaryOp#SHIFT_LEFT}) require {@code b} to
+     * be an {@code int}, even when {@code a} is a {@code long}.
      */
-    public <T> void op(BinaryOp op, Local<T> target, Local<T> a, Local<T> b) {
+    public <T1, T2> void op(BinaryOp op, Local<T1> target, Local<T1> a, Local<T2> b) {
         Rop rop = op.rop(StdTypeList.make(a.type.ropType, b.type.ropType));
         RegisterSpecList sources = RegisterSpecList.make(a.spec(), b.spec());
 

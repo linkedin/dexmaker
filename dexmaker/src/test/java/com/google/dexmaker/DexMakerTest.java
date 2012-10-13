@@ -730,16 +730,16 @@ public final class DexMakerTest extends TestCase {
     }
 
     public void testIntBinaryOps() throws Exception {
-        Method add = binaryOpMethod(int.class, BinaryOp.ADD);
+        Method add = binaryOpMethod(int.class, int.class, BinaryOp.ADD);
         assertEquals(79, add.invoke(null, 75, 4));
 
-        Method subtract = binaryOpMethod(int.class, BinaryOp.SUBTRACT);
+        Method subtract = binaryOpMethod(int.class, int.class, BinaryOp.SUBTRACT);
         assertEquals(71, subtract.invoke(null, 75, 4));
 
-        Method multiply = binaryOpMethod(int.class, BinaryOp.MULTIPLY);
+        Method multiply = binaryOpMethod(int.class, int.class, BinaryOp.MULTIPLY);
         assertEquals(300, multiply.invoke(null, 75, 4));
 
-        Method divide = binaryOpMethod(int.class, BinaryOp.DIVIDE);
+        Method divide = binaryOpMethod(int.class, int.class, BinaryOp.DIVIDE);
         assertEquals(18, divide.invoke(null, 75, 4));
         try {
             divide.invoke(null, 75, 0);
@@ -748,7 +748,7 @@ public final class DexMakerTest extends TestCase {
             assertEquals(ArithmeticException.class, expected.getCause().getClass());
         }
 
-        Method remainder = binaryOpMethod(int.class, BinaryOp.REMAINDER);
+        Method remainder = binaryOpMethod(int.class, int.class, BinaryOp.REMAINDER);
         assertEquals(3, remainder.invoke(null, 75, 4));
         try {
             remainder.invoke(null, 75, 0);
@@ -757,117 +757,117 @@ public final class DexMakerTest extends TestCase {
             assertEquals(ArithmeticException.class, expected.getCause().getClass());
         }
 
-        Method and = binaryOpMethod(int.class, BinaryOp.AND);
+        Method and = binaryOpMethod(int.class, int.class, BinaryOp.AND);
         assertEquals(0xff000000, and.invoke(null, 0xff00ff00, 0xffff0000));
 
-        Method or = binaryOpMethod(int.class, BinaryOp.OR);
+        Method or = binaryOpMethod(int.class, int.class, BinaryOp.OR);
         assertEquals(0xffffff00, or.invoke(null, 0xff00ff00, 0xffff0000));
 
-        Method xor = binaryOpMethod(int.class, BinaryOp.XOR);
+        Method xor = binaryOpMethod(int.class, int.class, BinaryOp.XOR);
         assertEquals(0x00ffff00, xor.invoke(null, 0xff00ff00, 0xffff0000));
 
-        Method shiftLeft = binaryOpMethod(int.class, BinaryOp.SHIFT_LEFT);
+        Method shiftLeft = binaryOpMethod(int.class, int.class, BinaryOp.SHIFT_LEFT);
         assertEquals(0xcd123400, shiftLeft.invoke(null, 0xabcd1234, 8));
 
-        Method shiftRight = binaryOpMethod(int.class, BinaryOp.SHIFT_RIGHT);
+        Method shiftRight = binaryOpMethod(int.class, int.class, BinaryOp.SHIFT_RIGHT);
         assertEquals(0xffabcd12, shiftRight.invoke(null, 0xabcd1234, 8));
 
         Method unsignedShiftRight = binaryOpMethod(int.class,
-                BinaryOp.UNSIGNED_SHIFT_RIGHT);
+                int.class, BinaryOp.UNSIGNED_SHIFT_RIGHT);
         assertEquals(0x00abcd12, unsignedShiftRight.invoke(null, 0xabcd1234, 8));
     }
 
     public void testLongBinaryOps() throws Exception {
-        Method add = binaryOpMethod(long.class, BinaryOp.ADD);
-        assertEquals(79L, add.invoke(null, 75L, 4L));
+        Method add = binaryOpMethod(long.class, long.class, BinaryOp.ADD);
+        assertEquals(30000000079L, add.invoke(null, 10000000075L, 20000000004L));
 
-        Method subtract = binaryOpMethod(long.class, BinaryOp.SUBTRACT);
-        assertEquals(71L, subtract.invoke(null, 75L, 4L));
+        Method subtract = binaryOpMethod(long.class, long.class, BinaryOp.SUBTRACT);
+        assertEquals(20000000071L, subtract.invoke(null, 30000000075L, 10000000004L));
 
-        Method multiply = binaryOpMethod(long.class, BinaryOp.MULTIPLY);
-        assertEquals(300L, multiply.invoke(null, 75L, 4L));
+        Method multiply = binaryOpMethod(long.class, long.class, BinaryOp.MULTIPLY);
+        assertEquals(-8742552812415203028L, multiply.invoke(null, 30000000075L, 20000000004L));
 
-        Method divide = binaryOpMethod(long.class, BinaryOp.DIVIDE);
-        assertEquals(18L, divide.invoke(null, 75L, 4L));
+        Method divide = binaryOpMethod(long.class, long.class, BinaryOp.DIVIDE);
+        assertEquals(-2L, divide.invoke(null, -8742552812415203028L, 4142552812415203028L));
         try {
-            divide.invoke(null, 75L, 0L);
+            divide.invoke(null, -8742552812415203028L, 0L);
             fail();
         } catch (InvocationTargetException expected) {
             assertEquals(ArithmeticException.class, expected.getCause().getClass());
         }
 
-        Method remainder = binaryOpMethod(long.class, BinaryOp.REMAINDER);
-        assertEquals(3L, remainder.invoke(null, 75L, 4L));
+        Method remainder = binaryOpMethod(long.class, long.class, BinaryOp.REMAINDER);
+        assertEquals(10000000004L, remainder.invoke(null, 30000000079L, 20000000075L));
         try {
-            remainder.invoke(null, 75L, 0L);
+            remainder.invoke(null, 30000000079L, 0L);
             fail();
         } catch (InvocationTargetException expected) {
             assertEquals(ArithmeticException.class, expected.getCause().getClass());
         }
 
-        Method and = binaryOpMethod(long.class, BinaryOp.AND);
+        Method and = binaryOpMethod(long.class, long.class, BinaryOp.AND);
         assertEquals(0xff00ff0000000000L,
                 and.invoke(null, 0xff00ff00ff00ff00L, 0xffffffff00000000L));
 
-        Method or = binaryOpMethod(long.class, BinaryOp.OR);
+        Method or = binaryOpMethod(long.class, long.class, BinaryOp.OR);
         assertEquals(0xffffffffff00ff00L,
                 or.invoke(null, 0xff00ff00ff00ff00L, 0xffffffff00000000L));
 
-        Method xor = binaryOpMethod(long.class, BinaryOp.XOR);
+        Method xor = binaryOpMethod(long.class, long.class, BinaryOp.XOR);
         assertEquals(0x00ff00ffff00ff00L,
                 xor.invoke(null, 0xff00ff00ff00ff00L, 0xffffffff00000000L));
 
-        Method shiftLeft = binaryOpMethod(long.class, BinaryOp.SHIFT_LEFT);
-        assertEquals(0xcdef012345678900L, shiftLeft.invoke(null, 0xabcdef0123456789L, 8L));
+        Method shiftLeft = binaryOpMethod(long.class, int.class, BinaryOp.SHIFT_LEFT);
+        assertEquals(0xcdef012345678900L, shiftLeft.invoke(null, 0xabcdef0123456789L, 8));
 
-        Method shiftRight = binaryOpMethod(long.class, BinaryOp.SHIFT_RIGHT);
-        assertEquals(0xffabcdef01234567L, shiftRight.invoke(null, 0xabcdef0123456789L, 8L));
+        Method shiftRight = binaryOpMethod(long.class, int.class, BinaryOp.SHIFT_RIGHT);
+        assertEquals(0xffabcdef01234567L, shiftRight.invoke(null, 0xabcdef0123456789L, 8));
 
-        Method unsignedShiftRight = binaryOpMethod(long.class,
-                BinaryOp.UNSIGNED_SHIFT_RIGHT);
-        assertEquals(0x00abcdef01234567L, unsignedShiftRight.invoke(null, 0xabcdef0123456789L, 8L));
+        Method unsignedShiftRight = binaryOpMethod(
+                long.class, int.class, BinaryOp.UNSIGNED_SHIFT_RIGHT);
+        assertEquals(0x00abcdef01234567L, unsignedShiftRight.invoke(null, 0xabcdef0123456789L, 8));
     }
 
     public void testFloatBinaryOps() throws Exception {
-        Method add = binaryOpMethod(float.class, BinaryOp.ADD);
+        Method add = binaryOpMethod(float.class, float.class, BinaryOp.ADD);
         assertEquals(6.75f, add.invoke(null, 5.5f, 1.25f));
 
-        Method subtract = binaryOpMethod(float.class, BinaryOp.SUBTRACT);
+        Method subtract = binaryOpMethod(float.class, float.class, BinaryOp.SUBTRACT);
         assertEquals(4.25f, subtract.invoke(null, 5.5f, 1.25f));
 
-        Method multiply = binaryOpMethod(float.class, BinaryOp.MULTIPLY);
+        Method multiply = binaryOpMethod(float.class, float.class, BinaryOp.MULTIPLY);
         assertEquals(6.875f, multiply.invoke(null, 5.5f, 1.25f));
 
-        Method divide = binaryOpMethod(float.class, BinaryOp.DIVIDE);
+        Method divide = binaryOpMethod(float.class, float.class, BinaryOp.DIVIDE);
         assertEquals(4.4f, divide.invoke(null, 5.5f, 1.25f));
         assertEquals(Float.POSITIVE_INFINITY, divide.invoke(null, 5.5f, 0.0f));
 
-        Method remainder = binaryOpMethod(float.class, BinaryOp.REMAINDER);
+        Method remainder = binaryOpMethod(float.class, float.class, BinaryOp.REMAINDER);
         assertEquals(0.5f, remainder.invoke(null, 5.5f, 1.25f));
         assertEquals(Float.NaN, remainder.invoke(null, 5.5f, 0.0f));
     }
 
     public void testDoubleBinaryOps() throws Exception {
-        Method add = binaryOpMethod(double.class, BinaryOp.ADD);
+        Method add = binaryOpMethod(double.class, double.class, BinaryOp.ADD);
         assertEquals(6.75, add.invoke(null, 5.5, 1.25));
 
-        Method subtract = binaryOpMethod(double.class, BinaryOp.SUBTRACT);
+        Method subtract = binaryOpMethod(double.class, double.class, BinaryOp.SUBTRACT);
         assertEquals(4.25, subtract.invoke(null, 5.5, 1.25));
 
-        Method multiply = binaryOpMethod(double.class, BinaryOp.MULTIPLY);
+        Method multiply = binaryOpMethod(double.class, double.class, BinaryOp.MULTIPLY);
         assertEquals(6.875, multiply.invoke(null, 5.5, 1.25));
 
-        Method divide = binaryOpMethod(double.class, BinaryOp.DIVIDE);
+        Method divide = binaryOpMethod(double.class, double.class, BinaryOp.DIVIDE);
         assertEquals(4.4, divide.invoke(null, 5.5, 1.25));
         assertEquals(Double.POSITIVE_INFINITY, divide.invoke(null, 5.5, 0.0));
 
-        Method remainder = binaryOpMethod(double.class, BinaryOp.REMAINDER);
+        Method remainder = binaryOpMethod(double.class, double.class, BinaryOp.REMAINDER);
         assertEquals(0.5, remainder.invoke(null, 5.5, 1.25));
         assertEquals(Double.NaN, remainder.invoke(null, 5.5, 0.0));
     }
 
-    private <T> Method binaryOpMethod(Class<T> valueClass, BinaryOp op)
-            throws Exception {
+    private <T1, T2> Method binaryOpMethod(
+            Class<T1> valueAClass, Class<T2> valueBClass, BinaryOp op) throws Exception {
         /*
          * public static int binaryOp(int a, int b) {
          *   int result = a + b;
@@ -875,12 +875,13 @@ public final class DexMakerTest extends TestCase {
          * }
          */
         reset();
-        TypeId<T> valueType = TypeId.get(valueClass);
-        MethodId<?, T> methodId = GENERATED.getMethod(valueType, "call", valueType, valueType);
+        TypeId<T1> valueAType = TypeId.get(valueAClass);
+        TypeId<T2> valueBType = TypeId.get(valueBClass);
+        MethodId<?, T1> methodId = GENERATED.getMethod(valueAType, "call", valueAType, valueBType);
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
-        Local<T> localA = code.getParameter(0, valueType);
-        Local<T> localB = code.getParameter(1, valueType);
-        Local<T> localResult = code.newLocal(valueType);
+        Local<T1> localA = code.getParameter(0, valueAType);
+        Local<T2> localB = code.getParameter(1, valueBType);
+        Local<T1> localResult = code.newLocal(valueAType);
         code.op(op, localResult, localA, localB);
         code.returnValue(localResult);
         return getMethod();

@@ -618,7 +618,11 @@ public final class ProxyBuilder<T> {
                 // Skip final methods, we can't override them. We
                 // also need to remember them, in case the same
                 // method exists in a parent class.
-                seenFinalMethods.add(new MethodSetEntry(method));
+                MethodSetEntry entry = new MethodSetEntry(method);
+                seenFinalMethods.add(entry);
+                // We may have seen this method already, from an interface
+                // implemented by a child class. We need to remove it here.
+                sink.remove(entry);
                 continue;
             }
             if ((method.getModifiers() & STATIC) != 0) {

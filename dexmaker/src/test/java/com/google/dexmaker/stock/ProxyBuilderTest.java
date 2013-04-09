@@ -782,6 +782,20 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals("no proxy", proxyFor(FinalToString.class).build().toString());
     }
 
+    public static class FinalInterfaceImpl implements FooReturnsString {
+        @Override public final String foo() {
+          return "no proxy";
+        }
+    }
+
+    public static class ExtenstionOfFinalInterfaceImpl extends FinalInterfaceImpl
+            implements FooReturnsString {
+    }
+
+    public void testFinalInterfaceImpl() throws Throwable {
+        assertEquals("no proxy", proxyFor(ExtenstionOfFinalInterfaceImpl.class).build().foo());
+    }
+
     /** Simple helper to add the most common args for this test to the proxy builder. */
     private <T> ProxyBuilder<T> proxyFor(Class<T> clazz) throws Exception {
         return ProxyBuilder.forClass(clazz)

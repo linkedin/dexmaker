@@ -599,6 +599,11 @@ public final class ProxyBuilder<T> {
         for (Class<?> c = baseClass; c != null; c = c.getSuperclass()) {
             getMethodsToProxy(methodsToProxy, seenFinalMethods, c);
         }
+        for (Class<?> c = baseClass; c != null; c = c.getSuperclass()) {
+            for (Class<?> i : c.getInterfaces()) {
+                getMethodsToProxy(methodsToProxy, seenFinalMethods, i);
+            }
+        }
         for (Class<?> c : interfaces) {
             getMethodsToProxy(methodsToProxy, seenFinalMethods, c);
         }
@@ -640,10 +645,6 @@ public final class ProxyBuilder<T> {
                 continue;
             }
             sink.add(entry);
-        }
-
-        for (Class<?> i : c.getInterfaces()) {
-            getMethodsToProxy(sink, seenFinalMethods, i);
         }
     }
 

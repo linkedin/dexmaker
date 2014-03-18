@@ -796,6 +796,22 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals("no proxy", proxyFor(ExtenstionOfFinalInterfaceImpl.class).build().foo());
     }
 
+    // https://code.google.com/p/dexmaker/issues/detail?id=9
+    public interface DeclaresMethodLate {
+        void thisIsTheMethod();
+    }
+
+    public static class MakesMethodFinalEarly {
+        public final void thisIsTheMethod() {}
+    }
+
+    public static class YouDoNotChooseYourFamily
+            extends MakesMethodFinalEarly implements DeclaresMethodLate {}
+
+    public void testInterfaceMethodMadeFinalBeforeActualInheritance() throws Exception {
+        proxyFor(YouDoNotChooseYourFamily.class).build();
+    }
+
     /** Simple helper to add the most common args for this test to the proxy builder. */
     private <T> ProxyBuilder<T> proxyFor(Class<T> clazz) throws Exception {
         return ProxyBuilder.forClass(clazz)

@@ -25,7 +25,7 @@
 
     <groupId>com.google.dexmaker</groupId>
     <artifactId>dexmaker-parent</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
     <packaging>pom</packaging>
 
     <name>dexmaker parent</name>
@@ -51,7 +51,8 @@
         <connection>scm:git:https://code.google.com/p/dexmaker/</connection>
         <developerConnection>scm:git:https://code.google.com/p/dexmaker/</developerConnection>
         <url>http://code.google.com/p/dexmaker/source/browse</url>
-    </scm>
+      <tag>dexmaker-parent-1.1</tag>
+  </scm>
 
     <issueManagement>
         <system>code.google.com</system>

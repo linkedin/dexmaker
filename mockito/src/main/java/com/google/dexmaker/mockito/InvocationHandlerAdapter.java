@@ -45,11 +45,6 @@ final class InvocationHandlerAdapter implements InvocationHandler {
             return System.identityHashCode(proxy);
         }
 
-        if (args == null) {
-            throw new IllegalArgumentException();
-        }
-
-
         ProxiedMethod proxiedMethod = new ProxiedMethod(method);
         return handler.handle(new InvocationImpl(proxy, proxiedMethod, args, SequenceNumber.next(),
                 proxiedMethod));

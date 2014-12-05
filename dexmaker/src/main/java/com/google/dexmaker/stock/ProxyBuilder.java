@@ -223,12 +223,18 @@ public final class ProxyBuilder<T> {
             // Thrown when the base class constructor throws an exception.
             throw launderCause(e);
         }
-        setHandlerInstanceField(result, handler);
+        setInvocationHandler(result, handler);
         return result;
     }
 
     // TODO: test coverage for this
-    // TODO: documentation for this
+
+    /**
+     * Generate a proxy class. Note that new instances of this class will not automatically have an
+     * an invocation handler, even if {@link #handler(InvocationHandler)} was called. The handler
+     * must be set on each instance after it is created, using
+     * {@link #setInvocationHandler(Object, InvocationHandler)}.
+     */
     public Class<? extends T> buildProxyClass() throws IOException {
         // try the cache to see if we've generated this one before
         @SuppressWarnings("unchecked") // we only populate the map with matching types
@@ -286,20 +292,6 @@ public final class ProxyBuilder<T> {
         throw new UndeclaredThrowableException(cause);
     }
 
-    private static void setHandlerInstanceField(Object instance, InvocationHandler handler) {
-        try {
-            Field handlerField = instance.getClass().getDeclaredField(FIELD_NAME_HANDLER);
-            handlerField.setAccessible(true);
-            handlerField.set(instance, handler);
-        } catch (NoSuchFieldException e) {
-            // Should not be thrown, generated proxy class has been generated with this field.
-            throw new AssertionError(e);
-        } catch (IllegalAccessException e) {
-            // Should not be thrown, we just set the field to accessible.
-            throw new AssertionError(e);
-        }
-    }
-
     private static void setMethodsStaticField(Class<?> proxyClass, Method[] methodsToProxy) {
         try {
             Field methodArrayField = proxyClass.getDeclaredField(FIELD_NAME_METHODS);
@@ -324,6 +316,31 @@ public final class ProxyBuilder<T> {
             Field field = instance.getClass().getDeclaredField(FIELD_NAME_HANDLER);
             field.setAccessible(true);
             return (InvocationHandler) field.get(instance);
+        } catch (NoSuchFieldException e) {
+            throw new IllegalArgumentException("Not a valid proxy instance", e);
+        } catch (IllegalAccessException e) {
+            // Should not be thrown, we just set the field to accessible.
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Sets the proxy's {@link InvocationHandler}.
+     * <p>
+     * If you create a proxy with {@link #build()}, the proxy will already have a handler set,
+     * provided that you configured one with {@link #handler(InvocationHandler)}.
+     * <p>
+     * If you generate a proxy class with {@link #buildProxyClass()}, instances of the proxy class
+     * will not automatically have a handler set, and it is necessary to use this method with each
+     * instance.
+     *
+     * @throws IllegalArgumentException if the object supplied is not a proxy created by this class.
+     */
+    public static void setInvocationHandler(Object instance, InvocationHandler handler) {
+        try {
+            Field handlerField = instance.getClass().getDeclaredField(FIELD_NAME_HANDLER);
+            handlerField.setAccessible(true);
+            handlerField.set(instance, handler);
         } catch (NoSuchFieldException e) {
             throw new IllegalArgumentException("Not a valid proxy instance", e);
         } catch (IllegalAccessException e) {

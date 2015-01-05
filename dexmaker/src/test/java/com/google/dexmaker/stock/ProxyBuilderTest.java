@@ -128,7 +128,7 @@ public class ProxyBuilderTest extends TestCase {
         try {
             proxy.getClass().getDeclaredMethod("result");
             fail();
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException expected) {
 
         }
 
@@ -148,14 +148,14 @@ public class ProxyBuilderTest extends TestCase {
         try {
             proxy.getClass().getDeclaredMethod("result");
             fail();
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException expected) {
 
         }
 
         try {
             proxy.result();
             fail();
-        } catch (AssertionFailedError e) {
+        } catch (AssertionFailedError expected) {
 
         }
     }

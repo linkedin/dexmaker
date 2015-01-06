@@ -651,6 +651,20 @@ public final class ProxyBuilder<T> {
                 // Skip static methods, overriding them has no effect.
                 continue;
             }
+            if (!Modifier.isPublic(method.getModifiers())
+					&& !Modifier.isProtected(method.getModifiers())) {
+                // Skip private methods, since they are invoked through direct
+                // invocation (as opposed to virtual). Therefore, it would not
+                // be possible to intercept any private method defined inside
+                // the proxy class except through reflection.
+
+                // Skip package-private methods as well. The proxy class does
+                // not actually inherit package-private methods from the parent
+                // class because it is not a member of the parent's package.
+                // This is even true if the two classes have the same package
+                // name, as they use different class loaders.
+                continue;
+            }
             if (method.getName().equals("finalize") && method.getParameterTypes().length == 0) {
                 // Skip finalize method, it's likely important that it execute as normal.
                 continue;

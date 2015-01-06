@@ -124,7 +124,15 @@ public class ProxyBuilderTest extends TestCase {
     }
 
     public void testProxyingPrivateMethods_NotIntercepted() throws Throwable {
-        assertEquals("expected", proxyFor(HasPrivateMethod.class).build().result());
+        HasPrivateMethod proxy = proxyFor(HasPrivateMethod.class).build();
+        try {
+            proxy.getClass().getDeclaredMethod("result");
+            fail();
+        } catch (NoSuchMethodException expected) {
+
+        }
+
+        assertEquals("expected", proxy.result());
     }
 
     public static class HasPackagePrivateMethod {
@@ -133,8 +141,23 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
-    public void testProxyingPackagePrivateMethods_AreIntercepted() throws Throwable {
-        assertEquals("fake result", proxyFor(HasPackagePrivateMethod.class).build().result());
+    public void testProxyingPackagePrivateMethods_NotIntercepted()
+            throws Throwable {
+        HasPackagePrivateMethod proxy = proxyFor(HasPackagePrivateMethod.class)
+                .build();
+        try {
+            proxy.getClass().getDeclaredMethod("result");
+            fail();
+        } catch (NoSuchMethodException expected) {
+
+        }
+
+        try {
+            proxy.result();
+            fail();
+        } catch (AssertionFailedError expected) {
+
+        }
     }
 
     public static class HasProtectedMethod {
@@ -145,6 +168,32 @@ public class ProxyBuilderTest extends TestCase {
 
     public void testProxyingProtectedMethods_AreIntercepted() throws Throwable {
         assertEquals("fake result", proxyFor(HasProtectedMethod.class).build().result());
+    }
+
+    public static class MyParentClass {
+        String someMethod() {
+            return "package";
+        }
+    }
+
+    public static class MyChildClassWithProtectedMethod extends MyParentClass {
+        @Override
+        protected String someMethod() {
+            return "protected";
+        }
+    }
+
+    public static class MyChildClassWithPublicMethod extends MyParentClass {
+        @Override
+        public String someMethod() {
+            return "public";
+        }
+    }
+
+    public void testProxying_ClassHierarchy() throws Throwable {
+        assertEquals("package", proxyFor(MyParentClass.class).build().someMethod());
+        assertEquals("fake result", proxyFor(MyChildClassWithProtectedMethod.class).build().someMethod());
+        assertEquals("fake result", proxyFor(MyChildClassWithPublicMethod.class).build().someMethod());
     }
 
     public static class HasVoidMethod {

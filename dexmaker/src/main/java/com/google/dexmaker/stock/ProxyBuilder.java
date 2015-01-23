@@ -637,34 +637,7 @@ public final class ProxyBuilder<T> {
         Arrays.sort(results, new Comparator<Method>() {
             @Override
             public int compare(Method method1, Method method2) {
-                MethodId<? extends T, ?> methodId1 = getMethodId(method1);
-                MethodId<? extends T, ?> methodId2 = getMethodId(method2);
-                String methodStr1 = methodId1.toString();
-                String methodStr2 = methodId2.toString();
-                if (methodStr1.equals(methodStr2)) {
-                    return 0;
-                }
-
-                if (methodStr1.compareTo(methodStr2) < 0) {
-                    return -1;
-                }
-
-                return 1;
-            }
-
-            private MethodId<? extends T, ?> getMethodId(Method method) {
-                String generatedName = getMethodNameForProxyOf(baseClass);
-                TypeId<? extends T> generatedType = TypeId.get("L"
-                        + generatedName + ";");
-                String name = method.getName();
-                Class<?>[] argClasses = method.getParameterTypes();
-                TypeId<?>[] argTypes = new TypeId<?>[argClasses.length];
-                for (int i = 0; i < argTypes.length; ++i) {
-                    argTypes[i] = TypeId.get(argClasses[i]);
-                }
-                Class<?> returnType = method.getReturnType();
-                TypeId<?> resultType = TypeId.get(returnType);
-                return generatedType.getMethod(resultType, name, argTypes);
+                return method1.toString().compareTo(method2.toString());
             }
         });
 

@@ -887,6 +887,10 @@ public class ProxyBuilderTest extends TestCase {
             return 0;
         }
 
+        public int returnsInt(int param1, int param2) {
+            return 1;
+        }
+
         public String returnsString() {
             return "string";
         }
@@ -911,14 +915,7 @@ public class ProxyBuilderTest extends TestCase {
         mapField.setAccessible(true);
 
         // Grab the static methods array from the original class.
-        Class<?> clazz1 = proxyFor(TestOrderingClass.class).buildProxyClass();
-        Method[] methods1 = null;
-        for (Field f : clazz1.getDeclaredFields()) {
-            if (Method[].class.isAssignableFrom(f.getType())) {
-                f.setAccessible(true);
-                methods1 = (Method[]) f.get(null);
-            }
-        }
+        Method[] methods1 = getMethodsForProxyClass(TestOrderingClass.class);
         assertNotNull(methods1);
 
         // Clear ProxyBuilder's in-memory cache of classes. This will force
@@ -929,17 +926,25 @@ public class ProxyBuilderTest extends TestCase {
         map.clear();
 
         // Grab the static methods array from the rebuilt class.
-        Class<?> clazz2 = proxyFor(TestOrderingClass.class).buildProxyClass();
-        Method[] methods2 = null;
-        for (Field f : clazz2.getDeclaredFields()) {
-            if (Method[].class.isAssignableFrom(f.getType())) {
-                f.setAccessible(true);
-                methods2 = (Method[]) f.get(null);
-            }
-        }
+        Method[] methods2 = getMethodsForProxyClass(TestOrderingClass.class);;
         assertNotNull(methods2);
 
         // Ensure that the two method arrays are equal.
         assertTrue(Arrays.equals(methods1, methods2));
+    }
+
+    // Returns static methods array from a proxy class.
+    private Method[] getMethodsForProxyClass(Class<?> parentClass) throws Exception {
+        Class<?> proxyClass = proxyFor(parentClass).buildProxyClass();
+        Method[] methods = null;
+        for (Field f : proxyClass.getDeclaredFields()) {
+            if (Method[].class.isAssignableFrom(f.getType())) {
+                f.setAccessible(true);
+                methods = (Method[]) f.get(null);
+                break;
+            }
+        }
+
+        return methods;
     }
 }

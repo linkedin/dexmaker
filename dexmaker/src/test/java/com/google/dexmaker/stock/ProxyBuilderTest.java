@@ -19,10 +19,12 @@ package com.google.dexmaker.stock;
 import com.google.dexmaker.DexMakerTest;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -878,5 +880,66 @@ public class ProxyBuilderTest extends TestCase {
         public void setFakeResult(Object result) {
             fakeResult = result;
         }
+    }
+
+    public static class TestOrderingClass {
+        public int returnsInt() {
+            return 0;
+        }
+
+        public String returnsString() {
+            return "string";
+        }
+
+        public boolean returnsBoolean() {
+            return false;
+        }
+
+        public double returnsDouble() {
+            return 1.0;
+        }
+
+        public Object returnsObject() {
+            return new Object();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testMethodsGeneratedInDeterministicOrder() throws Exception {
+        Field mapField = ProxyBuilder.class
+                .getDeclaredField("generatedProxyClasses");
+        mapField.setAccessible(true);
+
+        // Grab the static methods array from the original class.
+        Class<?> clazz1 = proxyFor(TestOrderingClass.class).buildProxyClass();
+        Method[] methods1 = null;
+        for (Field f : clazz1.getDeclaredFields()) {
+            if (Method[].class.isAssignableFrom(f.getType())) {
+                f.setAccessible(true);
+                methods1 = (Method[]) f.get(null);
+            }
+        }
+        assertNotNull(methods1);
+
+        // Clear ProxyBuilder's in-memory cache of classes. This will force
+        // it to rebuild the class and reset the static methods field.
+        Map<Class<?>, Class<?>> map = (Map<Class<?>, Class<?>>) mapField
+                .get(null);
+        assertNotNull(map);
+        map.clear();
+
+        // Grab the static methods array from the rebuilt class.
+        Class<?> clazz2 = proxyFor(TestOrderingClass.class).buildProxyClass();
+        Method[] methods2 = null;
+        for (Field f : clazz2.getDeclaredFields()) {
+            if (Method[].class.isAssignableFrom(f.getType())) {
+                f.setAccessible(true);
+                methods2 = (Method[]) f.get(null);
+            }
+        }
+        assertNotNull(methods2);
+
+        // Ensure that the two method arrays are equal.
+        assertTrue(Arrays.equals(methods1, methods2));
     }
 }

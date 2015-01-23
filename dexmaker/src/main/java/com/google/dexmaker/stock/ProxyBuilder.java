@@ -38,6 +38,7 @@ import static java.lang.reflect.Modifier.STATIC;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -630,6 +631,16 @@ public final class ProxyBuilder<T> {
         for (MethodSetEntry entry : methodsToProxy) {
             results[i++] = entry.originalMethod;
         }
+
+        // Sort the results array so that they are returned by this method
+        // in a deterministic fashion.
+        Arrays.sort(results, new Comparator<Method>() {
+            @Override
+            public int compare(Method method1, Method method2) {
+                return method1.toString().compareTo(method2.toString());
+            }
+        });
+
         return results;
     }
 

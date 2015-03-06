@@ -374,7 +374,9 @@ public final class DexMaker {
         File result = File.createTempFile("Generated", ".jar", dexCache);
         result.deleteOnExit();
         JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(result));
-        jarOut.putNextEntry(new JarEntry(DexFormat.DEX_IN_JAR_NAME));
+        JarEntry entry = new JarEntry(DexFormat.DEX_IN_JAR_NAME);
+        entry.setSize(dex.length);
+        jarOut.putNextEntry(entry);
         jarOut.write(dex);
         jarOut.closeEntry();
         jarOut.close();

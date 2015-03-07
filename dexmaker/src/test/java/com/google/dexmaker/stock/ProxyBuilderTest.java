@@ -32,7 +32,45 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 public class ProxyBuilderTest extends TestCase {
+    private static final File dxDir = DexMakerTest.getDataDirectory();
+
     private FakeInvocationHandler fakeHandler = new FakeInvocationHandler();
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        clearDxDir();
+        getInMemDxCache().clear();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        getInMemDxCache().clear();
+        clearDxDir();
+        super.tearDown();
+    }
+
+    // Clear the dexCache directory of any files ending in .jar or .dex. We
+    // cannot actually delete the entire directory as it also contains the
+    // package for the code that we are running, at least with Vogar.
+    private static void clearDxDir() {
+        for (File f : dxDir.listFiles()) {
+            if (f.getName().endsWith(".jar") || f.getName().endsWith(".dex")) {
+                f.delete();
+            }
+        }
+    }
+
+    // Clear the in-memory cache of generated proxy classes. This functionality
+    // is useful for helping with the setup and tear down of unit tests, and for
+    // unit tests which verify that ProxyBuilder is behaving correctly with respect
+    // to returning classes from memory vs. reading/writing files from disk.
+    private static Map<Class<?>, Class<?>> getInMemDxCache() throws Exception {
+        Field mapField = ProxyBuilder.class
+                .getDeclaredField("generatedProxyClasses");
+        mapField.setAccessible(true);
+        return (Map<Class<?>, Class<?>>) mapField.get(null);
+    }
 
     public static class SimpleClass {
         public String simpleMethod() {
@@ -363,7 +401,7 @@ public class ProxyBuilderTest extends TestCase {
     public void testWithoutInvocationHandler_ThrowsIllegalArgumentException() throws Throwable {
         try {
             ProxyBuilder.forClass(TwoConstructors.class)
-                    .dexCache(DexMakerTest.getDataDirectory())
+                    .dexCache(dxDir)
                     .build();
             fail();
         } catch (IllegalArgumentException expected) {}
@@ -602,13 +640,13 @@ public class ProxyBuilderTest extends TestCase {
                 .constructorArgTypes()
                 .constructorArgValues()
                 .handler(fakeHandler)
-                .dexCache(DexMakerTest.getDataDirectory()).build();
+                .dexCache(dxDir).build();
         assertEquals("no args", a.calledConstructor);
         HasMultipleConstructors b = ProxyBuilder.forClass(HasMultipleConstructors.class)
                 .constructorArgTypes(int.class)
                 .constructorArgValues(2)
                 .handler(fakeHandler)
-                .dexCache(DexMakerTest.getDataDirectory()).build();
+                .dexCache(dxDir).build();
         assertEquals("int 2", b.calledConstructor);
         assertEquals(a.getClass(), b.getClass());
 
@@ -616,7 +654,7 @@ public class ProxyBuilderTest extends TestCase {
                 .constructorArgTypes(Integer.class)
                 .constructorArgValues(3)
                 .handler(fakeHandler)
-                .dexCache(DexMakerTest.getDataDirectory()).build();
+                .dexCache(dxDir).build();
         assertEquals("Integer 3", c.calledConstructor);
         assertEquals(a.getClass(), c.getClass());
     }
@@ -867,7 +905,7 @@ public class ProxyBuilderTest extends TestCase {
     private <T> ProxyBuilder<T> proxyFor(Class<T> clazz) throws Exception {
         return ProxyBuilder.forClass(clazz)
                 .handler(fakeHandler)
-                .dexCache(DexMakerTest.getDataDirectory());
+                .dexCache(dxDir);
     }
 
     private static class FakeInvocationHandler implements InvocationHandler {
@@ -910,20 +948,13 @@ public class ProxyBuilderTest extends TestCase {
 
     @SuppressWarnings("unchecked")
     public void testMethodsGeneratedInDeterministicOrder() throws Exception {
-        Field mapField = ProxyBuilder.class
-                .getDeclaredField("generatedProxyClasses");
-        mapField.setAccessible(true);
-
         // Grab the static methods array from the original class.
         Method[] methods1 = getMethodsForProxyClass(TestOrderingClass.class);
         assertNotNull(methods1);
 
         // Clear ProxyBuilder's in-memory cache of classes. This will force
         // it to rebuild the class and reset the static methods field.
-        Map<Class<?>, Class<?>> map = (Map<Class<?>, Class<?>>) mapField
-                .get(null);
-        assertNotNull(map);
-        map.clear();
+        getInMemDxCache().clear();
 
         // Grab the static methods array from the rebuilt class.
         Method[] methods2 = getMethodsForProxyClass(TestOrderingClass.class);;
@@ -947,4 +978,55 @@ public class ProxyBuilderTest extends TestCase {
 
         return methods;
     }
+
+    public void testReuse() throws Throwable {
+        TestOrderingClass proxy1 = ProxyBuilder.forClass(TestOrderingClass.class)
+                .handler(new InvokeSuperHandler())
+                .dexCache(dxDir)
+                .reuse()
+                .build();
+        assertEquals(0, proxy1.returnsInt());
+        assertEquals(1, proxy1.returnsInt(1, 1));
+        assertEquals("string", proxy1.returnsString());
+        assertFalse(proxy1.returnsBoolean());
+        assertEquals(1.0, proxy1.returnsDouble());
+        int size = dxDir.listFiles().length;
+
+        getInMemDxCache().clear();
+
+        proxy1 = ProxyBuilder.forClass(TestOrderingClass.class)
+                .handler(new InvokeSuperHandler())
+                .dexCache(dxDir)
+                .reuse()
+                .build();
+
+        assertEquals(0, proxy1.returnsInt());
+        assertEquals(1, proxy1.returnsInt(1, 1));
+        assertEquals("string", proxy1.returnsString());
+        assertFalse(proxy1.returnsBoolean());
+        assertEquals(1.0, proxy1.returnsDouble());
+        assertEquals(size, dxDir.listFiles().length);
+
+        fakeHandler.setFakeResult("expected");
+        SimpleClass proxy2 = ProxyBuilder.forClass(SimpleClass.class)
+                .handler(fakeHandler)
+                .dexCache(dxDir)
+                .reuse()
+                .build();
+
+        assertEquals("expected", proxy2.simpleMethod());
+        assertEquals(size + 2, dxDir.listFiles().length);
+
+        getInMemDxCache().clear();
+
+        proxy2 = ProxyBuilder.forClass(SimpleClass.class)
+                .handler(fakeHandler)
+                .dexCache(dxDir)
+                .reuse()
+                .build();
+
+        assertEquals("expected", proxy2.simpleMethod());
+        assertEquals(size + 2, dxDir.listFiles().length);
+    }
+
 }

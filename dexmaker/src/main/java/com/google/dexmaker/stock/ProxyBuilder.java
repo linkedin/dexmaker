@@ -267,24 +267,40 @@ public final class ProxyBuilder<T> {
         String generatedName = getMethodNameForProxyOf(baseClass);
 
         // See if there is a jar file which has a classes.dex file with the proxy class.
-        if (reuse && dexCache != null) {
+        if (reuse) {
+            if (dexCache == null) {
+                try {
+                    Method assignDexCache = DexMaker.class.getDeclaredMethod("assignDexCache");
+                    assignDexCache.setAccessible(true);
+                    dexCache = (File)assignDexCache.invoke(null);
+                } catch (NoSuchMethodException e) {
+                    dexCache = null;
+                } catch (InvocationTargetException e) {
+                    dexCache = null;
+                } catch (IllegalAccessException e) {
+                    dexCache = null;
+                }
+            }
+
             // Because dexmaker is built against standard Java and not the Android framework,
             // we cannot import dalvik.system.DexClassLoader. Therefore, we have to access it
             // reflectively. I think there is merit to being able to run this code on a raw
             // dalvikvm, and in fact that is really the only way to run the unit tests, so I
             // do not believe it would be correct to alter the class path for the build.
             Class<?> dexClassLoader;
-            Constructor<?> dexClassLoaderConstructor;
-            try {
-                dexClassLoader = Class.forName("dalvik.system.DexClassLoader");
-                dexClassLoaderConstructor = dexClassLoader.getConstructor(String.class,
-                        String.class, String.class, ClassLoader.class);
-            } catch (ClassNotFoundException e) {
-                // give up and generate the class.
-                dexClassLoaderConstructor = null;
-            } catch (NoSuchMethodException e) {
-                // give up and generate the class.
-                dexClassLoaderConstructor = null;
+            Constructor<?> dexClassLoaderConstructor = null;
+            if (dexCache != null) {
+                try {
+                    dexClassLoader = Class.forName("dalvik.system.DexClassLoader");
+                    dexClassLoaderConstructor = dexClassLoader.getConstructor(String.class,
+                            String.class, String.class, ClassLoader.class);
+                } catch (ClassNotFoundException e) {
+                    // give up and generate the class.
+                    dexClassLoaderConstructor = null;
+                } catch (NoSuchMethodException e) {
+                    // give up and generate the class.
+                    dexClassLoaderConstructor = null;
+                }
             }
 
             if (dexClassLoaderConstructor != null) {

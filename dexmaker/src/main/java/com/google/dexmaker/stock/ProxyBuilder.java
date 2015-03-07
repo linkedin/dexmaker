@@ -214,7 +214,12 @@ public final class ProxyBuilder<T> {
         check(handler != null, "handler == null");
         check(constructorArgTypes.length == constructorArgValues.length,
                 "constructorArgValues.length != constructorArgTypes.length");
-        Class<? extends T> proxyClass = buildProxyClass();
+        Class<? extends T> proxyClass;
+        // Prevent a race condition where a class can be generated and written to disk twice.
+        synchronized (baseClass) {
+            proxyClass = buildProxyClass();
+        }
+
         Constructor<? extends T> constructor;
         try {
             constructor = proxyClass.getConstructor(constructorArgTypes);

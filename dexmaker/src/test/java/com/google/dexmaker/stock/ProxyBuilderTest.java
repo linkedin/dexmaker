@@ -33,6 +33,24 @@ import junit.framework.TestCase;
 
 public class ProxyBuilderTest extends TestCase {
     private FakeInvocationHandler fakeHandler = new FakeInvocationHandler();
+    private File versionedDxDir = new File(DexMakerTest.getDataDirectory(), "v1");
+
+    public void setUp() throws Exception {
+        super.setUp();
+        versionedDxDir.mkdirs();
+        clearVersionedDxDir();
+    }
+
+    public void tearDown() throws Exception {
+        clearVersionedDxDir();
+        super.tearDown();
+    }
+
+    private void clearVersionedDxDir() {
+        for (File f : versionedDxDir.listFiles()) {
+            f.delete();
+        }
+    }
 
     public static class SimpleClass {
         public String simpleMethod() {
@@ -44,6 +62,7 @@ public class ProxyBuilderTest extends TestCase {
         fakeHandler.setFakeResult("expected");
         SimpleClass proxy = proxyFor(SimpleClass.class).build();
         assertEquals("expected", proxy.simpleMethod());
+        assertEquals(2, versionedDxDir.listFiles().length);
     }
 
     public static class ConstructorTakesArguments {

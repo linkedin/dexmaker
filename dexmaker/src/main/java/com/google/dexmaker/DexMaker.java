@@ -327,6 +327,8 @@ public final class DexMaker {
         }
     }
 
+    // Generate a file name for the jar by taking a checksum of MethodIds and
+    // parent class types.
     private String generateFileName() {
         int checksum = 1;
 
@@ -409,6 +411,8 @@ public final class DexMaker {
         }
 
         File result = new File(dexCache, generateFileName());
+        // Check that the file exists. If it does, return a DexClassLoader and skip all
+        // the dex bytecode generation.
         if (result.exists()) {
             return generateClassLoader(result, dexCache, parent);
         }

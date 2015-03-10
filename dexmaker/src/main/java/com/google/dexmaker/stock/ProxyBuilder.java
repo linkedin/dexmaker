@@ -134,6 +134,7 @@ public final class ProxyBuilder<T> {
     private Class<?>[] constructorArgTypes = new Class[0];
     private Object[] constructorArgValues = new Object[0];
     private Set<Class<?>> interfaces = new HashSet<Class<?>>();
+    private boolean reuse = false;
 
     private ProxyBuilder(Class<T> clazz) {
         baseClass = clazz;
@@ -167,7 +168,17 @@ public final class ProxyBuilder<T> {
         this.dexCache = dexCache;
         return this;
     }
-    
+
+    /**
+     * Instructs ProxyBuilder to check the dex cache for existing files that
+     * contain code for the proxied class before writing a new pair of files to
+     * disk.
+     */
+    public ProxyBuilder<T> reuse() {
+        this.reuse = true;
+        return this;
+    }
+
     public ProxyBuilder<T> implementing(Class<?>... interfaces) {
         for (Class<?> i : interfaces) {
             if (!i.isInterface()) {
@@ -203,7 +214,12 @@ public final class ProxyBuilder<T> {
         check(handler != null, "handler == null");
         check(constructorArgTypes.length == constructorArgValues.length,
                 "constructorArgValues.length != constructorArgTypes.length");
-        Class<? extends T> proxyClass = buildProxyClass();
+        Class<? extends T> proxyClass;
+        // Prevent a race condition where a class can be generated and written to disk twice.
+        synchronized (baseClass) {
+            proxyClass = buildProxyClass();
+        }
+
         Constructor<? extends T> constructor;
         try {
             constructor = proxyClass.getConstructor(constructorArgTypes);
@@ -246,9 +262,84 @@ public final class ProxyBuilder<T> {
             return proxyClass; // cache hit!
         }
 
-        // the cache missed; generate the class
+        // the cache missed
         DexMaker dexMaker = new DexMaker();
         String generatedName = getMethodNameForProxyOf(baseClass);
+
+        // See if there is a jar file which has a classes.dex file with the proxy class.
+        if (reuse) {
+            if (dexCache == null) {
+                try {
+                    Method assignDexCache = DexMaker.class.getDeclaredMethod("assignDexCache");
+                    assignDexCache.setAccessible(true);
+                    dexCache = (File)assignDexCache.invoke(null);
+                } catch (NoSuchMethodException e) {
+                    dexCache = null;
+                } catch (InvocationTargetException e) {
+                    dexCache = null;
+                } catch (IllegalAccessException e) {
+                    dexCache = null;
+                }
+            }
+
+            // Because dexmaker is built against standard Java and not the Android framework,
+            // we cannot import dalvik.system.DexClassLoader. Therefore, we have to access it
+            // reflectively. I think there is merit to being able to run this code on a raw
+            // dalvikvm, and in fact that is really the only way to run the unit tests, so I
+            // do not believe it would be correct to alter the class path for the build.
+            Class<?> dexClassLoader;
+            Constructor<?> dexClassLoaderConstructor = null;
+            if (dexCache != null) {
+                try {
+                    dexClassLoader = Class.forName("dalvik.system.DexClassLoader");
+                    dexClassLoaderConstructor = dexClassLoader.getConstructor(String.class,
+                            String.class, String.class, ClassLoader.class);
+                } catch (ClassNotFoundException e) {
+                    // give up and generate the class.
+                    dexClassLoaderConstructor = null;
+                } catch (NoSuchMethodException e) {
+                    // give up and generate the class.
+                    dexClassLoaderConstructor = null;
+                }
+            }
+
+            if (dexClassLoaderConstructor != null) {
+                for (File f : dexCache.listFiles()) {
+                    if (f.getName().endsWith(".jar")) {
+                        ClassLoader classLoader;
+                        try {
+                            classLoader = (ClassLoader)dexClassLoaderConstructor.newInstance(
+                                    new Object[] {f.getAbsolutePath(), dexCache.getAbsolutePath(),
+                                    null, parentClassLoader});
+                        } catch (InstantiationException e) {
+                            // perhaps we should break here?
+                            continue;
+                        } catch (IllegalAccessException e) {
+                            continue;
+                        } catch (InvocationTargetException e) {
+                            continue;
+                        }
+
+                        try {
+                            proxyClass = loadClass(classLoader, generatedName);
+                        } catch (IllegalAccessError e) {
+                            // do not proxy.
+                            throw new UnsupportedOperationException(
+                                    "cannot proxy inaccessible class " + baseClass, e);
+                        } catch (ClassNotFoundException wrongLoader) {
+                            // This file does not contain a classes.dex file with the proxy
+                            // class. Check the remaining files.
+                            continue;
+                        }
+                        setMethodsStaticField(proxyClass, getMethodsToProxyRecursive());
+                        generatedProxyClasses.put(baseClass, proxyClass);
+                        return proxyClass;
+                    }
+                }
+            }
+        }
+
+        // Generate the class.
         TypeId<? extends T> generatedType = TypeId.get("L" + generatedName + ";");
         TypeId<T> superType = TypeId.get(baseClass);
         generateConstructorsAndFields(dexMaker, generatedType, superType, baseClass);

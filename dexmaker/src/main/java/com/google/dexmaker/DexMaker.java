@@ -323,6 +323,21 @@ public final class DexMaker {
         }
     }
 
+    private static File assignDexCache() {
+        File dexCache;
+        String property = System.getProperty("dexmaker.dexcache");
+        if (property != null) {
+            dexCache = new File(property);
+        } else {
+            dexCache = new AppDataDirGuesser().guess();
+            if (dexCache == null) {
+                throw new IllegalArgumentException("dexcache == null (and no default could be"
+                        + " found; consider setting the 'dexmaker.dexcache' system property)");
+            }
+        }
+        return dexCache;
+    }
+
     /**
      * Generates a dex file and loads its types into the current process.
      *
@@ -350,16 +365,7 @@ public final class DexMaker {
      */
     public ClassLoader generateAndLoad(ClassLoader parent, File dexCache) throws IOException {
         if (dexCache == null) {
-            String property = System.getProperty("dexmaker.dexcache");
-            if (property != null) {
-                dexCache = new File(property);
-            } else {
-                dexCache = new AppDataDirGuesser().guess();
-                if (dexCache == null) {
-                    throw new IllegalArgumentException("dexcache == null (and no default could be"
-                            + " found; consider setting the 'dexmaker.dexcache' system property)");
-                }
-            }
+            dexCache = assignDexCache();
         }
 
         byte[] dex = generate();

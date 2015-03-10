@@ -39,8 +39,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import static java.lang.reflect.Modifier.PRIVATE;
 import static java.lang.reflect.Modifier.STATIC;
+
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -323,6 +327,48 @@ public final class DexMaker {
         }
     }
 
+    private String generateFileName() {
+        int checksum = 1;
+
+        Set<TypeId<?>> typesKeySet = types.keySet();
+        Iterator<TypeId<?>> it = typesKeySet.iterator();
+        int[] checksums = new int[typesKeySet.size()];
+        int i = 0;
+
+        while (it.hasNext()) {
+            TypeId<?> typeId = it.next();
+            TypeDeclaration decl = getTypeDeclaration(typeId);
+            Set<MethodId> methodSet = decl.methods.keySet();
+            checksums[i++] = 31 * decl.supertype.hashCode() + methodSet.hashCode();
+        }
+        Arrays.sort(checksums);
+
+        for (int sum : checksums) {
+            checksum *= 31;
+            checksum += sum;
+        }
+
+        return "Generated_" + checksum +".jar";
+    }
+
+    private ClassLoader generateClassLoader(File result, File dexCache, ClassLoader parent) {
+        try {
+            return (ClassLoader) Class.forName("dalvik.system.DexClassLoader")
+                    .getConstructor(String.class, String.class, String.class, ClassLoader.class)
+                    .newInstance(result.getPath(), dexCache.getAbsolutePath(), null, parent);
+        } catch (ClassNotFoundException e) {
+            throw new UnsupportedOperationException("load() requires a Dalvik VM", e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e.getCause());
+        } catch (InstantiationException e) {
+            throw new AssertionError();
+        } catch (NoSuchMethodException e) {
+            throw new AssertionError();
+        } catch (IllegalAccessException e) {
+            throw new AssertionError();
+        }
+    }
+
     /**
      * Generates a dex file and loads its types into the current process.
      *
@@ -362,6 +408,11 @@ public final class DexMaker {
             }
         }
 
+        File result = new File(dexCache, generateFileName());
+        if (result.exists()) {
+            return generateClassLoader(result, dexCache, parent);
+        }
+
         byte[] dex = generate();
 
         /*
@@ -371,8 +422,7 @@ public final class DexMaker {
          *
          * TODO: load the dex from memory where supported.
          */
-        File result = File.createTempFile("Generated", ".jar", dexCache);
-        result.deleteOnExit();
+        result.createNewFile();
         JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(result));
         JarEntry entry = new JarEntry(DexFormat.DEX_IN_JAR_NAME);
         entry.setSize(dex.length);
@@ -380,21 +430,7 @@ public final class DexMaker {
         jarOut.write(dex);
         jarOut.closeEntry();
         jarOut.close();
-        try {
-            return (ClassLoader) Class.forName("dalvik.system.DexClassLoader")
-                    .getConstructor(String.class, String.class, String.class, ClassLoader.class)
-                    .newInstance(result.getPath(), dexCache.getAbsolutePath(), null, parent);
-        } catch (ClassNotFoundException e) {
-            throw new UnsupportedOperationException("load() requires a Dalvik VM", e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e.getCause());
-        } catch (InstantiationException e) {
-            throw new AssertionError();
-        } catch (NoSuchMethodException e) {
-            throw new AssertionError();
-        } catch (IllegalAccessException e) {
-            throw new AssertionError();
-        }
+        return generateClassLoader(result, dexCache, parent);
     }
 
     private static class TypeDeclaration {

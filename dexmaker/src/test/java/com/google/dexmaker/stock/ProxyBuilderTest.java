@@ -929,18 +929,13 @@ public class ProxyBuilderTest extends TestCase {
 
     @SuppressWarnings("unchecked")
     public void testMethodsGeneratedInDeterministicOrder() throws Exception {
-        Field mapField = ProxyBuilder.class
-                .getDeclaredField("generatedProxyClasses");
-        mapField.setAccessible(true);
-
         // Grab the static methods array from the original class.
         Method[] methods1 = getMethodsForProxyClass(TestOrderingClass.class);
         assertNotNull(methods1);
 
         // Clear ProxyBuilder's in-memory cache of classes. This will force
         // it to rebuild the class and reset the static methods field.
-        Map<Class<?>, Class<?>> map = (Map<Class<?>, Class<?>>) mapField
-                .get(null);
+        Map<Class<?>, Class<?>> map = getGeneratedProxyClasses();
         assertNotNull(map);
         map.clear();
 
@@ -965,5 +960,12 @@ public class ProxyBuilderTest extends TestCase {
         }
 
         return methods;
+    }
+
+    private Map<Class<?>, Class<?>> getGeneratedProxyClasses() throws Exception {
+        Field mapField = ProxyBuilder.class
+                .getDeclaredField("generatedProxyClasses");
+        mapField.setAccessible(true);
+        return (Map<Class<?>, Class<?>>) mapField.get(null);
     }
 }

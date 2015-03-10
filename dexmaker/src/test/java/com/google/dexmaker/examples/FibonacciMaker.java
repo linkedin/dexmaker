@@ -69,10 +69,10 @@ public final class FibonacciMaker {
         System.out.println(fibMethod.invoke(null, 8));
     }
 
-    public static File getDataDirectory() throws Exception {
-        Class<?> environmentClass = Class.forName("android.os.Environment");
-        Method method = environmentClass.getMethod("getDataDirectory");
-        Object dataDirectory = method.invoke(null);
-        return (File) dataDirectory;
+    public static File getDataDirectory() {
+        String envVariable = "ANDROID_DATA";
+        String defaultLoc = "/data";
+        String path = System.getenv(envVariable);
+        return path == null ? new File(defaultLoc) : new File(path);
     }
 }

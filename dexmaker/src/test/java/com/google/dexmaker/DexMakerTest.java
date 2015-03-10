@@ -66,6 +66,15 @@ public final class DexMakerTest extends TestCase {
     private void reset() {
         dexMaker = new DexMaker();
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
+        clearDataDirectory();
+    }
+
+    private void clearDataDirectory() {
+        for (File f : getDataDirectory().listFiles()) {
+            if (f.getName().endsWith(".jar") || f.getName().endsWith(".dex")) {
+                f.delete();
+            }
+        }
     }
 
     public void testNewInstance() throws Exception {

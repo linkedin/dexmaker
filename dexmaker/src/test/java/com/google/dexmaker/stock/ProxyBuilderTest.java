@@ -964,6 +964,15 @@ public class ProxyBuilderTest extends TestCase {
     }
 
     public void testOrderingClassWithDexMakerCaching() throws Exception {
+        doTestOrderClassWithDexMakerCaching();
+
+        // Force ProxyBuilder to call DexMaker.generateAndLoad()
+        getGeneratedProxyClasses().clear();
+
+        doTestOrderClassWithDexMakerCaching();
+    }
+
+    private void doTestOrderClassWithDexMakerCaching() throws Exception {
         TestOrderingClass proxy = ProxyBuilder.forClass(TestOrderingClass.class)
                 .handler(new InvokeSuperHandler())
                 .dexCache(DexMakerTest.getDataDirectory())
@@ -974,22 +983,6 @@ public class ProxyBuilderTest extends TestCase {
         assertFalse(proxy.returnsBoolean());
         assertEquals(1.0, proxy.returnsDouble());
         assertNotNull(proxy.returnsObject());
-        assertEquals(2, versionedDxDir.listFiles().length);
-
-        // Force ProxyBuilder to call DexMaker.generateAndLoad()
-        getGeneratedProxyClasses().clear();
-
-        proxy = ProxyBuilder.forClass(TestOrderingClass.class)
-                .handler(new InvokeSuperHandler())
-                .dexCache(DexMakerTest.getDataDirectory())
-                .build();
-        assertEquals(0, proxy.returnsInt());
-        assertEquals(1, proxy.returnsInt(1, 1));
-        assertEquals("string", proxy.returnsString());
-        assertFalse(proxy.returnsBoolean());
-        assertEquals(1.0, proxy.returnsDouble());
-        assertNotNull(proxy.returnsObject());
-        // the class should be already cached.
         assertEquals(2, versionedDxDir.listFiles().length);
     }
 

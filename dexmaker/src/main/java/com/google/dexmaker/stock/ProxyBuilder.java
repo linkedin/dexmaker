@@ -169,7 +169,7 @@ public final class ProxyBuilder<T> {
      */
     public ProxyBuilder<T> dexCache(File dexCacheParent) {
         dexCache = new File(dexCacheParent, "v" + Integer.toString(VERSION));
-        dexCache.mkdirs();
+        dexCache.mkdir();
         return this;
     }
     

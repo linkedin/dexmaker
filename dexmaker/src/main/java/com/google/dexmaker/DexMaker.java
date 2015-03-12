@@ -341,7 +341,9 @@ public final class DexMaker {
             TypeId<?> typeId = it.next();
             TypeDeclaration decl = getTypeDeclaration(typeId);
             Set<MethodId> methodSet = decl.methods.keySet();
-            checksums[i++] = 31 * decl.supertype.hashCode() + methodSet.hashCode();
+            if (decl.supertype != null) {
+                checksums[i++] = 31 * decl.supertype.hashCode() + methodSet.hashCode();
+            }
         }
         Arrays.sort(checksums);
 

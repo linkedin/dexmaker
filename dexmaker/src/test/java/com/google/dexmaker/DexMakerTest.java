@@ -1897,7 +1897,7 @@ public final class DexMakerTest extends TestCase {
 
     }
 
-    public void testCaching_Types() throws Exception {
+    public void testCaching_DifferentParentClasses() throws Exception {
         int origSize = getDataDirectory().listFiles().length;
         final String defaultMethodName = "call";
 

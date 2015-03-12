@@ -124,3 +124,14 @@ Maven users can get dexmaker from Sonatype's central repository. The Mockito dep
 
 Download [dexmaker-1.2.jar](http://search.maven.org/remotecontent?filepath=com/google/dexmaker/dexmaker/1.2/dexmaker-1.2.jar)
 and [dexmaker-mockito-1.2.jar](http://search.maven.org/remotecontent?filepath=com/google/dexmaker/dexmaker-mockito/1.2/dexmaker-mockito-1.2.jar).
+
+Run the Unit Tests
+------------------
+
+The unit tests for dexmaker must be run on a dalvikvm. In order to do this, you can use [Vogar](https://code.google.com/p/vogar/) in the following fashion:
+
+```
+$ java -jar vogar.jar --mode device --sourcepath /path/to/dexmaker/dexmaker/src/test/java --sourcepath /path/to/dexmaker/dexmaker/src/main/java --sourcepath /path/to/dexmaker/dx/src/main/java --device-dir /data/dexmaker /path/to/dexmaker/dexmaker/src/test/
+```
+
+Download [vogar.jar](https://vogar.googlecode.com/files/vogar.jar).

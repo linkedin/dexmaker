@@ -1819,6 +1819,7 @@ public final class DexMakerTest extends TestCase {
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         generateAndLoad();
+        // DexMaker writes two files to disk at a time: Generated_XXXX.jar and Generated_XXXX.dex.
         assertEquals(origSize + 2, getDataDirectory().listFiles().length);
 
         long lastModified  = getJarFiles()[0].lastModified();
@@ -1905,6 +1906,7 @@ public final class DexMakerTest extends TestCase {
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.get(BlankClassA.class));
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         generateAndLoad();
+        // DexMaker writes two files to disk at a time: Generated_XXXX.jar and Generated_XXXX.dex.
         assertEquals(origSize + 2, getDataDirectory().listFiles().length);
 
         // Create new dexmaker generator with BlankClassB as supertype.
@@ -1941,6 +1943,7 @@ public final class DexMakerTest extends TestCase {
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addConstructorToDexMakerGenerator(TypeId.INT);
         generateAndLoad();
+        // DexMaker writes two files to disk at a time: Generated_XXXX.jar and Generated_XXXX.dex.
         assertEquals(origSize + 2, getDataDirectory().listFiles().length);
 
         long lastModified  = getJarFiles()[0].lastModified();

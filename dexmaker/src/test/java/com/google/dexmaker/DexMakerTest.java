@@ -2006,11 +2006,11 @@ public final class DexMakerTest extends TestCase {
         throw new IllegalStateException("no call() method");
     }
 
-    public static File getDataDirectory() {
-        String envVariable = "ANDROID_DATA";
-        String defaultLoc = "/data";
-        String path = System.getenv(envVariable);
-        return path == null ? new File(defaultLoc) : new File(path);
+    public static File getDataDirectory() throws Exception {
+        Class<?> environmentClass = Class.forName("android.os.Environment");
+        Method method = environmentClass.getMethod("getDataDirectory");
+        Object dataDirectory = method.invoke(null);
+        return (File) dataDirectory;
     }
 
     private Class<?> generateAndLoad() throws Exception {

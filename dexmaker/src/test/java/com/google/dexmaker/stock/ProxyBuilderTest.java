@@ -33,6 +33,26 @@ import junit.framework.TestCase;
 
 public class ProxyBuilderTest extends TestCase {
     private FakeInvocationHandler fakeHandler = new FakeInvocationHandler();
+    private File versionedDxDir = new File(DexMakerTest.getDataDirectory(), "v1");
+
+    public void setUp() throws Exception {
+        super.setUp();
+        versionedDxDir.mkdirs();
+        clearVersionedDxDir();
+        getGeneratedProxyClasses().clear();
+    }
+
+    public void tearDown() throws Exception {
+        getGeneratedProxyClasses().clear();
+        clearVersionedDxDir();
+        super.tearDown();
+    }
+
+    private void clearVersionedDxDir() {
+        for (File f : versionedDxDir.listFiles()) {
+            f.delete();
+        }
+    }
 
     public static class SimpleClass {
         public String simpleMethod() {
@@ -43,6 +63,21 @@ public class ProxyBuilderTest extends TestCase {
     public void testExampleOperation() throws Throwable {
         fakeHandler.setFakeResult("expected");
         SimpleClass proxy = proxyFor(SimpleClass.class).build();
+        assertEquals("expected", proxy.simpleMethod());
+        assertEquals(2, versionedDxDir.listFiles().length);
+    }
+
+    public void testExampleOperation_DexMakerCaching() throws Throwable {
+        fakeHandler.setFakeResult("expected");
+        SimpleClass proxy = proxyFor(SimpleClass.class).build();
+        assertEquals(2, versionedDxDir.listFiles().length);
+        assertEquals("expected", proxy.simpleMethod());
+
+        // Force ProxyBuilder to create a DexMaker generator and call DexMaker.generateAndLoad().
+        getGeneratedProxyClasses().clear();
+
+        proxy = proxyFor(SimpleClass.class).build();
+        assertEquals(2, versionedDxDir.listFiles().length);
         assertEquals("expected", proxy.simpleMethod());
     }
 
@@ -910,27 +945,45 @@ public class ProxyBuilderTest extends TestCase {
 
     @SuppressWarnings("unchecked")
     public void testMethodsGeneratedInDeterministicOrder() throws Exception {
-        Field mapField = ProxyBuilder.class
-                .getDeclaredField("generatedProxyClasses");
-        mapField.setAccessible(true);
-
         // Grab the static methods array from the original class.
         Method[] methods1 = getMethodsForProxyClass(TestOrderingClass.class);
         assertNotNull(methods1);
 
         // Clear ProxyBuilder's in-memory cache of classes. This will force
         // it to rebuild the class and reset the static methods field.
-        Map<Class<?>, Class<?>> map = (Map<Class<?>, Class<?>>) mapField
-                .get(null);
+        Map<Class<?>, Class<?>> map = getGeneratedProxyClasses();
         assertNotNull(map);
         map.clear();
 
         // Grab the static methods array from the rebuilt class.
-        Method[] methods2 = getMethodsForProxyClass(TestOrderingClass.class);;
+        Method[] methods2 = getMethodsForProxyClass(TestOrderingClass.class);
         assertNotNull(methods2);
 
         // Ensure that the two method arrays are equal.
         assertTrue(Arrays.equals(methods1, methods2));
+    }
+
+    public void testOrderingClassWithDexMakerCaching() throws Exception {
+        doTestOrderClassWithDexMakerCaching();
+
+        // Force ProxyBuilder to call DexMaker.generateAndLoad()
+        getGeneratedProxyClasses().clear();
+
+        doTestOrderClassWithDexMakerCaching();
+    }
+
+    private void doTestOrderClassWithDexMakerCaching() throws Exception {
+        TestOrderingClass proxy = ProxyBuilder.forClass(TestOrderingClass.class)
+                .handler(new InvokeSuperHandler())
+                .dexCache(DexMakerTest.getDataDirectory())
+                .build();
+        assertEquals(0, proxy.returnsInt());
+        assertEquals(1, proxy.returnsInt(1, 1));
+        assertEquals("string", proxy.returnsString());
+        assertFalse(proxy.returnsBoolean());
+        assertEquals(1.0, proxy.returnsDouble());
+        assertNotNull(proxy.returnsObject());
+        assertEquals(2, versionedDxDir.listFiles().length);
     }
 
     // Returns static methods array from a proxy class.
@@ -946,5 +999,54 @@ public class ProxyBuilderTest extends TestCase {
         }
 
         return methods;
+    }
+
+    private Map<Class<?>, Class<?>> getGeneratedProxyClasses() throws Exception {
+        Field mapField = ProxyBuilder.class
+                .getDeclaredField("generatedProxyClasses");
+        mapField.setAccessible(true);
+        return (Map<Class<?>, Class<?>>) mapField.get(null);
+    }
+
+    public static class ConcreteClassA implements FooReturnsInt {
+        // from FooReturnsInt
+        public int foo() {
+            return 1;
+        }
+
+        // not from FooReturnsInt
+        public String bar() {
+            return "bar";
+        }
+    }
+
+    public static class ConcreteClassB implements FooReturnsInt {
+        // from FooReturnsInt
+        public int foo() {
+            return 0;
+        }
+
+        // not from FooReturnsInt
+        public String bar() {
+            return "bahhr";
+        }
+    }
+
+    public void testTwoClassesWithIdenticalMethodSignatures_DexMakerCaching() throws Exception {
+        ConcreteClassA proxyA = ProxyBuilder.forClass(ConcreteClassA.class)
+                .handler(new InvokeSuperHandler())
+                .dexCache(DexMakerTest.getDataDirectory())
+                .build();
+        assertEquals(1, proxyA.foo());
+        assertEquals("bar", proxyA.bar());
+        assertEquals(2, versionedDxDir.listFiles().length);
+
+        ConcreteClassB proxyB = ProxyBuilder.forClass(ConcreteClassB.class)
+                .handler(new InvokeSuperHandler())
+                .dexCache(DexMakerTest.getDataDirectory())
+                .build();
+        assertEquals(0, proxyB.foo());
+        assertEquals("bahhr", proxyB.bar());
+        assertEquals(4, versionedDxDir.listFiles().length);
     }
 }

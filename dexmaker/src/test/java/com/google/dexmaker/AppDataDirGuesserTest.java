@@ -16,7 +16,10 @@
 
 package com.google.dexmaker;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -73,6 +76,72 @@ public final class AppDataDirGuesserTest extends TestCase {
                 AppDataDirGuesser.splitPathList("dexPath=foo:bar")));
         assertTrue(Arrays.equals(expected,
                 AppDataDirGuesser.splitPathList("dexPath=foo:bar,bazPath=bar:bar2")));
+    }
+
+    public void testPre43PathProcessing() {
+        String input = "dalvik.system.PathClassLoader[dexPath=/data/app/abc-1.apk," +
+                       "libraryPath=/data/app-lib/abc-1]";
+        String processed = AppDataDirGuesser.processClassLoaderString(input);
+        assertTrue("dexPath=/data/app/abc-1.apk,libraryPath=/data/app-lib/abc-1".equals(processed));
+    }
+
+    public void test43PathProcessing() {
+        String input = "dalvik.system.PathClassLoader[DexPathList[[zip file " +
+                       "\"/data/app/abc-1/base.apk\", zip file \"/data/app/def-1/base.apk\"], " +
+                       "nativeLibraryDirectories=[/data/app-lib/abc-1]]]";
+        String processed = AppDataDirGuesser.processClassLoaderString(input);
+        assertTrue("/data/app/abc-1/base.apk:/data/app/def-1/base.apk".equals(processed));
+    }
+
+    // Try to find the SDK level of the device.
+    private int getSDKLevel() {
+        // Maybe the version is reflected into the system properties correctly.
+        String level = System.getProperty("ro.build.version.sdk");
+        try {
+            return Integer.parseInt(level);
+        } catch (Exception ignored) {
+        }
+
+        // Run getprop and parse the result.
+        try {
+            Process p = Runtime.getRuntime().exec("/system/bin/getprop ro.build.version.sdk");
+            int exitValue = p.waitFor();
+            if (exitValue == 0) {
+                String line =
+                        new BufferedReader(new InputStreamReader(p.getInputStream())).readLine();
+                if (line != null) {
+                    return Integer.parseInt(line);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        // It would be nice to access android.os.Build.SDK_INT. However, that bottoms out in some
+        // native code reading system properties. Try to load the library and *hope* that the
+        // methods don't need registration code. Note: this will likely fail.
+        try {
+            // Need to load android_runtime.
+            System.loadLibrary("android_runtime");
+            Class<?> buildClass = Class.forName("android.os.Build");
+            java.lang.reflect.Field field = buildClass.getDeclaredField("SDK_INT");
+            return field.getInt(null);
+        } catch (Throwable exc) {
+            // This is already the fallback of the fallback, so throw an unchecked exception.
+            throw new RuntimeException(exc);
+        }
+    }
+
+    public void testApiLevel17PlusPathProcessing() {
+        int level = getSDKLevel();
+        if (level >= 17) {
+            // Our processing should work for anything >= Android 4.2.
+            String input = getClass().getClassLoader().toString();
+            String processed = AppDataDirGuesser.processClassLoaderString(input);
+            // A tighter check would be interesting. But vogar doesn't run the tests in a directory
+            // recognized by the guesser (usually under /data/local/tmp), so we cannot use the
+            // processed result as input to guessPath.
+            assertTrue(!input.equals(processed));
+        }
     }
 
     private interface TestCondition {

@@ -21,7 +21,7 @@ Dexmaker includes class proxy support for [Mockito](http://code.google.com/p/moc
 and the dexmaker `.jar` files to your Android test project's `libs/` directory and you can use Mockito
 in your Android unit tests.
 
-This requires Mockito 1.9.5 or newer.
+This requires Mockito 1.10.5 or newer.
 
 Runtime Code Generation
 -----------------------

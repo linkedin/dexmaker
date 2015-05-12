@@ -19,6 +19,8 @@ package com.google.dexmaker.mockito;
 import com.google.dexmaker.stock.ProxyBuilder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+
 import org.mockito.internal.invocation.InvocationImpl;
 import org.mockito.internal.invocation.MockitoMethod;
 import org.mockito.internal.invocation.realmethod.RealMethod;
@@ -91,6 +93,10 @@ final class InvocationHandlerAdapter implements InvocationHandler {
 
         public Object invoke(Object target, Object[] arguments) throws Throwable {
             return ProxyBuilder.callSuper(target, method, arguments);
+        }
+
+        public boolean isAbstract() {
+            return Modifier.isAbstract(method.getModifiers());
         }
     }
 }

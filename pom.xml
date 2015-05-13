@@ -29,7 +29,7 @@
     <packaging>pom</packaging>
 
     <name>dexmaker parent</name>
-    <url>http://code.google.com/p/dexmaker</url>
+    <url>https://github.com/crittercism/dexmaker</url>
 
     <modules>
         <module>dx</module>
@@ -48,15 +48,14 @@
     </properties>
 
     <scm>
-        <connection>scm:git:https://code.google.com/p/dexmaker/</connection>
-        <developerConnection>scm:git:https://code.google.com/p/dexmaker/</developerConnection>
-        <url>http://code.google.com/p/dexmaker/source/browse</url>
-      <tag>HEAD</tag>
-  </scm>
+        <connection>scm:git:git://github.com/crittercism/dexmaker.git</connection>
+        <developerConnection>scm:git:git@github.com:crittercism/dexmaker.git</developerConnection>
+        <url>https://code.google.com/p/dexmaker</url>
+    </scm>
 
     <issueManagement>
-        <system>code.google.com</system>
-        <url>http://code.google.com/p/dexmaker/issues</url>
+        <system>GitHub Issues</system>
+        <url>https://github.com/crittercism/dexmaker/issues</url>
     </issueManagement>
 
     <licenses>

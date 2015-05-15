@@ -18,7 +18,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.google.dexmaker</groupId>
+        <groupId>com.crittercism.dexmaker</groupId>
         <artifactId>dexmaker-parent</artifactId>
         <version>1.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -30,7 +30,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.google.dexmaker</groupId>
+            <groupId>com.crittercism.dexmaker</groupId>
             <artifactId>dexmaker</artifactId>
             <version>${project.version}</version>
         </dependency>

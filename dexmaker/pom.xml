@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.google.dexmaker</groupId>
         <artifactId>dexmaker-parent</artifactId>
-        <version>1.3-SNAPSHOT</version>
+        <version>1.3</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 

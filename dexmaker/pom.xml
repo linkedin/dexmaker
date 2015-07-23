@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.crittercism.dexmaker</groupId>
         <artifactId>dexmaker-parent</artifactId>
-        <version>1.4</version>
+        <version>1.5-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 

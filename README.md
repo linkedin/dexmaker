@@ -113,17 +113,17 @@ Maven users can get dexmaker from Sonatype's central repository. The Mockito dep
   <dependency>
     <groupId>com.crittercism.dexmaker</groupId>
     <artifactId>dexmaker</artifactId>
-    <version>1.3</version>
+    <version>1.4</version>
   </dependency>
   <dependency>
     <groupId>com.crittercism.dexmaker</groupId>
     <artifactId>dexmaker-mockito</artifactId>
-    <version>1.3</version>
+    <version>1.4</version>
   </dependency>
 ```
 
-Download [dexmaker-1.3.jar](http://search.maven.org/remotecontent?filepath=com/crittercism/dexmaker/dexmaker/1.3/dexmaker-1.3.jar)
-and [dexmaker-mockito-1.3.jar](http://search.maven.org/remotecontent?filepath=com/crittercism/dexmaker/dexmaker-mockito/1.3/dexmaker-mockito-1.3.jar).
+Download [dexmaker-1.4.jar](http://search.maven.org/remotecontent?filepath=com/crittercism/dexmaker/dexmaker/1.4/dexmaker-1.4.jar)
+and [dexmaker-mockito-1.4.jar](http://search.maven.org/remotecontent?filepath=com/crittercism/dexmaker/dexmaker-mockito/1.4/dexmaker-mockito-1.4.jar).
 
 Run the Unit Tests
 ------------------

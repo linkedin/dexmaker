@@ -78,6 +78,9 @@ public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProv
     }
 
     private InvocationHandlerAdapter getInvocationHandlerAdapter(Object mock) {
+        if (mock == null) {
+            return null;
+        }
         if (Proxy.isProxyClass(mock.getClass())) {
             InvocationHandler invocationHandler = Proxy.getInvocationHandler(mock);
             return invocationHandler instanceof InvocationHandlerAdapter

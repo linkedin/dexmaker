@@ -27,7 +27,8 @@ Runtime Code Generation
 -----------------------
 
 This example generates a class and a method. It then loads that class into the current process and invokes its method.
-```
+
+``` java
 public final class HelloWorldMaker {
     public static void main(String[] args) throws Exception {
         DexMaker dexMaker = new DexMaker();
@@ -109,19 +110,19 @@ Use it in your app
 
 Maven users can get dexmaker from Sonatype's central repository. The Mockito dependency is optional.
 
-```
-  <dependency>
+``` xml
+<dependency>
     <groupId>com.crittercism.dexmaker</groupId>
     <artifactId>dexmaker</artifactId>
     <version>1.4</version>
-  </dependency>
-  <dependency>
+</dependency>
+<dependency>
     <groupId>com.crittercism.dexmaker</groupId>
     <artifactId>dexmaker-mockito</artifactId>
     <version>1.4</version>
-  </dependency>
+</dependency>
 ```
-                            
+
 Download [dexmaker-1.4.jar](https://oss.sonatype.org/service/local/repositories/releases/content/com/crittercism/dexmaker/dexmaker/1.4/dexmaker-1.4.jar)
 and [dexmaker-mockito-1.4.jar](https://oss.sonatype.org/service/local/repositories/releases/content/com/crittercism/dexmaker/dexmaker-mockito/1.4/dexmaker-mockito-1.4.jar).
 
@@ -130,8 +131,13 @@ Run the Unit Tests
 
 The unit tests for dexmaker must be run on a dalvikvm. In order to do this, you can use [Vogar](https://code.google.com/p/vogar/) in the following fashion:
 
-```
-$ java -jar vogar.jar --mode device --sourcepath /path/to/dexmaker/dexmaker/src/test/java --sourcepath /path/to/dexmaker/dexmaker/src/main/java --sourcepath /path/to/dexmaker/dx/src/main/java --device-dir /data/dexmaker /path/to/dexmaker/dexmaker/src/test/
+``` bash
+$ java -jar vogar.jar \
+  --mode device \
+  --sourcepath /path/to/dexmaker/dexmaker/src/test/java \
+  --sourcepath /path/to/dexmaker/dexmaker/src/main/java \
+  --sourcepath /path/to/dexmaker/dx/src/main/java \
+  --device-dir /data/dexmaker /path/to/dexmaker/dexmaker/src/test/
 ```
 
 Download [vogar.jar](https://vogar.googlecode.com/files/vogar.jar).

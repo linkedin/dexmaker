@@ -109,7 +109,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * If the base class to be proxied leaks the {@code this} pointer in the constructor (bad practice),
  * that is to say calls a non-private non-final method from the constructor, the invocation handler
  * will not be invoked.  As a simple concrete example, when proxying Random we discover that it
- * inernally calls setSeed during the constructor.  The proxy will not intercept this call during
+ * internally calls setSeed during the constructor.  The proxy will not intercept this call during
  * proxy construction, but will intercept as normal afterwards.  This behaviour may be subject to
  * change in future releases.
  * <p>

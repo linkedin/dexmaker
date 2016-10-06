@@ -20,6 +20,7 @@ import com.android.dx.stock.ProxyBuilder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+
 import org.mockito.internal.debugging.LocationImpl;
 import org.mockito.internal.invocation.InvocationImpl;
 import org.mockito.internal.invocation.MockitoMethod;

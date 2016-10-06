@@ -1,3 +1,5 @@
+[![Release](https://jitpack.io/v/User/Repo.svg)](https://jitpack.io/blueapron/dexmaker)
+
 This is a fork of the original Crittercism Dexmaker. See https://github.com/crittercism/dexmaker for the main project.
 
 Why does this exist? We wanted to use Mockito 2.1.0, which isn't compatible with the current Dexmaker. So we decided to patch up the small bug rather than wait for the owners of Dexmaker to adopt the fix. Once they create a new release, this will likely be removed.
@@ -15,5 +17,5 @@ allprojects {
 
 ```groovy
 dependencies {
-  compile 'com.github.blueapron:dexmaker:0.0.0'
+  compile 'com.github.blueapron:dexmaker:1.0'
 ```

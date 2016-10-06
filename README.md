@@ -1,4 +1,4 @@
-[![Release](https://jitpack.io/v/User/Repo.svg)](https://jitpack.io/blueapron/dexmaker)
+[![Release](https://jitpack.io/v/blueapron/dexmaker.svg)](https://jitpack.io/#blueapron/dexmaker)
 
 This is a fork of the original Crittercism Dexmaker. See https://github.com/crittercism/dexmaker for the main project.
 
@@ -17,5 +17,5 @@ allprojects {
 
 ```groovy
 dependencies {
-  compile 'com.github.blueapron:dexmaker:1.0'
+  compile 'com.github.blueapron:dexmaker:2.0'
 ```

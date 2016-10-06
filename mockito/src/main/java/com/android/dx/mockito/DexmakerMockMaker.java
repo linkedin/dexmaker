@@ -77,6 +77,26 @@ public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProv
         return adapter != null ? adapter.getHandler() : null;
     }
 
+    public TypeMockability isTypeMockable(final Class<?> type) {
+        return new TypeMockability() {
+            @Override
+            public boolean mockable() {
+                return !type.isPrimitive() && !Modifier.isFinal(type.getModifiers());
+            }
+
+            @Override
+            public String nonMockableReason() {
+                if(type.isPrimitive()) {
+                    return "primitive type";
+                }
+                if(Modifier.isFinal(type.getModifiers())) {
+                    return "final or anonymous class";
+                }
+                return "\nnot handled type";
+            }
+        };
+    }
+
     private InvocationHandlerAdapter getInvocationHandlerAdapter(Object mock) {
         if (mock == null) {
             return null;

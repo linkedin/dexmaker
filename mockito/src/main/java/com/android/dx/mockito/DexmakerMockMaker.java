@@ -19,6 +19,7 @@ package com.android.dx.mockito;
 import com.android.dx.stock.ProxyBuilder;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.Set;
 import org.mockito.exceptions.base.MockitoException;
@@ -34,15 +35,16 @@ import org.mockito.plugins.StackTraceCleanerProvider;
 public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProvider {
     private final UnsafeAllocator unsafeAllocator = UnsafeAllocator.create();
 
+    @Override
     public <T> T createMock(MockCreationSettings<T> settings, MockHandler handler) {
         Class<T> typeToMock = settings.getTypeToMock();
-        Set<Class> interfacesSet = settings.getExtraInterfaces();
+        Set<Class<?>> interfacesSet = settings.getExtraInterfaces();
         Class<?>[] extraInterfaces = interfacesSet.toArray(new Class[interfacesSet.size()]);
         InvocationHandler invocationHandler = new InvocationHandlerAdapter(handler);
 
         if (typeToMock.isInterface()) {
             // support interfaces via java.lang.reflect.Proxy
-            Class[] classesToMock = new Class[extraInterfaces.length + 1];
+            Class<?>[] classesToMock = new Class<?>[extraInterfaces.length + 1];
             classesToMock[0] = typeToMock;
             System.arraycopy(extraInterfaces, 0, classesToMock, 1, extraInterfaces.length);
             @SuppressWarnings("unchecked") // newProxyInstance returns the type of typeToMock
@@ -67,14 +69,16 @@ public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProv
         }
     }
 
-    public void resetMock(Object mock, MockHandler newHandler, MockCreationSettings settings) {
-        InvocationHandlerAdapter adapter = getInvocationHandlerAdapter(mock);
-        adapter.setHandler(newHandler);
-    }
-
+    @Override
     public MockHandler getHandler(Object mock) {
         InvocationHandlerAdapter adapter = getInvocationHandlerAdapter(mock);
         return adapter != null ? adapter.getHandler() : null;
+    }
+
+    @Override
+    public void resetMock(Object mock, MockHandler newHandler, MockCreationSettings settings) {
+        InvocationHandlerAdapter adapter = getInvocationHandlerAdapter(mock);
+        adapter.setHandler(newHandler);
     }
 
     private InvocationHandlerAdapter getInvocationHandlerAdapter(Object mock) {
@@ -98,14 +102,39 @@ public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProv
         return null;
     }
 
-    public StackTraceCleaner getStackTraceCleaner(final StackTraceCleaner defaultCleaner) {
-        return new StackTraceCleaner() {
-            public boolean isOut(StackTraceElement candidate) {
-                return defaultCleaner.isOut(candidate)
-                        || candidate.getClassName().endsWith("_Proxy") // dexmaker class proxies
-                        || candidate.getClassName().startsWith("$Proxy") // dalvik interface proxies
-                        || candidate.getClassName().startsWith("com.google.dexmaker.mockito.");
+    @Override
+    public TypeMockability isTypeMockable(final Class<?> type) {
+        return new TypeMockability() {
+
+            @Override
+            public boolean mockable() {
+                return nonMockableReason().isEmpty();
+            }
+
+            @Override
+            public String nonMockableReason() {
+                if (type.isPrimitive()) {
+                    return "primitive type";
+                }
+                if (Modifier.isFinal(type.getModifiers())) {
+                    return "final class";
+                }
+                return "";
             }
         };
     }
+
+    @Override
+    public StackTraceCleaner getStackTraceCleaner(final StackTraceCleaner defaultCleaner) {
+        return new StackTraceCleaner() {
+            @Override
+            public boolean isIn(StackTraceElement candidate) {
+                return defaultCleaner.isIn(candidate)
+                        && !candidate.getClassName().endsWith("_Proxy") // dexmaker class proxies
+                        && !candidate.getClassName().startsWith("$Proxy") // dalvik interface proxies
+                        && !candidate.getClassName().startsWith("com.google.dexmaker.mockito.");
+            }
+        };
+    }
+
 }

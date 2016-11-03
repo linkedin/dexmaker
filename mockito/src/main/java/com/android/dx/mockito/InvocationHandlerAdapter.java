@@ -21,11 +21,11 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import org.mockito.internal.debugging.LocationImpl;
 import org.mockito.internal.invocation.InvocationImpl;
 import org.mockito.internal.invocation.MockitoMethod;
 import org.mockito.internal.invocation.realmethod.RealMethod;
 import org.mockito.internal.progress.SequenceNumber;
-import org.mockito.internal.util.ObjectMethodsGuru;
 import org.mockito.invocation.MockHandler;
 
 /**
@@ -34,22 +34,21 @@ import org.mockito.invocation.MockHandler;
  */
 final class InvocationHandlerAdapter implements InvocationHandler {
     private MockHandler handler;
-    private final ObjectMethodsGuru objectMethodsGuru = new ObjectMethodsGuru();
 
     public InvocationHandlerAdapter(MockHandler handler) {
         this.handler = handler;
     }
 
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if (objectMethodsGuru.isEqualsMethod(method)) {
+        if (ObjectMethodsGuru2.isEqualsMethod(method)) {
             return proxy == args[0];
-        } else if (objectMethodsGuru.isHashCodeMethod(method)) {
+        } else if (ObjectMethodsGuru2.isHashCodeMethod(method)) {
             return System.identityHashCode(proxy);
         }
 
         ProxiedMethod proxiedMethod = new ProxiedMethod(method);
         return handler.handle(new InvocationImpl(proxy, proxiedMethod, args, SequenceNumber.next(),
-                proxiedMethod));
+                proxiedMethod, new LocationImpl()));
     }
 
     public MockHandler getHandler() {

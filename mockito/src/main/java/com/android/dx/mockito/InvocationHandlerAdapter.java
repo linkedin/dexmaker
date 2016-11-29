@@ -21,11 +21,11 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import org.mockito.internal.debugging.LocationImpl;
 import org.mockito.internal.invocation.InvocationImpl;
 import org.mockito.internal.invocation.MockitoMethod;
 import org.mockito.internal.invocation.realmethod.RealMethod;
 import org.mockito.internal.progress.SequenceNumber;
-import org.mockito.internal.util.ObjectMethodsGuru;
 import org.mockito.invocation.MockHandler;
 
 /**
@@ -34,22 +34,32 @@ import org.mockito.invocation.MockHandler;
  */
 final class InvocationHandlerAdapter implements InvocationHandler {
     private MockHandler handler;
-    private final ObjectMethodsGuru objectMethodsGuru = new ObjectMethodsGuru();
 
     public InvocationHandlerAdapter(MockHandler handler) {
         this.handler = handler;
     }
 
+    private static boolean isEqualsMethod(Method method) {
+        return method.getName().equals("equals")
+            && method.getParameterTypes().length == 1
+            && method.getParameterTypes()[0] == Object.class;
+    }
+
+    private static boolean isHashCodeMethod(Method method) {
+        return method.getName().equals("hashCode")
+            && method.getParameterTypes().length == 0;
+    }
+
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if (objectMethodsGuru.isEqualsMethod(method)) {
+        if (isEqualsMethod(method)) {
             return proxy == args[0];
-        } else if (objectMethodsGuru.isHashCodeMethod(method)) {
+        } else if (isHashCodeMethod(method)) {
             return System.identityHashCode(proxy);
         }
 
         ProxiedMethod proxiedMethod = new ProxiedMethod(method);
         return handler.handle(new InvocationImpl(proxy, proxiedMethod, args, SequenceNumber.next(),
-                proxiedMethod));
+                proxiedMethod, new LocationImpl()));
     }
 
     public MockHandler getHandler() {

@@ -11,13 +11,13 @@ allocation and regular/wide instruction selection for free.
 Class Proxies
 -------------
 
-Dexmaker includes a stock code generator for [class proxies](http://dexmaker.googlecode.com/git/javadoc/com/google/dexmaker/stock/ProxyBuilder.html).
+Dexmaker includes a stock code generator for [class proxies](https://github.com/crittercism/dexmaker/blob/master/dexmaker/src/main/java/com/android/dx/stock/ProxyBuilder.java).
 If you just want to do AOP or class mocking, you don't need to mess around with bytecodes.
 
 Mockito Mocks
 -------------
 
-Dexmaker includes class proxy support for [Mockito](http://code.google.com/p/mockito/). Add the mockito
+Dexmaker includes class proxy support for [Mockito](https://github.com/mockito/mockito). Add the mockito
 and the dexmaker `.jar` files to your Android test project's `libs/` directory and you can use Mockito
 in your Android unit tests.
 
@@ -141,7 +141,7 @@ and [dexmaker-mockito-1.4.jar](https://oss.sonatype.org/service/local/repositori
 Run the Unit Tests
 ------------------
 
-The unit tests for dexmaker must be run on a dalvikvm. In order to do this, you can use [Vogar](https://code.google.com/p/vogar/) in the following fashion:
+The unit tests for dexmaker must be run on a dalvikvm. In order to do this, you can use [Vogar](https://android.googlesource.com/platform/external/vogar/) in the following fashion:
 
 ``` bash
 $ java -jar vogar.jar \

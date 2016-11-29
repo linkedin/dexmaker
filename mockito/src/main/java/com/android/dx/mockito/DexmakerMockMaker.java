@@ -17,16 +17,17 @@
 package com.android.dx.mockito;
 
 import com.android.dx.stock.ProxyBuilder;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
-import java.util.Set;
 import org.mockito.exceptions.base.MockitoException;
 import org.mockito.exceptions.stacktrace.StackTraceCleaner;
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
 import org.mockito.plugins.StackTraceCleanerProvider;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
+import java.util.Set;
 
 /**
  * Generates mock instances on Android's runtime.
@@ -36,7 +37,7 @@ public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProv
 
     public <T> T createMock(MockCreationSettings<T> settings, MockHandler handler) {
         Class<T> typeToMock = settings.getTypeToMock();
-        Set<Class> interfacesSet = settings.getExtraInterfaces();
+        Set<Class<?>> interfacesSet = settings.getExtraInterfaces();
         Class<?>[] extraInterfaces = interfacesSet.toArray(new Class[interfacesSet.size()]);
         InvocationHandler invocationHandler = new InvocationHandlerAdapter(handler);
 
@@ -77,6 +78,26 @@ public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProv
         return adapter != null ? adapter.getHandler() : null;
     }
 
+    public TypeMockability isTypeMockable(final Class<?> type) {
+        return new TypeMockability() {
+            @Override
+            public boolean mockable() {
+                return !type.isPrimitive() && !Modifier.isFinal(type.getModifiers());
+            }
+
+            @Override
+            public String nonMockableReason() {
+                if(type.isPrimitive()) {
+                    return "primitive type";
+                }
+                if(Modifier.isFinal(type.getModifiers())) {
+                    return "final or anonymous class";
+                }
+                return "not handled type";
+            }
+        };
+    }
+
     private InvocationHandlerAdapter getInvocationHandlerAdapter(Object mock) {
         if (mock == null) {
             return null;
@@ -100,11 +121,11 @@ public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProv
 
     public StackTraceCleaner getStackTraceCleaner(final StackTraceCleaner defaultCleaner) {
         return new StackTraceCleaner() {
-            public boolean isOut(StackTraceElement candidate) {
-                return defaultCleaner.isOut(candidate)
-                        || candidate.getClassName().endsWith("_Proxy") // dexmaker class proxies
-                        || candidate.getClassName().startsWith("$Proxy") // dalvik interface proxies
-                        || candidate.getClassName().startsWith("com.google.dexmaker.mockito.");
+            public boolean isIn(StackTraceElement candidate) {
+                return defaultCleaner.isIn(candidate)
+                        && !candidate.getClassName().endsWith("_Proxy") // dexmaker class proxies
+                        && !candidate.getClassName().startsWith("$Proxy") // dalvik interface proxies
+                        && !candidate.getClassName().startsWith("com.google.dexmaker.mockito.");
             }
         };
     }

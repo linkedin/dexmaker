@@ -17,6 +17,8 @@
 package com.android.dx.stock;
 
 import com.android.dx.DexMakerTest;
+import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,13 +31,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
 
 public class ProxyBuilderTest extends TestCase {
     private FakeInvocationHandler fakeHandler = new FakeInvocationHandler();
     private File versionedDxDir = new File(DexMakerTest.getDataDirectory(), "v1");
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         versionedDxDir.mkdirs();
@@ -43,6 +44,7 @@ public class ProxyBuilderTest extends TestCase {
         getGeneratedProxyClasses().clear();
     }
 
+    @Override
     public void tearDown() throws Exception {
         getGeneratedProxyClasses().clear();
         clearVersionedDxDir();
@@ -61,25 +63,37 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    public static class ExampleClass {
+        public String exampleMethod() {
+            throw new AssertionFailedError();
+        }
+    }
+
+    public static class ExampleOperationClass {
+        public String exampleMethod() {
+            throw new AssertionFailedError();
+        }
+    }
+
     public void testExampleOperation() throws Throwable {
         fakeHandler.setFakeResult("expected");
-        SimpleClass proxy = proxyFor(SimpleClass.class).build();
-        assertEquals("expected", proxy.simpleMethod());
+        ExampleClass proxy = proxyFor(ExampleClass.class).build();
+        assertEquals("expected", proxy.exampleMethod());
         assertEquals(2, versionedDxDir.listFiles().length);
     }
 
     public void testExampleOperation_DexMakerCaching() throws Throwable {
         fakeHandler.setFakeResult("expected");
-        SimpleClass proxy = proxyFor(SimpleClass.class).build();
+        ExampleOperationClass proxy = proxyFor(ExampleOperationClass.class).build();
         assertEquals(2, versionedDxDir.listFiles().length);
-        assertEquals("expected", proxy.simpleMethod());
+        assertEquals("expected", proxy.exampleMethod());
 
         // Force ProxyBuilder to create a DexMaker generator and call DexMaker.generateAndLoad().
         getGeneratedProxyClasses().clear();
 
-        proxy = proxyFor(SimpleClass.class).build();
+        proxy = proxyFor(ExampleOperationClass.class).build();
         assertEquals(2, versionedDxDir.listFiles().length);
-        assertEquals("expected", proxy.simpleMethod());
+        assertEquals("expected", proxy.exampleMethod());
     }
 
     public static class ConstructorTakesArguments {
@@ -467,7 +481,7 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals("even 2", proxy.method(2));
         assertEquals("odd 3", proxy.method(3));
     }
-    
+
     public void testCallSuperThrows() throws Exception {
         InvocationHandler handler = new InvocationHandler() {
             public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
@@ -486,7 +500,7 @@ public class ProxyBuilderTest extends TestCase {
             assertEquals("boom!", expected.getMessage());
         }
     }
-    
+
     public static class FooThrows {
         public void foo() {
             throw new IllegalStateException("boom!");
@@ -685,7 +699,7 @@ public class ProxyBuilderTest extends TestCase {
 
         assertTrue(a.getClass() != b.getClass());
     }
-    
+
     public void testAbstractClassWithUndeclaredInterfaceMethod() throws Throwable {
         DeclaresInterface declaresInterface = proxyFor(DeclaresInterface.class)
                 .build();
@@ -693,10 +707,10 @@ public class ProxyBuilderTest extends TestCase {
         try {
             ProxyBuilder.callSuper(declaresInterface, Callable.class.getMethod("call"));
             fail();
-        } catch (AbstractMethodError expected) {
+        } catch (IncompatibleClassChangeError expected) {
         }
     }
-    
+
     public static abstract class DeclaresInterface implements Callable<String> {
     }
 
@@ -742,7 +756,7 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals("a", ProxyBuilder.callSuper(
                 proxy, ImplementsCallable.class.getMethod("call")));
     }
-    
+
     /**
      * This test is a bit unintuitive because it exercises the synthetic methods
      * that support covariant return types. Calling 'Object call()' on the
@@ -772,7 +786,7 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals("a", ProxyBuilder.callSuper(proxy, Callable.class.getMethod("call")));
         assertEquals(3, count.get());
     }
-    
+
     public static class ImplementsCallable implements Callable<String> {
         public String call() throws Exception {
             return "a";
@@ -799,27 +813,27 @@ public class ProxyBuilderTest extends TestCase {
                 }
             }
         };
-        
+
         Object o = proxyFor(Object.class)
                 .implementing(FooReturnsVoid.class, FooReturnsString.class, FooReturnsInt.class)
                 .handler(handler)
                 .build();
-        
+
         FooReturnsVoid a = (FooReturnsVoid) o;
         a.foo();
-        
+
         FooReturnsString b = (FooReturnsString) o;
         assertEquals("X", b.foo());
-        
+
         FooReturnsInt c = (FooReturnsInt) o;
         assertEquals(3, c.foo());
     }
-    
+
     public void testInterfacesSameNamesSameReturnType() throws Throwable {
         Object o = proxyFor(Object.class)
                 .implementing(FooReturnsInt.class, FooReturnsInt2.class)
                 .build();
-        
+
         fakeHandler.setFakeResult(3);
 
         FooReturnsInt a = (FooReturnsInt) o;
@@ -828,7 +842,7 @@ public class ProxyBuilderTest extends TestCase {
         FooReturnsInt2 b = (FooReturnsInt2) o;
         assertEquals(3, b.foo());
     }
-    
+
     public interface FooReturnsVoid {
         void foo();
     }
@@ -840,11 +854,11 @@ public class ProxyBuilderTest extends TestCase {
     public interface FooReturnsInt {
         int foo();
     }
-    
+
     public interface FooReturnsInt2 {
         int foo();
     }
-    
+
     private ClassLoader newPathClassLoader() throws Exception {
         return (ClassLoader) Class.forName("dalvik.system.PathClassLoader")
                 .getConstructor(String.class, ClassLoader.class)
@@ -984,7 +998,7 @@ public class ProxyBuilderTest extends TestCase {
         assertFalse(proxy.returnsBoolean());
         assertEquals(1.0, proxy.returnsDouble());
         assertNotNull(proxy.returnsObject());
-        assertEquals(2, versionedDxDir.listFiles().length);
+        assertTrue(versionedDxDir.listFiles().length != 0);
     }
 
     // Returns static methods array from a proxy class.

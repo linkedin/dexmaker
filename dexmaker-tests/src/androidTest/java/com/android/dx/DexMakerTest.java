@@ -16,6 +16,9 @@
 
 package com.android.dx;
 
+import android.support.test.InstrumentationRegistry;
+import junit.framework.TestCase;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -23,6 +26,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Callable;
+
 import static java.lang.reflect.Modifier.ABSTRACT;
 import static java.lang.reflect.Modifier.FINAL;
 import static java.lang.reflect.Modifier.NATIVE;
@@ -31,10 +38,6 @@ import static java.lang.reflect.Modifier.PROTECTED;
 import static java.lang.reflect.Modifier.PUBLIC;
 import static java.lang.reflect.Modifier.STATIC;
 import static java.lang.reflect.Modifier.SYNCHRONIZED;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
-import junit.framework.TestCase;
 
 /**
  * This generates a class named 'Generated' with one or more generated methods
@@ -2007,10 +2010,8 @@ public final class DexMakerTest extends TestCase {
     }
 
     public static File getDataDirectory() {
-        String envVariable = "ANDROID_DATA";
-        String defaultLoc = "/data";
-        String path = System.getenv(envVariable);
-        return path == null ? new File(defaultLoc) : new File(path);
+        String dataDir = InstrumentationRegistry.getTargetContext().getApplicationInfo().dataDir;
+        return new File(dataDir);
     }
 
     private Class<?> generateAndLoad() throws Exception {

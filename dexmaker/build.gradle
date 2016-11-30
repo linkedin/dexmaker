@@ -1,0 +1,11 @@
+apply plugin: 'java'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile project(":dx")
+
+    testCompile 'junit:junit:4.12'
+}

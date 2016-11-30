@@ -1,4 +1,11 @@
 *.iml
 .DS_Store
 .idea
-target
+.gradle
+build/
+reports/
+local.properties
+external/
+*.ipr
+*.iws
+*.svn

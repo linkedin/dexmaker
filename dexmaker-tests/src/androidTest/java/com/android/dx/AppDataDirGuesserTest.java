@@ -16,13 +16,14 @@
 
 package com.android.dx;
 
+import junit.framework.TestCase;
+
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import junit.framework.TestCase;
 
 public final class AppDataDirGuesserTest extends TestCase {
     public void testGuessCacheDir_SimpleExample() {

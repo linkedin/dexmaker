@@ -1,1 +1,1 @@
-include ':dexmaker', ':dx', ':mockito', ':dexmaker-tests'
+include ':dexmaker', ':mockito', ':dexmaker-tests'

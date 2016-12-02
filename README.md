@@ -1,3 +1,6 @@
+#Dexmaker
+[![Build Status](https://travis-ci.org/linkedin/dexmaker.svg?branch=master)](https://travis-ci.org/linkedin/dexmaker)
+
 A Java-language API for doing compile time or runtime code generation targeting the Dalvik VM. Unlike
 [cglib](http://cglib.sourceforge.net/) or [ASM](http://asm.ow2.org/), this library creates Dalvik `.dex`
 files instead of Java `.class` files.

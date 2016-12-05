@@ -7,6 +7,7 @@
 - Converted tests to run as Android tests rather than in Vogar
 - Fixed monitorExit instructions being added as monitorEnter
 - Updated Mockito dependency to version 1.10.19
+- Fixed transitive dependency configuration [#22](https://github.com/linkedin/dexmaker/issues/22)
 
 ## Version 1.4 (2015-07-23
 

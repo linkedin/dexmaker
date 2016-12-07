@@ -1,0 +1,62 @@
+apply plugin: 'maven-publish'
+apply plugin: 'ivy-publish'
+apply plugin: 'com.jfrog.artifactory'
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+publishing {
+    publications {
+        lib(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    description "${ -> description }"
+                    url 'https://github.com/linkedin/dexmaker'
+                    scm {
+                        url 'https://github.com/linkedin/dexmaker'
+                        connection 'scm:git:git://github.com/linkedin/dexmaker.git'
+                        developerConnection 'https://github.com/linkedin/dexmaker.git'
+                    }
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/license/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id 'com.linkedin'
+                            name 'LinkedIn Corp'
+                            email ''
+                        }
+                    }
+                }
+            }
+            pom.withXml {
+                asNode().dependencies.'*'.findAll() {
+                    it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
+                        dep.name == it.artifactId.text()
+                    }
+                }.each { it.scope*.value = 'compile'}
+            }
+        }
+        ivyJava(IvyPublication) {
+            from components.java
+        }
+    }
+}

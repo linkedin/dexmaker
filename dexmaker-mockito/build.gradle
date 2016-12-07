@@ -1,74 +1,14 @@
 apply plugin: 'java'
-apply plugin: 'com.jfrog.artifactory'
-apply plugin: 'maven-publish'
+apply from: "$rootDir/gradle/publishing.gradle"
 
 version = VERSION_NAME
+description = "Implementation of the Mockito API for use on the Android Dalvik VM"
 
 targetCompatibility = '1.7'
 sourceCompatibility = '1.7'
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
 // TODO: fix javadoc errors and then remove this
 javadoc.failOnError = false
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-publishing {
-    publications {
-        lib(MavenPublication) {
-            from components.java
-
-            artifact sourcesJar
-            artifact javadocJar
-
-            pom.withXml {
-                asNode().children().last() + {
-                    resolveStrategy = Closure.DELEGATE_FIRST
-                    description = "Implementation of the Mockito API for use on the Android Dalvik VM"
-                    url 'https://github.com/linkedin/dexmaker'
-                    scm {
-                        url 'https://github.com/linkedin/dexmaker'
-                        connection 'scm:git:git://github.com/linkedin/dexmaker.git'
-                        developerConnection 'https://github.com/linkedin/dexmaker.git'
-                    }
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/license/LICENSE-2.0.txt'
-                            distribution 'repo'
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id 'com.linkedin'
-                            name 'LinkedIn Corp'
-                            email ''
-                        }
-                    }
-                }
-            }
-        }
-
-        // https://discuss.gradle.org/t/maven-publish-plugin-generated-pom-making-dependency-scope-runtime/7494/12
-        all {
-            pom.withXml {
-                asNode().dependencies.'*'.findAll() {
-                    it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
-                        dep.name == it.artifactId.text()
-                    }
-                }.each { it.scope*.value = 'compile'}
-            }
-        }
-    }
-}
 
 repositories {
     jcenter()

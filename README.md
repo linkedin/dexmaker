@@ -123,4 +123,4 @@ or Gradle:
 
 _Note: The dependency on Mockito will be transitively included, so there's no need to specify both Mockito AND dexmaker-mockito_
 
-You can also download the files manually from [Bintray](https://bintray.com/linkedin/maven/dexmaker/) if you prefer.
+You can also download the files manually from [Bintray](https://bintray.com/linkedin/maven/dexmaker-mockito/) if you prefer.

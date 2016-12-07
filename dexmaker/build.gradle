@@ -1,0 +1,70 @@
+apply plugin: 'java'
+apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'maven-publish'
+
+version = VERSION_NAME
+
+targetCompatibility = '1.7'
+sourceCompatibility = '1.7'
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+// TODO: fix javadoc errors and then remove this
+javadoc.failOnError = false
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+publishing {
+    publications {
+        lib(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    description = "A utility for doing compile or runtime code generation targeting Android's Dalvik VM"
+                    url 'https://github.com/linkedin/dexmaker'
+                    scm {
+                        url 'https://github.com/linkedin/dexmaker'
+                        connection 'scm:git:git://github.com/linkedin/dexmaker.git'
+                        developerConnection 'https://github.com/linkedin/dexmaker.git'
+                    }
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/license/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id 'com.linkedin'
+                            name 'LinkedIn Corp'
+                            email ''
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'com.jakewharton.android.repackaged:dalvik-dx:7.1.0_r7'
+
+    testCompile 'junit:junit:4.12'
+}

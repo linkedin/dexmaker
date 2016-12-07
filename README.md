@@ -1,31 +1,30 @@
+# Dexmaker
+[![Build Status](https://travis-ci.org/linkedin/dexmaker.svg?branch=master)](https://travis-ci.org/linkedin/dexmaker)
+
 A Java-language API for doing compile time or runtime code generation targeting the Dalvik VM. Unlike
 [cglib](http://cglib.sourceforge.net/) or [ASM](http://asm.ow2.org/), this library creates Dalvik `.dex`
 files instead of Java `.class` files.
 
 It has a small, close-to-the-metal API. This API mirrors the
-[Dalvik bytecode specification](http://source.android.com/tech/dalvik/dalvik-bytecode.html) giving you tight
+[Dalvik bytecode specification](http://source.android.com/devices/tech/dalvik/dalvik-bytecode.html) giving you tight
 control over the bytecode emitted. Code is generated instruction-by-instruction; you bring your own abstract
 syntax tree if you need one. And since it uses Dalvik's `dx` tool as a backend, you get efficient register
 allocation and regular/wide instruction selection for free.
 
-Class Proxies
--------------
+## What does it do?
 
+### Mockito Mocks
+Dexmaker lets you use the [Mockito](https://github.com/mockito/mockito) mocking library in your
+Android projects by generating Dalvik bytecode class proxies. Just add an
+`androidTestCompile` dependency on `dexmaker-mockito` and you can use Mockito in your Android Instrumentation tests.
+
+Dexmaker currently targets Mockito 1.10.19.
+
+### Class Proxies
 Dexmaker includes a stock code generator for [class proxies](https://github.com/crittercism/dexmaker/blob/master/dexmaker/src/main/java/com/android/dx/stock/ProxyBuilder.java).
 If you just want to do AOP or class mocking, you don't need to mess around with bytecodes.
 
-Mockito Mocks
--------------
-
-Dexmaker includes class proxy support for [Mockito](https://github.com/mockito/mockito). Add the mockito
-and the dexmaker `.jar` files to your Android test project's `libs/` directory and you can use Mockito
-in your Android unit tests.
-
-This requires Mockito 1.10.5 or newer.
-
-Runtime Code Generation
------------------------
-
+### Runtime Code Generation
 This example generates a class and a method. It then loads that class into the current process and invokes its method.
 
 ``` java
@@ -105,51 +104,23 @@ public final class HelloWorldMaker {
 }
 ```
 
-Use it in your app
-------------------
+## Download
 
-Maven users can get dexmaker from Sonatype's central repository. The Mockito dependency is optional.
-
-``` xml
-<dependency>
-    <groupId>com.crittercism.dexmaker</groupId>
-    <artifactId>dexmaker</artifactId>
-    <version>1.4</version>
-</dependency>
-<dependency>
-    <groupId>com.crittercism.dexmaker</groupId>
-    <artifactId>dexmaker-dx</artifactId>
-    <version>1.4</version>
-</dependency>
-<dependency>
-    <groupId>com.crittercism.dexmaker</groupId>
-    <artifactId>dexmaker-mockito</artifactId>
-    <version>1.4</version>
-</dependency>
+For Mockito support, download the latest .jar via Maven:
+```xml
+    <dependency>
+      <groupId>com.linkedin.dexmaker</groupId>
+      <artifactId>dexmaker-mockito</artifactId>
+      <version>1.5.0</version>
+      <type>pom</type>
+    </dependency>
 ```
 
-Gradle users can import the project this way:
-
-    testCompile "com.crittercism.dexmaker:dexmaker:1.4"
-    testCompile "com.crittercism.dexmaker:dexmaker-dx:1.4"
-    testCompile "com.crittercism.dexmaker:dexmaker-mockito:1.4"
-
-
-Download [dexmaker-1.4.jar](https://oss.sonatype.org/service/local/repositories/releases/content/com/crittercism/dexmaker/dexmaker/1.4/dexmaker-1.4.jar), [dexmaker-dx-1.4.jar](https://oss.sonatype.org/service/local/repositories/releases/content/com/crittercism/dexmaker/dexmaker-dx/1.4/dexmaker-dx-1.4.jar)
-and [dexmaker-mockito-1.4.jar](https://oss.sonatype.org/service/local/repositories/releases/content/com/crittercism/dexmaker/dexmaker-mockito/1.4/dexmaker-mockito-1.4.jar).
-
-Run the Unit Tests
-------------------
-
-The unit tests for dexmaker must be run on a dalvikvm. In order to do this, you can use [Vogar](https://android.googlesource.com/platform/external/vogar/) in the following fashion:
-
-``` bash
-$ java -jar vogar.jar \
-  --mode device \
-  --sourcepath /path/to/dexmaker/dexmaker/src/test/java \
-  --sourcepath /path/to/dexmaker/dexmaker/src/main/java \
-  --sourcepath /path/to/dexmaker/dx/src/main/java \
-  --device-dir /data/dexmaker /path/to/dexmaker/dexmaker/src/test/
+or Gradle:
+```
+    androidTestCompile 'com.linkedin.dexmaker:dexmaker-mockito:1.5.0'
 ```
 
-Download [vogar.jar](https://vogar.googlecode.com/files/vogar.jar).
+_Note: The dependency on Mockito will be transitively included, so there's no need to specify both Mockito AND dexmaker-mockito_
+
+You can also download the files manually from [Bintray](https://bintray.com/linkedin/maven/dexmaker/) if you prefer.

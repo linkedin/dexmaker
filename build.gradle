@@ -1,0 +1,41 @@
+import com.linkedin.gradle.DistributeTask
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.2.2'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4'
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.0"
+    }
+}
+
+apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'maven-publish'
+
+allprojects {
+    group = GROUP_ID
+}
+
+artifactoryPublish.skip = true
+artifactory {
+    contextUrl = 'https://linkedin.jfrog.io/linkedin'
+    publish {
+        repoKey = 'dexmaker'
+        username = System.getenv('ARTIFACTORY_USER') ?: ""
+        password = System.getenv('ARTIFACTORY_KEY') ?: ""
+
+        defaults {
+            publications 'lib'
+        }
+
+        publishArtifacts = true
+    }
+    clientConfig.setIncludeEnvVars(false)
+}
+
+task distributeBuild(type: DistributeTask) {
+    dependsOn ':artifactoryPublish', 'dexmaker:artifactoryPublish', 'dexmaker-mockito:artifactoryPublish'
+}

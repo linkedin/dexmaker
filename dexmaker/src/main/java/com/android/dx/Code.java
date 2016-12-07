@@ -22,23 +22,25 @@ import com.android.dx.rop.code.PlainCstInsn;
 import com.android.dx.rop.code.PlainInsn;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.code.Rop;
-import static com.android.dx.rop.code.Rop.BRANCH_GOTO;
-import static com.android.dx.rop.code.Rop.BRANCH_NONE;
-import static com.android.dx.rop.code.Rop.BRANCH_RETURN;
 import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.rop.code.ThrowingCstInsn;
 import com.android.dx.rop.code.ThrowingInsn;
 import com.android.dx.rop.cst.CstInteger;
 import com.android.dx.rop.type.StdTypeList;
-import static com.android.dx.rop.type.Type.BT_BYTE;
-import static com.android.dx.rop.type.Type.BT_CHAR;
-import static com.android.dx.rop.type.Type.BT_INT;
-import static com.android.dx.rop.type.Type.BT_SHORT;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import static com.android.dx.rop.code.Rop.BRANCH_GOTO;
+import static com.android.dx.rop.code.Rop.BRANCH_NONE;
+import static com.android.dx.rop.code.Rop.BRANCH_RETURN;
+import static com.android.dx.rop.type.Type.BT_BYTE;
+import static com.android.dx.rop.type.Type.BT_CHAR;
+import static com.android.dx.rop.type.Type.BT_INT;
+import static com.android.dx.rop.type.Type.BT_SHORT;
 
 /**
  * Builds a sequence of instructions.
@@ -853,7 +855,7 @@ public final class Code {
      * Releases the held lock on {@code monitor}.
      */
     public void monitorExit(Local<?> monitor) {
-        addInstruction(new ThrowingInsn(Rops.MONITOR_ENTER, sourcePosition,
+        addInstruction(new ThrowingInsn(Rops.MONITOR_EXIT, sourcePosition,
                 RegisterSpecList.make(monitor.spec()), catches));
     }
 

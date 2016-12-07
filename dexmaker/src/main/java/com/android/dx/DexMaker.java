@@ -16,7 +16,7 @@
 
 package com.android.dx;
 
-import com.android.dx.dex.DexFormat;
+import com.android.dex.DexFormat;
 import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.code.DalvCode;
 import com.android.dx.dex.code.PositionList;
@@ -26,20 +26,17 @@ import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedField;
 import com.android.dx.dex.file.EncodedMethod;
 import com.android.dx.rop.code.AccessFlags;
-import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
 import com.android.dx.rop.code.LocalVariableInfo;
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.StdTypeList;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import static java.lang.reflect.Modifier.PRIVATE;
-import static java.lang.reflect.Modifier.STATIC;
-
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -47,6 +44,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+
+import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
+import static java.lang.reflect.Modifier.PRIVATE;
+import static java.lang.reflect.Modifier.STATIC;
 
 /**
  * Generates a </i><strong>D</strong>alvik <strong>EX</strong>ecutable (dex)

@@ -23,12 +23,19 @@ artifactoryPublish.skip = true
 artifactory {
     contextUrl = 'https://linkedin.jfrog.io/linkedin'
     publish {
-        repoKey = 'dexmaker'
-        username = System.getenv('ARTIFACTORY_USER') ?: ""
-        password = System.getenv('ARTIFACTORY_KEY') ?: ""
+        repository {
+          repoKey = 'dexmaker'
+          username = System.getenv('ARTIFACTORY_USER') ?: ""
+          password = System.getenv('ARTIFACTORY_KEY') ?: ""
+          ivy {
+            ivyLayout = "[organisation]/[module]/[revision]/[module]-[revision].ivy"
+            artifactLayout = "[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]"
+            mavenCompatible = true
+          }
+        }
 
         defaults {
-            publications 'lib'
+            publications 'lib', 'ivyJava'
         }
 
         publishArtifacts = true

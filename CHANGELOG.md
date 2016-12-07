@@ -1,5 +1,8 @@
 # Change Log
 
+## Version 1.5.1 (2016-12-07)
+- Fix bug in generated pom files that broke transitive dependencies
+
 ## Version 1.5.0 (2016-12-07)
 
 - Project ownership transferred to LinkedIn

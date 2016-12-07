@@ -1,6 +1,6 @@
 # Change Log
 
-## Current Snapshot
+## Version 1.5.0 (2016-12-07)
 
 - Project ownership transferred to LinkedIn
 - Updated dx dependency to latest tag release from AOSP (7.1.0_r7) and switched from copied source to [Jake Wharton's repackaged artifact](https://github.com/JakeWharton/dalvik-dx)

@@ -12,6 +12,6 @@
 - Updated Mockito dependency to version 1.10.19
 - Fixed transitive dependency configuration [#22](https://github.com/linkedin/dexmaker/issues/22)
 
-## Version 1.4 (2015-07-23
+## Version 1.4 (2015-07-23)
 
 ## Version 1.3 (2015-06-22)

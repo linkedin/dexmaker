@@ -18,7 +18,9 @@ package com.android.dx.stock;
 
 import com.android.dx.DexMakerTest;
 import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,28 +34,35 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ProxyBuilderTest extends TestCase {
+import static com.android.dx.util.TestUtil.DELTA_DOUBLE;
+import static com.android.dx.util.TestUtil.DELTA_FLOAT;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertSame;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
+
+public class ProxyBuilderTest {
     private FakeInvocationHandler fakeHandler = new FakeInvocationHandler();
     private File versionedDxDir = new File(DexMakerTest.getDataDirectory(), "v1");
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         versionedDxDir.mkdirs();
         clearVersionedDxDir();
         getGeneratedProxyClasses().clear();
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         getGeneratedProxyClasses().clear();
         clearVersionedDxDir();
-        super.tearDown();
     }
 
     private void clearVersionedDxDir() {
-        for (File f : versionedDxDir.listFiles()) {
-            f.delete();
+        for (File file : versionedDxDir.listFiles()) {
+            file.delete();
         }
     }
 
@@ -75,6 +84,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testExampleOperation() throws Throwable {
         fakeHandler.setFakeResult("expected");
         ExampleClass proxy = proxyFor(ExampleClass.class).build();
@@ -82,6 +92,7 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals(2, versionedDxDir.listFiles().length);
     }
 
+    @Test
     public void testExampleOperation_DexMakerCaching() throws Throwable {
         fakeHandler.setFakeResult("expected");
         ExampleOperationClass proxy = proxyFor(ExampleOperationClass.class).build();
@@ -108,6 +119,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testConstruction_SucceedsIfCorrectArgumentsProvided() throws Throwable {
         ConstructorTakesArguments proxy = proxyFor(ConstructorTakesArguments.class)
                 .constructorArgTypes(String.class)
@@ -117,30 +129,22 @@ public class ProxyBuilderTest extends TestCase {
         proxy.method();
     }
 
+    @Test(expected = IllegalArgumentException.class)
     public void testConstruction_FailsWithWrongNumberOfArguments() throws Throwable {
-        try {
-            proxyFor(ConstructorTakesArguments.class).build();
-            fail();
-        } catch (IllegalArgumentException expected) {}
+        proxyFor(ConstructorTakesArguments.class).build();
     }
 
+    @Test(expected = UnsupportedOperationException.class)
     public void testClassIsNotAccessbile_FailsWithUnsupportedOperationException() throws Exception {
-        class MethodVisibilityClass {
-        }
-        try {
-            proxyFor(MethodVisibilityClass.class).build();
-            fail();
-        } catch (UnsupportedOperationException expected) {}
+        class MethodVisibilityClass {}
+        proxyFor(MethodVisibilityClass.class).build();
     }
 
-    private static class PrivateVisibilityClass {
-    }
+    private static class PrivateVisibilityClass {}
 
+    @Test(expected = UnsupportedOperationException.class)
     public void testPrivateClass_FailsWithUnsupportedOperationException() throws Exception {
-        try {
-            proxyFor(PrivateVisibilityClass.class).build();
-            fail();
-        } catch (UnsupportedOperationException expected) {}
+        proxyFor(PrivateVisibilityClass.class).build();
     }
 
     protected static class ProtectedVisibilityClass {
@@ -149,6 +153,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testProtectedVisibility_WorksFine() throws Exception {
         assertEquals("fake result", proxyFor(ProtectedVisibilityClass.class).build().foo());
     }
@@ -163,6 +168,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testCanProxyClassesWithFinalMethods_WillNotCallTheFinalMethod() throws Throwable {
         HasFinalMethod proxy = proxyFor(HasFinalMethod.class).build();
         assertEquals("final method", proxy.finalMethod());
@@ -175,6 +181,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testProxyingPrivateMethods_NotIntercepted() throws Throwable {
         HasPrivateMethod proxy = proxyFor(HasPrivateMethod.class).build();
         try {
@@ -218,6 +225,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testProxyingProtectedMethods_AreIntercepted() throws Throwable {
         assertEquals("fake result", proxyFor(HasProtectedMethod.class).build().result());
     }
@@ -242,6 +250,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testProxying_ClassHierarchy() throws Throwable {
         assertEquals("package", proxyFor(MyParentClass.class).build().someMethod());
         assertEquals("fake result", proxyFor(MyChildClassWithProtectedMethod.class).build().someMethod());
@@ -254,10 +263,13 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testVoidMethod_ShouldNotThrowRuntimeException() throws Throwable {
         proxyFor(HasVoidMethod.class).build().dangerousMethod();
     }
 
+    @Test
+    @SuppressWarnings("EqualsWithItself")
     public void testObjectMethodsAreAlsoProxied() throws Throwable {
         Object proxy = proxyFor(Object.class).build();
         fakeHandler.setFakeResult("mystring");
@@ -281,6 +293,7 @@ public class ProxyBuilderTest extends TestCase {
         public String[] getStringArray() { return new String[] { "d", "e" }; }
     }
 
+    @Test
     public void testAllReturnTypes() throws Throwable {
         AllReturnTypes proxy = proxyFor(AllReturnTypes.class).build();
         fakeHandler.setFakeResult(false);
@@ -294,9 +307,9 @@ public class ProxyBuilderTest extends TestCase {
         fakeHandler.setFakeResult((short) 11);
         assertEquals(11, proxy.getShort());
         fakeHandler.setFakeResult(12f);
-        assertEquals(12f, proxy.getFloat());
+        assertEquals(12f, proxy.getFloat(), DELTA_FLOAT);
         fakeHandler.setFakeResult(13.0);
-        assertEquals(13.0, proxy.getDouble());
+        assertEquals(13.0, proxy.getDouble(), DELTA_FLOAT);
         fakeHandler.setFakeResult('z');
         assertEquals('z', proxy.getChar());
         fakeHandler.setFakeResult(new int[] { -1, -2 });
@@ -325,6 +338,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testPassThroughWorksForAllTypes() throws Exception {
         PassThroughAllTypes proxy = proxyFor(PassThroughAllTypes.class)
                 .handler(new InvokeSuperHandler())
@@ -339,10 +353,10 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals(5L, proxy.getLong(5L));
         assertEquals((short) 6, proxy.getShort((short) 6));
         assertEquals((short) 7, proxy.getShort((short) 7));
-        assertEquals(8f, proxy.getFloat(8f));
-        assertEquals(9f, proxy.getFloat(9f));
-        assertEquals(10.0, proxy.getDouble(10.0));
-        assertEquals(11.0, proxy.getDouble(11.0));
+        assertEquals(8f, proxy.getFloat(8f), DELTA_FLOAT);
+        assertEquals(9f, proxy.getFloat(9f), DELTA_FLOAT);
+        assertEquals(10.0, proxy.getDouble(10.0), DELTA_DOUBLE);
+        assertEquals(11.0, proxy.getDouble(11.0), DELTA_DOUBLE);
         assertEquals('a', proxy.getChar('a'));
         assertEquals('b', proxy.getChar('b'));
         assertEquals("asdf", proxy.getString("asdf"));
@@ -358,6 +372,7 @@ public class ProxyBuilderTest extends TestCase {
         public int example() { return 0; }
     }
 
+    @Test
     public void testProxyWorksForSuperclassMethodsAlso() throws Throwable {
         ExtendsAllReturnTypes proxy = proxyFor(ExtendsAllReturnTypes.class).build();
         fakeHandler.setFakeResult(99);
@@ -372,6 +387,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testMixingBoxedAndUnboxedParams() throws Throwable {
         HasOddParams proxy = proxyFor(HasOddParams.class).build();
         fakeHandler.setFakeResult(99L);
@@ -384,6 +400,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testSinglePrimitiveParameter() throws Throwable {
         InvocationHandler handler = new InvocationHandler() {
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -405,11 +422,13 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testNoConstructorArguments_CallsNoArgConstructor() throws Throwable {
         TwoConstructors twoConstructors = proxyFor(TwoConstructors.class).build();
         assertEquals("no-arg", twoConstructors.string);
     }
 
+    @Test
     public void testWithoutInvocationHandler_ThrowsIllegalArgumentException() throws Throwable {
         try {
             ProxyBuilder.forClass(TwoConstructors.class)
@@ -427,6 +446,7 @@ public class ProxyBuilderTest extends TestCase {
         public HardToConstructCorrectly(Integer ignored) { fail(); }
     }
 
+    @Test
     public void testHardToConstruct_WorksIfYouSpecifyTheConstructorCorrectly() throws Throwable {
         proxyFor(HardToConstructCorrectly.class)
                 .constructorArgTypes(Boolean.class)
@@ -434,6 +454,7 @@ public class ProxyBuilderTest extends TestCase {
                 .build();
     }
 
+    @Test
     public void testHardToConstruct_EvenWorksWhenArgsAreAmbiguous() throws Throwable {
         proxyFor(HardToConstructCorrectly.class)
                 .constructorArgTypes(Boolean.class)
@@ -441,15 +462,14 @@ public class ProxyBuilderTest extends TestCase {
                 .build();
     }
 
+    @Test(expected = IllegalArgumentException.class)
     public void testHardToConstruct_DoesNotInferTypesFromValues() throws Throwable {
-        try {
-            proxyFor(HardToConstructCorrectly.class)
-                    .constructorArgValues(true)
-                    .build();
-            fail();
-        } catch (IllegalArgumentException expected) {}
+        proxyFor(HardToConstructCorrectly.class)
+                .constructorArgValues(true)
+                .build();
     }
 
+    @Test
     public void testDefaultProxyHasSuperMethodToAccessOriginal() throws Exception {
         Object objectProxy = proxyFor(Object.class).build();
         assertNotNull(objectProxy.getClass().getMethod("super$hashCode$int"));
@@ -461,6 +481,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testSometimesDelegateToSuper() throws Exception {
         InvocationHandler delegatesOddValues = new InvocationHandler() {
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -482,6 +503,7 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals("odd 3", proxy.method(3));
     }
 
+    @Test
     public void testCallSuperThrows() throws Exception {
         InvocationHandler handler = new InvocationHandler() {
             public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
@@ -513,14 +535,15 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testUnboxedResult() throws Exception {
         fakeHandler.fakeResult = 2.0;
-        assertEquals(2.0, proxyFor(DoubleReturn.class).build().getValue());
+        assertEquals(2.0, proxyFor(DoubleReturn.class).build().getValue(), DELTA_DOUBLE);
     }
 
-    public static void staticMethod() {
-    }
+    public static void staticMethod() {}
 
+    @Test
     public void testDoesNotOverrideStaticMethods() throws Exception {
         // Method should exist on this test class itself.
         ProxyBuilderTest.class.getDeclaredMethod("staticMethod");
@@ -531,33 +554,28 @@ public class ProxyBuilderTest extends TestCase {
         } catch (NoSuchMethodException expected) {}
     }
 
+    @Test(expected = IOException.class)
     public void testIllegalCacheDirectory() throws Exception {
-        try {
-          proxyFor(ProxyForIllegalCacheDirectory.class)
-                  .dexCache(new File("/poop/"))
-                  .build();
-          fail();
-        } catch (IOException expected) {
-        }
+        proxyFor(ProxyForIllegalCacheDirectory.class)
+                .dexCache(new File("/poop/"))
+                .build();
     }
 
-    public static class ProxyForIllegalCacheDirectory {
-    }
+    public static class ProxyForIllegalCacheDirectory {}
 
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidConstructorSpecification() throws Exception {
-        try {
-            proxyFor(Object.class)
-                    .constructorArgTypes(String.class, Boolean.class)
-                    .constructorArgValues("asdf", true)
-                    .build();
-            fail();
-        } catch (IllegalArgumentException expected) {}
+        proxyFor(Object.class)
+                .constructorArgTypes(String.class, Boolean.class)
+                .constructorArgValues("asdf", true)
+                .build();
     }
 
     public static abstract class AbstractClass {
         public abstract Object getValue();
     }
 
+    @Test
     public void testAbstractClassBehaviour() throws Exception {
         assertEquals("fake result", proxyFor(AbstractClass.class).build().getValue());
     }
@@ -580,6 +598,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testParentConstructorThrowsDeclaredException() throws Exception {
         try {
             proxyFor(CtorHasDeclaredException.class).build();
@@ -601,16 +620,15 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testGetInvocationHandler_NormalOperation() throws Exception {
         Object proxy = proxyFor(Object.class).build();
         assertSame(fakeHandler, ProxyBuilder.getInvocationHandler(proxy));
     }
 
+    @Test(expected = IllegalArgumentException.class)
     public void testGetInvocationHandler_NotAProxy() {
-        try {
-            ProxyBuilder.getInvocationHandler(new Object());
-            fail();
-        } catch (IllegalArgumentException expected) {}
+        ProxyBuilder.getInvocationHandler(new Object());
     }
 
     public static class ReturnsObject {
@@ -626,6 +644,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testCovariantReturnTypes_NormalBehaviour() throws Exception {
         String expected = "some string";
         fakeHandler.setFakeResult(expected);
@@ -633,6 +652,7 @@ public class ProxyBuilderTest extends TestCase {
         assertSame(expected, proxyFor(ReturnsString.class).build().getValue());
     }
 
+    @Test
     public void testCovariantReturnTypes_WrongReturnType() throws Exception {
         try {
             fakeHandler.setFakeResult(new Object());
@@ -641,12 +661,14 @@ public class ProxyBuilderTest extends TestCase {
         } catch (ClassCastException expected) {}
     }
 
+    @Test
     public void testCaching() throws Exception {
         SimpleClass a = proxyFor(SimpleClass.class).build();
         SimpleClass b = proxyFor(SimpleClass.class).build();
         assertSame(a.getClass(), b.getClass());
     }
 
+    @Test
     public void testCachingWithMultipleConstructors() throws Exception {
         HasMultipleConstructors a = ProxyBuilder.forClass(HasMultipleConstructors.class)
                 .constructorArgTypes()
@@ -684,6 +706,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testClassNotCachedWithDifferentParentClassLoaders() throws Exception {
         ClassLoader classLoaderA = newPathClassLoader();
         SimpleClass a = proxyFor(SimpleClass.class)
@@ -700,6 +723,7 @@ public class ProxyBuilderTest extends TestCase {
         assertTrue(a.getClass() != b.getClass());
     }
 
+    @Test
     public void testAbstractClassWithUndeclaredInterfaceMethod() throws Throwable {
         DeclaresInterface declaresInterface = proxyFor(DeclaresInterface.class)
                 .build();
@@ -711,9 +735,9 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
-    public static abstract class DeclaresInterface implements Callable<String> {
-    }
+    public static abstract class DeclaresInterface implements Callable<String> {}
 
+    @Test
     public void testImplementingInterfaces() throws Throwable {
         SimpleClass simpleClass = proxyFor(SimpleClass.class)
                 .implementing(Callable.class)
@@ -729,6 +753,7 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals(3, asComparable.compareTo(null));
     }
 
+    @Test
     public void testCallSuperWithInterfaceMethod() throws Throwable {
         SimpleClass simpleClass = proxyFor(SimpleClass.class)
                 .implementing(Callable.class)
@@ -741,6 +766,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testImplementInterfaceCallingThroughConcreteClass() throws Throwable {
         InvocationHandler invocationHandler = new InvocationHandler() {
             public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
@@ -763,6 +789,7 @@ public class ProxyBuilderTest extends TestCase {
      * interface bridges to 'String call()', and so the super method appears to
      * also be proxied.
      */
+    @Test
     public void testImplementInterfaceCallingThroughInterface() throws Throwable {
         final AtomicInteger count = new AtomicInteger();
 
@@ -799,6 +826,7 @@ public class ProxyBuilderTest extends TestCase {
      * different from javac's convention where return types must be assignable
      * in one direction or the other.
      */
+    @Test
     public void testInterfacesSameNamesDifferentReturnTypes() throws Throwable {
         InvocationHandler handler = new InvocationHandler() {
             public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
@@ -829,6 +857,7 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals(3, c.foo());
     }
 
+    @Test
     public void testInterfacesSameNamesSameReturnType() throws Throwable {
         Object o = proxyFor(Object.class)
                 .implementing(FooReturnsInt.class, FooReturnsInt2.class)
@@ -866,6 +895,7 @@ public class ProxyBuilderTest extends TestCase {
 
     }
 
+    @Test
     public void testSubclassOfRandom() throws Exception {
         proxyFor(Random.class)
                 .handler(new InvokeSuperHandler())
@@ -880,6 +910,7 @@ public class ProxyBuilderTest extends TestCase {
     }
 
     // https://code.google.com/p/dexmaker/issues/detail?id=12
+    @Test
     public void testFinalToString() throws Throwable {
         assertEquals("no proxy", proxyFor(FinalToString.class).build().toString());
     }
@@ -895,6 +926,7 @@ public class ProxyBuilderTest extends TestCase {
             implements FooReturnsString {
     }
 
+    @Test
     public void testFinalInterfaceImpl() throws Throwable {
         assertEquals("no proxy", proxyFor(ExtenstionOfFinalInterfaceImpl.class).build().foo());
     }
@@ -911,6 +943,7 @@ public class ProxyBuilderTest extends TestCase {
     public static class YouDoNotChooseYourFamily
             extends MakesMethodFinalEarly implements DeclaresMethodLate {}
 
+    @Test
     public void testInterfaceMethodMadeFinalBeforeActualInheritance() throws Exception {
         proxyFor(YouDoNotChooseYourFamily.class).build();
     }
@@ -960,6 +993,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     @SuppressWarnings("unchecked")
     public void testMethodsGeneratedInDeterministicOrder() throws Exception {
         // Grab the static methods array from the original class.
@@ -980,6 +1014,7 @@ public class ProxyBuilderTest extends TestCase {
         assertTrue(Arrays.equals(methods1, methods2));
     }
 
+    @Test
     public void testOrderingClassWithDexMakerCaching() throws Exception {
         doTestOrderClassWithDexMakerCaching();
 
@@ -998,7 +1033,7 @@ public class ProxyBuilderTest extends TestCase {
         assertEquals(1, proxy.returnsInt(1, 1));
         assertEquals("string", proxy.returnsString());
         assertFalse(proxy.returnsBoolean());
-        assertEquals(1.0, proxy.returnsDouble());
+        assertEquals(1.0, proxy.returnsDouble(), DELTA_DOUBLE);
         assertNotNull(proxy.returnsObject());
         assertTrue(versionedDxDir.listFiles().length != 0);
     }
@@ -1049,6 +1084,7 @@ public class ProxyBuilderTest extends TestCase {
         }
     }
 
+    @Test
     public void testTwoClassesWithIdenticalMethodSignatures_DexMakerCaching() throws Exception {
         ConcreteClassA proxyA = ProxyBuilder.forClass(ConcreteClassA.class)
                 .handler(new InvokeSuperHandler())

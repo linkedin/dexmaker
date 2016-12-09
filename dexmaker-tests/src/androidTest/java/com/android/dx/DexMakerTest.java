@@ -17,7 +17,8 @@
 package com.android.dx;
 
 import android.support.test.InstrumentationRegistry;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -30,6 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import static com.android.dx.util.TestUtil.DELTA_DOUBLE;
+import static com.android.dx.util.TestUtil.DELTA_FLOAT;
 import static java.lang.reflect.Modifier.ABSTRACT;
 import static java.lang.reflect.Modifier.FINAL;
 import static java.lang.reflect.Modifier.NATIVE;
@@ -38,6 +41,10 @@ import static java.lang.reflect.Modifier.PROTECTED;
 import static java.lang.reflect.Modifier.PUBLIC;
 import static java.lang.reflect.Modifier.STATIC;
 import static java.lang.reflect.Modifier.SYNCHRONIZED;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * This generates a class named 'Generated' with one or more generated methods
@@ -46,7 +53,7 @@ import static java.lang.reflect.Modifier.SYNCHRONIZED;
  *
  * <p>This test must run on a Dalvik VM.
  */
-public final class DexMakerTest extends TestCase {
+public final class DexMakerTest {
     private DexMaker dexMaker;
     private static TypeId<DexMakerTest> TEST_TYPE = TypeId.get(DexMakerTest.class);
     private static TypeId<?> INT_ARRAY = TypeId.get(int[].class);
@@ -58,9 +65,8 @@ public final class DexMakerTest extends TestCase {
     private static TypeId<Callable> CALLABLE = TypeId.get(Callable.class);
     private static MethodId<Callable, Object> CALL = CALLABLE.getMethod(TypeId.OBJECT, "call");
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setup() {
         reset();
     }
 
@@ -82,6 +88,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testNewInstance() throws Exception {
         /*
          * public static Constructable call(long a, boolean b) {
@@ -115,6 +122,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testVoidNoArgMemberMethod() throws Exception {
         /*
          * public void call() {
@@ -132,6 +140,7 @@ public final class DexMakerTest extends TestCase {
         method.invoke(instance);
     }
 
+    @Test
     public void testInvokeStatic() throws Exception {
         /*
          * public static int call(int a) {
@@ -151,6 +160,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(10, getMethod().invoke(null, 4));
     }
 
+    @Test
     public void testCreateLocalMethodAsNull() throws Exception {
         /*
          * public void call(int value) {
@@ -177,6 +187,7 @@ public final class DexMakerTest extends TestCase {
         return a + 6;
     }
 
+    @Test
     public void testInvokeVirtual() throws Exception {
         /*
          * public static int call(DexMakerTest test, int a) {
@@ -202,6 +213,7 @@ public final class DexMakerTest extends TestCase {
         return a + 5;
     }
 
+    @Test
     public <G> void testInvokeDirect() throws Exception {
         /*
          * private int directMethod() {
@@ -237,6 +249,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(5, method.invoke(null, instance));
     }
 
+    @Test
     public <G> void testInvokeSuper() throws Exception {
         /*
          * public int superHashCode() {
@@ -270,6 +283,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(System.identityHashCode(instance), method.invoke(instance));
     }
 
+    @Test
     public void testInvokeInterface() throws Exception {
         /*
          * public static Object call(Callable c) {
@@ -292,6 +306,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals("abc", getMethod().invoke(null, callable));
     }
 
+    @Test
     public void testInvokeVoidMethodIgnoresTargetLocal() throws Exception {
         /*
          * public static int call() {
@@ -312,9 +327,9 @@ public final class DexMakerTest extends TestCase {
     }
 
     @SuppressWarnings("unused") // called by generated code
-    public static void voidMethod() {
-    }
+    public static void voidMethod() {}
 
+    @Test
     public void testParameterMismatch() throws Exception {
         TypeId<?>[] argTypes = {
                 TypeId.get(Integer.class), // should fail because the code specifies int
@@ -332,6 +347,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testInvokeTypeSafety() throws Exception {
         /*
          * public static boolean call(DexMakerTest test) {
@@ -357,6 +373,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(false, getMethod().invoke(null, this));
     }
 
+    @Test
     public void testReturnTypeMismatch() {
         MethodId<?, String> methodId = GENERATED.getMethod(TypeId.STRING, "call");
         Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
@@ -372,6 +389,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testDeclareStaticFields() throws Exception {
         /*
          * class Generated {
@@ -393,6 +411,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(null, b.get(null));
     }
 
+    @Test
     public void testDeclareInstanceFields() throws Exception {
         /*
          * class Generated {
@@ -422,6 +441,7 @@ public final class DexMakerTest extends TestCase {
      * Declare a constructor that takes an int parameter and assigns it to a
      * field.
      */
+    @Test
     public <G> void testDeclareConstructor() throws Exception {
         /*
          * class Generated {
@@ -448,6 +468,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(0xabcd, a.get(instance));
     }
 
+    @Test
     public void testReturnType() throws Exception {
         testReturnType(boolean.class, true);
         testReturnType(byte.class, (byte) 5);
@@ -486,6 +507,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(value, method.invoke(null));
     }
 
+    @Test
     public void testBranching() throws Exception {
         Method lt = branchingMethod(Comparison.LT);
         assertEquals(Boolean.TRUE, lt.invoke(null, 1, 2));
@@ -549,6 +571,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testCastIntegerToInteger() throws Exception {
         Method intToLong = numericCastingMethod(int.class, long.class);
         assertEquals(0x0000000000000000L, intToLong.invoke(null, 0x00000000));
@@ -577,6 +600,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals((byte) 0x34, intToByte.invoke(null, 0xffffff34));
     }
 
+    @Test
     public void testCastIntegerToFloatingPoint() throws Exception {
         Method intToFloat = numericCastingMethod(int.class, float.class);
         assertEquals(0.0f, intToFloat.invoke(null, 0));
@@ -603,6 +627,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(9007199254740992.0, longToDouble.invoke(null, 9007199254740993L)); // precision
     }
 
+    @Test
     public void testCastFloatingPointToInteger() throws Exception {
         Method floatToInt = numericCastingMethod(float.class, int.class);
         assertEquals(0, floatToInt.invoke(null, 0.0f));
@@ -637,6 +662,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(0L, doubleToLong.invoke(null, Double.NaN));
     }
 
+    @Test
     public void testCastFloatingPointToFloatingPoint() throws Exception {
         Method floatToDouble = numericCastingMethod(float.class, double.class);
         assertEquals(0.0, floatToDouble.invoke(null, 0.0f));
@@ -673,6 +699,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testNot() throws Exception {
         Method notInteger = notMethod(int.class);
         assertEquals(0xffffffff, notInteger.invoke(null, 0x00000000));
@@ -702,6 +729,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testNegate() throws Exception {
         Method negateInteger = negateMethod(int.class);
         assertEquals(0, negateInteger.invoke(null, 0));
@@ -743,6 +771,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testIntBinaryOps() throws Exception {
         Method add = binaryOpMethod(int.class, int.class, BinaryOp.ADD);
         assertEquals(79, add.invoke(null, 75, 4));
@@ -791,6 +820,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(0x00abcd12, unsignedShiftRight.invoke(null, 0xabcd1234, 8));
     }
 
+    @Test
     public void testLongBinaryOps() throws Exception {
         Method add = binaryOpMethod(long.class, long.class, BinaryOp.ADD);
         assertEquals(30000000079L, add.invoke(null, 10000000075L, 20000000004L));
@@ -842,6 +872,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(0x00abcdef01234567L, unsignedShiftRight.invoke(null, 0xabcdef0123456789L, 8));
     }
 
+    @Test
     public void testFloatBinaryOps() throws Exception {
         Method add = binaryOpMethod(float.class, float.class, BinaryOp.ADD);
         assertEquals(6.75f, add.invoke(null, 5.5f, 1.25f));
@@ -861,6 +892,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(Float.NaN, remainder.invoke(null, 5.5f, 0.0f));
     }
 
+    @Test
     public void testDoubleBinaryOps() throws Exception {
         Method add = binaryOpMethod(double.class, double.class, BinaryOp.ADD);
         assertEquals(6.75, add.invoke(null, 5.5, 1.25));
@@ -901,6 +933,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testReadAndWriteInstanceFields() throws Exception {
         Instance instance = new Instance();
 
@@ -922,12 +955,12 @@ public final class DexMakerTest extends TestCase {
         Method floatSwap = instanceSwapMethod(float.class, "floatValue");
         instance.floatValue = 1.5f;
         assertEquals(1.5f, floatSwap.invoke(null, instance, 0.5f));
-        assertEquals(0.5f, instance.floatValue);
+        assertEquals(0.5f, instance.floatValue, DELTA_FLOAT);
 
         Method doubleSwap = instanceSwapMethod(double.class, "doubleValue");
         instance.doubleValue = 155.5;
         assertEquals(155.5, doubleSwap.invoke(null, instance, 266.6));
-        assertEquals(266.6, instance.doubleValue);
+        assertEquals(266.6, instance.doubleValue, DELTA_DOUBLE);
 
         Method objectSwap = instanceSwapMethod(Object.class, "objectValue");
         instance.objectValue = "before";
@@ -986,6 +1019,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testReadAndWriteStaticFields() throws Exception {
         Method intSwap = staticSwapMethod(int.class, "intValue");
         Static.intValue = 5;
@@ -1005,12 +1039,12 @@ public final class DexMakerTest extends TestCase {
         Method floatSwap = staticSwapMethod(float.class, "floatValue");
         Static.floatValue = 1.5f;
         assertEquals(1.5f, floatSwap.invoke(null, 0.5f));
-        assertEquals(0.5f, Static.floatValue);
+        assertEquals(0.5f, Static.floatValue, DELTA_FLOAT);
 
         Method doubleSwap = staticSwapMethod(double.class, "doubleValue");
         Static.doubleValue = 155.5;
         assertEquals(155.5, doubleSwap.invoke(null, 266.6));
-        assertEquals(266.6, Static.doubleValue);
+        assertEquals(266.6, Static.doubleValue, DELTA_DOUBLE);
 
         Method objectSwap = staticSwapMethod(Object.class, "objectValue");
         Static.objectValue = "before";
@@ -1068,6 +1102,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testTypeCast() throws Exception {
         /*
          * public static String call(Object o) {
@@ -1092,6 +1127,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testInstanceOf() throws Exception {
         /*
          * public static boolean call(Object o) {
@@ -1115,6 +1151,7 @@ public final class DexMakerTest extends TestCase {
     /**
      * Tests that we can construct a for loop.
      */
+    @Test
     public void testForLoop() throws Exception {
         /*
          * public static int call(int count) {
@@ -1160,6 +1197,7 @@ public final class DexMakerTest extends TestCase {
     /**
      * Tests that we can construct a while loop.
      */
+    @Test
     public void testWhileLoop() throws Exception {
         /*
          * public static int call(int max) {
@@ -1198,6 +1236,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(1024, ceilPow2.invoke(null, 1000));
     }
 
+    @Test
     public void testIfElseBlock() throws Exception {
         /*
          * public static int call(int a, int b, int c) {
@@ -1244,6 +1283,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(1, min.invoke(null, 3, 2, 1));
     }
 
+    @Test
     public void testRecursion() throws Exception {
         /*
          * public static int call(int a) {
@@ -1289,6 +1329,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(8, fib.invoke(null, 6));
     }
 
+    @Test
     public void testCatchExceptions() throws Exception {
         /*
          * public static String call(int i) {
@@ -1362,6 +1403,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testNestedCatchClauses() throws Exception {
         /*
          * public static String call(int a, int b, int c) {
@@ -1419,6 +1461,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals("NONE", method.invoke(null, 0, 0, 0));
     }
 
+    @Test
     public void testThrow() throws Exception {
         /*
          * public static void call() {
@@ -1441,6 +1484,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testUnusedParameters() throws Exception {
         /*
          * public static void call(int unused1, long unused2, long unused3) {}
@@ -1452,6 +1496,7 @@ public final class DexMakerTest extends TestCase {
         getMethod().invoke(null, 1, 2, 3);
     }
 
+    @Test
     public void testFloatingPointCompare() throws Exception {
         Method floatG = floatingPointCompareMethod(TypeId.FLOAT, 1);
         assertEquals(-1, floatG.invoke(null, 1.0f, Float.POSITIVE_INFINITY));
@@ -1514,6 +1559,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testLongCompare() throws Exception {
         /*
          * public static int call(long a, long b) {
@@ -1541,6 +1587,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(0, method.invoke(null, Long.MAX_VALUE, Long.MAX_VALUE));
     }
 
+    @Test
     public void testArrayLength() throws Exception {
         Method booleanArrayLength = arrayLengthMethod(BOOLEAN_ARRAY);
         assertEquals(0, booleanArrayLength.invoke(null, new Object[] { new boolean[0] }));
@@ -1580,6 +1627,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testNewArray() throws Exception {
         Method newBooleanArray = newArrayMethod(BOOLEAN_ARRAY);
         assertEquals("[]", Arrays.toString((boolean[]) newBooleanArray.invoke(null, 0)));
@@ -1622,6 +1670,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testReadAndWriteArray() throws Exception {
         Method swapBooleanArray = arraySwapMethod(BOOLEAN_ARRAY, TypeId.BOOLEAN);
         boolean[] booleans = new boolean[3];
@@ -1672,6 +1721,7 @@ public final class DexMakerTest extends TestCase {
         return getMethod();
     }
 
+    @Test
     public void testSynchronizedFlagImpactsDeclarationOnly() throws Exception {
         /*
          * public synchronized void call() {
@@ -1701,6 +1751,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testMonitorEnterMonitorExit() throws Exception {
         /*
          * public synchronized void call() {
@@ -1729,6 +1780,7 @@ public final class DexMakerTest extends TestCase {
         method.invoke(instance); // will take 100ms
     }
 
+    @Test
     public void testMoveInt() throws Exception {
         /*
          * public static int call(int a) {
@@ -1749,6 +1801,7 @@ public final class DexMakerTest extends TestCase {
         assertEquals(6, getMethod().invoke(null, 3));
     }
 
+    @Test
     public void testPrivateClassesAreUnsupported() {
         try {
             dexMaker.declare(TypeId.get("LPrivateClass;"), "PrivateClass.generated", PRIVATE,
@@ -1758,6 +1811,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testAbstractMethodsAreUnsupported() {
         MethodId<?, Void> methodId = GENERATED.getMethod(TypeId.VOID, "call");
         try {
@@ -1767,6 +1821,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testNativeMethodsAreUnsupported() {
         MethodId<?, Void> methodId = GENERATED.getMethod(TypeId.VOID, "call");
         try {
@@ -1776,6 +1831,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testSynchronizedFieldsAreUnsupported() {
         try {
             FieldId<?, ?> fieldId = GENERATED.getField(TypeId.OBJECT, "synchronizedField");
@@ -1785,6 +1841,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testInitialValueWithNonStaticField() {
         try {
             FieldId<?, ?> fieldId = GENERATED.getField(TypeId.OBJECT, "nonStaticField");
@@ -1815,6 +1872,7 @@ public final class DexMakerTest extends TestCase {
         code.returnVoid();
     }
 
+    @Test
     public void testCaching_Methods() throws Exception {
         int origSize = getDataDirectory().listFiles().length;
         final String defaultMethodName = "call";
@@ -1893,14 +1951,11 @@ public final class DexMakerTest extends TestCase {
         assertEquals(origSize + 16, getDataDirectory().listFiles().length);
     }
 
-    public static class BlankClassA {
+    public static class BlankClassA {}
 
-    }
+    public static class BlankClassB {}
 
-    public static class BlankClassB {
-
-    }
-
+    @Test
     public void testCaching_DifferentParentClasses() throws Exception {
         int origSize = getDataDirectory().listFiles().length;
         final String defaultMethodName = "call";
@@ -1939,6 +1994,7 @@ public final class DexMakerTest extends TestCase {
         }
     }
 
+    @Test
     public void testCaching_Constructors() throws Exception {
         int origSize = getDataDirectory().listFiles().length;
 

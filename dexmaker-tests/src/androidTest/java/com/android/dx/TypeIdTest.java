@@ -16,9 +16,12 @@
 
 package com.android.dx;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public final class TypeIdTest extends TestCase {
+import static org.junit.Assert.assertEquals;
+
+public final class TypeIdTest {
+    @Test
     public void testGetType() {
         assertEquals("Ljava/lang/String;", TypeId.get(String.class).getName());
         assertEquals("[Ljava/lang/String;", TypeId.get(String[].class).getName());

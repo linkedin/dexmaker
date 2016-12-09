@@ -17,13 +17,14 @@
 package com.android.dx.stock;
 
 import com.android.dx.Code;
-import com.android.dx.FieldId;
 import com.android.dx.Comparison;
 import com.android.dx.DexMaker;
+import com.android.dx.FieldId;
 import com.android.dx.Label;
 import com.android.dx.Local;
 import com.android.dx.MethodId;
 import com.android.dx.TypeId;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -32,9 +33,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import static java.lang.reflect.Modifier.PRIVATE;
-import static java.lang.reflect.Modifier.PUBLIC;
-import static java.lang.reflect.Modifier.STATIC;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,6 +42,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+
+import static java.lang.reflect.Modifier.PRIVATE;
+import static java.lang.reflect.Modifier.PUBLIC;
+import static java.lang.reflect.Modifier.STATIC;
 
 /**
  * Creates dynamic proxies of concrete classes.
@@ -137,7 +139,7 @@ public final class ProxyBuilder<T> {
     private File dexCache;
     private Class<?>[] constructorArgTypes = new Class[0];
     private Object[] constructorArgValues = new Object[0];
-    private Set<Class<?>> interfaces = new HashSet<Class<?>>();
+    private Set<Class<?>> interfaces = new HashSet<>();
 
     private ProxyBuilder(Class<T> clazz) {
         baseClass = clazz;
@@ -172,7 +174,7 @@ public final class ProxyBuilder<T> {
         dexCache.mkdir();
         return this;
     }
-    
+
     public ProxyBuilder<T> implementing(Class<?>... interfaces) {
         for (Class<?> i : interfaces) {
             if (!i.isInterface()) {
@@ -243,7 +245,8 @@ public final class ProxyBuilder<T> {
      */
     public Class<? extends T> buildProxyClass() throws IOException {
         // try the cache to see if we've generated this one before
-        @SuppressWarnings("unchecked") // we only populate the map with matching types
+        // we only populate the map with matching types
+        @SuppressWarnings("unchecked")
         Class<? extends T> proxyClass = (Class) generatedProxyClasses.get(baseClass);
         if (proxyClass != null
                 && proxyClass.getClassLoader().getParent() == parentClassLoader
@@ -259,8 +262,7 @@ public final class ProxyBuilder<T> {
         generateConstructorsAndFields(dexMaker, generatedType, superType, baseClass);
         Method[] methodsToProxy = getMethodsToProxyRecursive();
         generateCodeForAllMethods(dexMaker, generatedType, methodsToProxy, superType);
-        dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType,
-                getInterfacesAsTypeIds());
+        dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType, getInterfacesAsTypeIds());
         ClassLoader classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache);
         try {
             proxyClass = loadClass(classLoader, generatedName);
@@ -356,7 +358,7 @@ public final class ProxyBuilder<T> {
     }
 
     // TODO: test coverage for isProxyClass
-    
+
     /**
      * Returns true if {@code c} is a proxy class created by this builder.
      */
@@ -617,8 +619,8 @@ public final class ProxyBuilder<T> {
      * supplied class.
      */
     private Method[] getMethodsToProxyRecursive() {
-        Set<MethodSetEntry> methodsToProxy = new HashSet<MethodSetEntry>();
-        Set<MethodSetEntry> seenFinalMethods = new HashSet<MethodSetEntry>();
+        Set<MethodSetEntry> methodsToProxy = new HashSet<>();
+        Set<MethodSetEntry> seenFinalMethods = new HashSet<>();
         for (Class<?> c = baseClass; c != null; c = c.getSuperclass()) {
             getMethodsToProxy(methodsToProxy, seenFinalMethods, c);
         }
@@ -731,7 +733,7 @@ public final class ProxyBuilder<T> {
     }
 
     private static <T> Set<T> asSet(T... array) {
-        return new CopyOnWriteArraySet<T>(Arrays.asList(array));
+        return new CopyOnWriteArraySet<>(Arrays.asList(array));
     }
 
     private static MethodId<?, ?> getUnboxMethodForPrimitive(Class<?> methodReturnType) {
@@ -740,7 +742,7 @@ public final class ProxyBuilder<T> {
 
     private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_BOXED;
     static {
-        PRIMITIVE_TO_BOXED = new HashMap<Class<?>, Class<?>>();
+        PRIMITIVE_TO_BOXED = new HashMap<>();
         PRIMITIVE_TO_BOXED.put(boolean.class, Boolean.class);
         PRIMITIVE_TO_BOXED.put(int.class, Integer.class);
         PRIMITIVE_TO_BOXED.put(byte.class, Byte.class);
@@ -753,7 +755,7 @@ public final class ProxyBuilder<T> {
 
     private static final Map<TypeId<?>, MethodId<?, ?>> PRIMITIVE_TYPE_TO_UNBOX_METHOD;
     static {
-        PRIMITIVE_TYPE_TO_UNBOX_METHOD = new HashMap<TypeId<?>, MethodId<?, ?>>();
+        PRIMITIVE_TYPE_TO_UNBOX_METHOD = new HashMap<>();
         for (Map.Entry<Class<?>, Class<?>> entry : PRIMITIVE_TO_BOXED.entrySet()) {
             TypeId<?> primitiveType = TypeId.get(entry.getKey());
             TypeId<?> boxedType = TypeId.get(entry.getValue());
@@ -771,7 +773,7 @@ public final class ProxyBuilder<T> {
      */
     private static final Map<Class<?>, MethodId<?, ?>> PRIMITIVE_TO_UNBOX_METHOD;
     static {
-        Map<Class<?>, MethodId<?, ?>> map = new HashMap<Class<?>, MethodId<?, ?>>();
+        Map<Class<?>, MethodId<?, ?>> map = new HashMap<>();
         map.put(boolean.class, TypeId.get(Boolean.class).getMethod(TypeId.BOOLEAN, "booleanValue"));
         map.put(int.class, TypeId.get(Integer.class).getMethod(TypeId.INT, "intValue"));
         map.put(byte.class, TypeId.get(Byte.class).getMethod(TypeId.BYTE, "byteValue"));

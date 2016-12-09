@@ -29,7 +29,7 @@ import java.util.List;
  */
 public final class Label {
 
-    final List<Insn> instructions = new ArrayList<Insn>();
+    final List<Insn> instructions = new ArrayList<>();
 
     Code code;
 

@@ -7,9 +7,6 @@ description = "Implementation of the Mockito API for use on the Android Dalvik V
 targetCompatibility = '1.7'
 sourceCompatibility = '1.7'
 
-// TODO: fix javadoc errors and then remove this
-javadoc.failOnError = false
-
 repositories {
     jcenter()
 }

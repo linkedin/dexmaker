@@ -66,7 +66,7 @@ public final class MethodId<D, R> {
     }
 
     /**
-     * Returns the method's name. This is "<init>" if this is a constructor.
+     * Returns the method's name. This is "&lt;init&gt;" if this is a constructor.
      */
     public String getName() {
         return name;
@@ -97,7 +97,8 @@ public final class MethodId<D, R> {
         return Prototype.intern(descriptor(includeThis));
     }
 
-    @Override public boolean equals(Object o) {
+    @Override
+    public boolean equals(Object o) {
         return o instanceof MethodId
                 && ((MethodId<?, ?>) o).declaringType.equals(declaringType)
                 && ((MethodId<?, ?>) o).name.equals(name)
@@ -105,7 +106,8 @@ public final class MethodId<D, R> {
                 && ((MethodId<?, ?>) o).returnType.equals(returnType);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         int result = 17;
         result = 31 * result + declaringType.hashCode();
         result = 31 * result + name.hashCode();
@@ -114,7 +116,8 @@ public final class MethodId<D, R> {
         return result;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return declaringType + "." + name + "(" + parameters + ")";
     }
 }

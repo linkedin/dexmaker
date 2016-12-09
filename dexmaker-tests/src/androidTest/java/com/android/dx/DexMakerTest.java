@@ -58,7 +58,8 @@ public final class DexMakerTest extends TestCase {
     private static TypeId<Callable> CALLABLE = TypeId.get(Callable.class);
     private static MethodId<Callable, Object> CALL = CALLABLE.getMethod(TypeId.OBJECT, "call");
 
-    @Override protected void setUp() throws Exception {
+    @Override
+    protected void setUp() throws Exception {
         super.setUp();
         reset();
     }

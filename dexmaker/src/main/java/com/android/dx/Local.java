@@ -68,7 +68,8 @@ public final class Local<T> {
         return type;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "v" + reg + "(" + type + ")";
     }
 }

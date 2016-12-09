@@ -58,17 +58,20 @@ public final class FieldId<D, V> {
         return name;
     }
 
-    @Override public boolean equals(Object o) {
+    @Override
+    public boolean equals(Object o) {
         return o instanceof FieldId
                 && ((FieldId<?, ?>) o).declaringType.equals(declaringType)
                 && ((FieldId<?, ?>) o).name.equals(name);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         return declaringType.hashCode() + 37 * name.hashCode();
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return declaringType + "." + name;
     }
 }

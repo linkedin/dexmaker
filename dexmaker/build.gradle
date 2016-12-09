@@ -7,9 +7,6 @@ description = "A utility for doing compile or runtime code generation targeting 
 targetCompatibility = '1.7'
 sourceCompatibility = '1.7'
 
-// TODO: fix javadoc errors and then remove this
-javadoc.failOnError = false
-
 repositories {
     jcenter()
 }

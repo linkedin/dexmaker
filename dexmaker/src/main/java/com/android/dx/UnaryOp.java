@@ -26,14 +26,16 @@ public enum UnaryOp {
 
     /** {@code ~a}. Supports int and long. */
     NOT() {
-        @Override Rop rop(TypeId<?> type) {
+        @Override
+        Rop rop(TypeId<?> type) {
             return Rops.opNot(type.ropType);
         }
     },
 
     /** {@code -a}. Supports int, long, float and double. */
     NEGATE() {
-        @Override Rop rop(TypeId<?> type) {
+        @Override
+        Rop rop(TypeId<?> type) {
             return Rops.opNeg(type.ropType);
         }
     };

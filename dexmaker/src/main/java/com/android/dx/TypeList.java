@@ -43,15 +43,18 @@ final class TypeList {
         return Collections.unmodifiableList(Arrays.asList(types));
     }
 
-    @Override public boolean equals(Object o) {
+    @Override
+    public boolean equals(Object o) {
         return o instanceof TypeList && Arrays.equals(((TypeList) o).types, types);
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         return Arrays.hashCode(types);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < types.length; i++) {
             if (i > 0) {

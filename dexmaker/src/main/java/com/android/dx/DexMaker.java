@@ -50,7 +50,7 @@ import static java.lang.reflect.Modifier.PRIVATE;
 import static java.lang.reflect.Modifier.STATIC;
 
 /**
- * Generates a </i><strong>D</strong>alvik <strong>EX</strong>ecutable (dex)
+ * Generates a <strong>D</strong>alvik <strong>EX</strong>ecutable (dex)
  * file for execution on Android. Dex files define classes and interfaces,
  * including their member methods and fields, executable code, and debugging
  * information. They also define annotations, though this API currently has no
@@ -196,8 +196,7 @@ import static java.lang.reflect.Modifier.STATIC;
  * }</pre>
  */
 public final class DexMaker {
-    private final Map<TypeId<?>, TypeDeclaration> types
-            = new LinkedHashMap<TypeId<?>, TypeDeclaration>();
+    private final Map<TypeId<?>, TypeDeclaration> types = new LinkedHashMap<>();
 
     /**
      * Creates a new {@code DexMaker} instance, which can be used to create a
@@ -450,10 +449,8 @@ public final class DexMaker {
         private String sourceFile;
         private TypeList interfaces;
 
-        private final Map<FieldId, FieldDeclaration> fields
-                = new LinkedHashMap<FieldId, FieldDeclaration>();
-        private final Map<MethodId, MethodDeclaration> methods
-                = new LinkedHashMap<MethodId, MethodDeclaration>();
+        private final Map<FieldId, FieldDeclaration> fields = new LinkedHashMap<>();
+        private final Map<MethodId, MethodDeclaration> methods = new LinkedHashMap<>();
 
         TypeDeclaration(TypeId<?> type) {
             this.type = type;

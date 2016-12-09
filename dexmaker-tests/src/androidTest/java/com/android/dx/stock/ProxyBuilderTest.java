@@ -873,7 +873,8 @@ public class ProxyBuilderTest extends TestCase {
     }
 
     public static class FinalToString {
-        @Override public final String toString() {
+        @Override
+        public final String toString() {
             return "no proxy";
         }
     }
@@ -884,7 +885,8 @@ public class ProxyBuilderTest extends TestCase {
     }
 
     public static class FinalInterfaceImpl implements FooReturnsString {
-        @Override public final String foo() {
+        @Override
+        public final String foo() {
           return "no proxy";
         }
     }

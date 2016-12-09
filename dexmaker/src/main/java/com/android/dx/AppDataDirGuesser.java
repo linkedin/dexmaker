@@ -47,8 +47,7 @@ class AppDataDirGuesser {
         return AppDataDirGuesser.class.getClassLoader();
     }
 
-    private String getPathFromThisClassLoader(ClassLoader classLoader,
-            Class<?> pathClassLoaderClass) {
+    private String getPathFromThisClassLoader(ClassLoader classLoader, Class<?> pathClassLoaderClass) {
         // Prior to ICS, we can simply read the "path" field of the
         // PathClassLoader.
         try {
@@ -132,7 +131,7 @@ class AppDataDirGuesser {
     }
 
     File[] guessPath(String input) {
-        List<File> results = new ArrayList<File>();
+        List<File> results = new ArrayList<>();
         for (String potential : splitPathList(input)) {
             if (!potential.startsWith("/data/app/")) {
                 continue;

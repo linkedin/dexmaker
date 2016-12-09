@@ -720,7 +720,7 @@ public final class Code {
      * {@code 0x12345678} to a short yields {@code 0x5678}, losing the high
      * bytes. The following numeric casts are supported:
      *
-     * <p><table border="1">
+     * <p><table border="1" summary="Supported Numeric Casts">
      * <tr><th>From</th><th>To</th></tr>
      * <tr><td>int</td><td>byte, char, short, long, float, double</td></tr>
      * <tr><td>long</td><td>int, float, double</td></tr>

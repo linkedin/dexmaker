@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 2.2.0 (2016-12-09)
+- Update underlying Mockito version to 2.2.29
+- Major and minor version numbers will now be in sync with the Mockito version that's supported by dexmaker-mockito
+
 ## Version 1.5.1 (2016-12-07)
 - Fix bug in generated pom files that broke transitive dependencies
 

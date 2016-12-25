@@ -1103,6 +1103,74 @@ public final class DexMakerTest {
     }
 
     @Test
+    public void testStaticInitializer() throws Exception {
+        reset();
+
+        StaticFieldSpec<?>[] fields = new StaticFieldSpec[] {
+                new StaticFieldSpec<>(boolean.class, "booleanValue", true),
+                new StaticFieldSpec<>(byte.class, "byteValue", Byte.MIN_VALUE),
+                new StaticFieldSpec<>(short.class, "shortValue", Short.MAX_VALUE),
+                new StaticFieldSpec<>(int.class, "intValue", Integer.MIN_VALUE),
+                new StaticFieldSpec<>(long.class, "longValue", Long.MAX_VALUE),
+                new StaticFieldSpec<>(float.class, "floatValue", Float.MIN_VALUE),
+                new StaticFieldSpec<>(double.class, "doubleValue", Double.MAX_VALUE),
+                new StaticFieldSpec<>(String.class, "stringValue", "qwerty"),
+        };
+
+        MethodId<?, Void> clinit = GENERATED.getStaticInitializer();
+        assertTrue(clinit.isStaticInitializer());
+
+        Code code = dexMaker.declare(clinit, Modifier.STATIC);
+
+        for (StaticFieldSpec<?> field : fields) {
+            field.createLocal(code);
+        }
+
+        for (StaticFieldSpec<?> field : fields) {
+            field.initializeField(code);
+        }
+
+        code.returnVoid();
+
+        Class<?> generated = generateAndLoad();
+        for (StaticFieldSpec<?> fieldSpec : fields) {
+            Field field = generated.getDeclaredField(fieldSpec.name);
+            assertEquals(StaticFieldSpec.MODIFIERS, field.getModifiers());
+            assertEquals(fieldSpec.value, field.get(null));
+        }
+    }
+
+    private class StaticFieldSpec<T> {
+        Class<T> type;
+        TypeId<T> typeId;
+        String name;
+        T value;
+        FieldId<?, T> fieldId;
+        Local<T> local;
+
+        static final int MODIFIERS = Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL;
+
+        public StaticFieldSpec(Class<T> type, String name, T value) {
+            this.type = type;
+            this.name = name;
+            this.value = value;
+
+            typeId = TypeId.get(type);
+            fieldId = GENERATED.getField(typeId, name);
+            dexMaker.declare(fieldId, MODIFIERS, null);
+        }
+
+        public void createLocal(Code code) {
+            local = code.newLocal(typeId);
+        }
+
+        public void initializeField(Code code) {
+            code.loadConstant(local, value);
+            code.sput(fieldId, local);
+        }
+    }
+
+    @Test
     public void testTypeCast() throws Exception {
         /*
          * public static String call(Object o) {

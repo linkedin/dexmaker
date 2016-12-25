@@ -123,6 +123,10 @@ public final class TypeId<T> {
         return new MethodId<>(this, VOID, "<init>", new TypeList(parameters));
     }
 
+    public MethodId<T, Void> getStaticInitializer() {
+        return new MethodId<>(this, VOID, "<clinit>", new TypeList(new TypeId[0]));
+    }
+
     public <R> MethodId<T, R> getMethod(TypeId<R> returnType, String name, TypeId<?>... parameters) {
         return new MethodId<>(this, returnType, name, new TypeList(parameters));
     }

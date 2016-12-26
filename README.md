@@ -18,7 +18,7 @@ Dexmaker lets you use the [Mockito](https://github.com/mockito/mockito) mocking 
 Android projects by generating Dalvik bytecode class proxies. Just add an
 `androidTestCompile` dependency on `dexmaker-mockito` and you can use Mockito in your Android Instrumentation tests.
 
-Dexmaker currently targets Mockito 1.10.19.
+The version of Mockito that Dexmaker targets can be found in `dexmaker-mockito`'s [build.gradle](https://github.com/linkedin/dexmaker/blob/master/dexmaker-mockito/build.gradle) file. The general rule is that the major and minor version of Dexmaker will match the underlying major and minor version of Mockito.
 
 ### Class Proxies
 Dexmaker includes a stock code generator for [class proxies](https://github.com/crittercism/dexmaker/blob/master/dexmaker/src/main/java/com/android/dx/stock/ProxyBuilder.java).

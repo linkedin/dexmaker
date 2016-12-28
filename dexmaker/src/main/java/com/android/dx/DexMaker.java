@@ -267,7 +267,7 @@ public final class DexMaker {
             flags = (flags & ~Modifier.SYNCHRONIZED) | AccessFlags.ACC_DECLARED_SYNCHRONIZED;
         }
 
-        if (method.isConstructor()) {
+        if (method.isConstructor() || method.isStaticInitializer()) {
             flags |= ACC_CONSTRUCTOR;
         }
 

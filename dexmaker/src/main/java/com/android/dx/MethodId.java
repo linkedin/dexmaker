@@ -66,7 +66,15 @@ public final class MethodId<D, R> {
     }
 
     /**
-     * Returns the method's name. This is "&lt;init&gt;" if this is a constructor.
+     * Returns true if this method is the static initializer for its declaring class.
+     */
+    public boolean isStaticInitializer() {
+        return name.equals("<clinit>");
+    }
+
+    /**
+     * Returns the method's name. This is "&lt;init&gt;" if this is a constructor
+     * or "&lt;clinit&gt;" if a static initializer
      */
     public String getName() {
         return name;

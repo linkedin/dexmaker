@@ -572,6 +572,69 @@ public final class DexMakerTest {
     }
 
     @Test
+    public void testBranchingZ() throws Exception {
+        Method lt = branchingZMethod(Comparison.LT);
+        assertEquals(Boolean.TRUE, lt.invoke(null, -1));
+        assertEquals(Boolean.FALSE, lt.invoke(null, 0));
+        assertEquals(Boolean.FALSE, lt.invoke(null, 1));
+
+        Method le = branchingZMethod(Comparison.LE);
+        assertEquals(Boolean.TRUE, le.invoke(null, -1));
+        assertEquals(Boolean.TRUE, le.invoke(null, 0));
+        assertEquals(Boolean.FALSE, le.invoke(null, 1));
+
+        Method eq = branchingZMethod(Comparison.EQ);
+        assertEquals(Boolean.FALSE, eq.invoke(null, -1));
+        assertEquals(Boolean.TRUE, eq.invoke(null, 0));
+        assertEquals(Boolean.FALSE, eq.invoke(null, 1));
+
+        Method ge = branchingZMethod(Comparison.GE);
+        assertEquals(Boolean.FALSE, ge.invoke(null, -1));
+        assertEquals(Boolean.TRUE, ge.invoke(null, 0));
+        assertEquals(Boolean.TRUE, ge.invoke(null, 1));
+
+        Method gt = branchingZMethod(Comparison.GT);
+        assertEquals(Boolean.FALSE, gt.invoke(null, -1));
+        assertEquals(Boolean.FALSE, gt.invoke(null, 0));
+        assertEquals(Boolean.TRUE, gt.invoke(null, 1));
+
+        Method ne = branchingZMethod(Comparison.NE);
+        assertEquals(Boolean.TRUE, ne.invoke(null, -1));
+        assertEquals(Boolean.FALSE, ne.invoke(null, 0));
+        assertEquals(Boolean.TRUE, ne.invoke(null, 1));
+    }
+
+    private Method branchingZMethod(Comparison comparison) throws Exception {
+        /*
+         * public static boolean call(int localA) {
+         *   if (a comparison 0) {
+         *     return true;
+         *   }
+         *   return false;
+         * }
+         */
+        reset();
+        MethodId<?, Boolean> methodId = GENERATED.getMethod(
+            TypeId.BOOLEAN, "call", TypeId.INT);
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
+        Local<Integer> localA = code.getParameter(0, TypeId.INT);
+        Local<Boolean> result = code.newLocal(TypeId.get(boolean.class));
+        Label afterIf = new Label();
+        Label ifBody = new Label();
+        code.compareZ(comparison, ifBody, localA);
+        code.jump(afterIf);
+
+        code.mark(ifBody);
+        code.loadConstant(result, true);
+        code.returnValue(result);
+
+        code.mark(afterIf);
+        code.loadConstant(result, false);
+        code.returnValue(result);
+        return getMethod();
+    }
+
+    @Test
     public void testCastIntegerToInteger() throws Exception {
         Method intToLong = numericCastingMethod(int.class, long.class);
         assertEquals(0x0000000000000000L, intToLong.invoke(null, 0x00000000));

@@ -534,10 +534,21 @@ public final class Code {
      */
     public <T> void compare(Comparison comparison, Label trueLabel, Local<T> a, Local<T> b) {
         adopt(trueLabel);
-        // TODO: ops to compare with zero/null: just omit the 2nd local in StdTypeList.make()
         Rop rop = comparison.rop(StdTypeList.make(a.type.ropType, b.type.ropType));
         addInstruction(new PlainInsn(rop, sourcePosition, null,
                 RegisterSpecList.make(a.spec(), b.spec())), trueLabel);
+    }
+
+    /**
+     * Check if an int or reference equals to zero. If the comparison is true,
+     * execution jumps to {@code trueLabel}. If it is false, execution continues to
+     * the next instruction.
+     */
+    public <T> void compareZ(Comparison comparison, Label trueLabel, Local<?> a) {
+        adopt(trueLabel);
+        Rop rop = comparison.rop(StdTypeList.make(a.type.ropType));
+        addInstruction(new PlainInsn(rop, sourcePosition, null,
+                RegisterSpecList.make(a.spec())), trueLabel);
     }
 
     /**

@@ -587,7 +587,7 @@ public final class Code {
      * Copies the value in instance field {@code fieldId} of {@code instance} to
      * {@code target}.
      */
-    public <D, V> void iget(FieldId<D, V> fieldId, Local<V> target, Local<D> instance) {
+    public <D, V> void iget(FieldId<D, ? extends V> fieldId, Local<V> target, Local<D> instance) {
         addInstruction(new ThrowingCstInsn(Rops.opGetField(target.type.ropType), sourcePosition,
                 RegisterSpecList.make(instance.spec()), catches, fieldId.constant));
         moveResult(target, true);
@@ -597,7 +597,7 @@ public final class Code {
      * Copies the value in {@code source} to the instance field {@code fieldId}
      * of {@code instance}.
      */
-   public <D, V> void iput(FieldId<D, V> fieldId, Local<D> instance, Local<V> source) {
+   public <D, V> void iput(FieldId<D, V> fieldId, Local<? extends D> instance, Local<? extends V> source) {
         addInstruction(new ThrowingCstInsn(Rops.opPutField(source.type.ropType), sourcePosition,
                 RegisterSpecList.make(source.spec(), instance.spec()), catches, fieldId.constant));
     }
@@ -605,7 +605,7 @@ public final class Code {
     /**
      * Copies the value in the static field {@code fieldId} to {@code target}.
      */
-    public <V> void sget(FieldId<?, V> fieldId, Local<V> target) {
+    public <V> void sget(FieldId<?, ? extends V> fieldId, Local<V> target) {
         addInstruction(new ThrowingCstInsn(Rops.opGetStatic(target.type.ropType), sourcePosition,
                 RegisterSpecList.EMPTY, catches, fieldId.constant));
         moveResult(target, true);
@@ -614,7 +614,7 @@ public final class Code {
     /**
      * Copies the value in {@code source} to the static field {@code fieldId}.
      */
-    public <V> void sput(FieldId<?, V> fieldId, Local<V> source) {
+    public <V> void sput(FieldId<?, V> fieldId, Local<? extends V> source) {
         addInstruction(new ThrowingCstInsn(Rops.opPutStatic(source.type.ropType), sourcePosition,
                 RegisterSpecList.make(source.spec()), catches, fieldId.constant));
     }

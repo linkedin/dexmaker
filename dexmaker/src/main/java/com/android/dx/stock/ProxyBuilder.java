@@ -621,9 +621,13 @@ public final class ProxyBuilder<T> {
     private Method[] getMethodsToProxyRecursive() {
         Set<MethodSetEntry> methodsToProxy = new HashSet<>();
         Set<MethodSetEntry> seenFinalMethods = new HashSet<>();
+        // Traverse the class hierarchy to ensure that all concrete methods (which could be marked
+        // as final) are visited before any abstract methods from interfaces.
         for (Class<?> c = baseClass; c != null; c = c.getSuperclass()) {
             getMethodsToProxy(methodsToProxy, seenFinalMethods, c);
         }
+        // Now traverse the interface hierarchy, starting with the ones implemented by the class,
+        // followed by any extra interfaces.
         for (Class<?> c = baseClass; c != null; c = c.getSuperclass()) {
             for (Class<?> i : c.getInterfaces()) {
                 getMethodsToProxy(methodsToProxy, seenFinalMethods, i);
@@ -694,6 +698,14 @@ public final class ProxyBuilder<T> {
                 continue;
             }
             sink.add(entry);
+        }
+
+        // Only visit the interfaces of this class if it is itself an interface. That prevents
+        // visiting interfaces of a class before its super classes.
+        if (c.isInterface()) {
+            for (Class<?> i : c.getInterfaces()) {
+                getMethodsToProxy(sink, seenFinalMethods, i);
+            }
         }
     }
 

@@ -27,7 +27,9 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
@@ -1106,7 +1108,8 @@ public class ProxyBuilderTest {
                 .build();
         assertEquals(1, proxyA.foo());
         assertEquals("bar", proxyA.bar());
-        assertEquals(2, versionedDxDir.listFiles().length);
+        int numFiles = versionedDxDir.listFiles().length;
+        assertTrue(numFiles > 0);
 
         ConcreteClassB proxyB = ProxyBuilder.forClass(ConcreteClassB.class)
                 .handler(new InvokeSuperHandler())
@@ -1114,6 +1117,61 @@ public class ProxyBuilderTest {
                 .build();
         assertEquals(0, proxyB.foo());
         assertEquals("bahhr", proxyB.bar());
-        assertEquals(4, versionedDxDir.listFiles().length);
+        assertTrue(numFiles < versionedDxDir.listFiles().length);
+    }
+
+    public static abstract class PartiallyFinalClass {
+        public String returnA() {
+            return "A";
+        }
+
+        public String returnB() {
+            return "B";
+        }
+
+        public String returnC() {
+            return "C";
+        }
+
+        public final String returnD() {
+            return "D";
+        }
+
+        public abstract String returnE();
+    }
+
+    @Test
+    public void testProxyingSomeMethods() throws Throwable {
+        ArrayList<Method> methodsToOverride = new ArrayList<>();
+        for (Method method : PartiallyFinalClass.class.getDeclaredMethods()) {
+            if (!Modifier.isFinal(method.getModifiers()) && !method.getName().equals("returnC")) {
+                methodsToOverride.add(method);
+            }
+        }
+
+        InvocationHandler handler = new InvokeSuperHandler() {
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                if (method.getName().equals("returnA")) {
+                    return "fake A";
+                } else if (method.getName().equals("returnC")) {
+                    // This will never trigger as "returnC" is not overridden
+                    return "fake C";
+                } else if (method.getName().equals("returnE")) {
+                    return "fake E";
+                } else {
+                    return super.invoke(proxy, method, args);
+                }
+            }
+        };
+
+        PartiallyFinalClass proxy = ProxyBuilder.forClass(PartiallyFinalClass.class)
+                .handler(handler).onlyMethods(methodsToOverride.toArray(new Method[]{})).build();
+
+        assertEquals("fake A", proxy.returnA());
+        assertEquals("B", proxy.returnB());
+        assertEquals("C", proxy.returnC());
+        assertEquals("D", proxy.returnD());
+        assertEquals("fake E", proxy.returnE());
+
     }
 }

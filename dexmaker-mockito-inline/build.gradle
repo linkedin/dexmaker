@@ -1,0 +1,33 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
+
+    lintOptions {
+        abortOnError false
+    }
+
+    defaultConfig {
+        minSdkVersion 25
+        targetSdkVersion 25
+        versionName VERSION_NAME
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'CMakeLists.txt'
+        }
+    }
+
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile project(':dexmaker')
+    compile 'org.mockito:mockito-core:2.11.0'
+}
+

@@ -3,9 +3,9 @@
 .idea
 .gradle
 build/
+.externalNativeBuild/
 reports/
 local.properties
-external/
 *.ipr
 *.iws
 *.svn

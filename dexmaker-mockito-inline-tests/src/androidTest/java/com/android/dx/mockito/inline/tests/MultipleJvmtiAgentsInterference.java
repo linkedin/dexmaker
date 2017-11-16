@@ -30,7 +30,7 @@ import static org.mockito.Mockito.mock;
 public class MultipleJvmtiAgentsInterference {
     private static final String AGENT_LIB_NAME = "libmultiplejvmtiagentsinterferenceagent.so";
 
-    public class TestClass {
+    public static class TestClass {
         public String returnA() {
             return "A";
         }

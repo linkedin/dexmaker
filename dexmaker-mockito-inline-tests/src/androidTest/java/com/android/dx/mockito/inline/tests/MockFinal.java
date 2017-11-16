@@ -73,7 +73,7 @@ public class MockFinal {
         assertSame(fakeBinder, mockService.onBind(new Intent()));
     }
 
-    private final class FinalNonDefaultConstructorClass {
+    private static final class FinalNonDefaultConstructorClass {
         public FinalNonDefaultConstructorClass(int i) {
         }
 
@@ -121,6 +121,7 @@ public class MockFinal {
     }
 
     private static final class SubClass extends SuperClass {
+        @Override
         String returnC() {
             return "subC";
         }

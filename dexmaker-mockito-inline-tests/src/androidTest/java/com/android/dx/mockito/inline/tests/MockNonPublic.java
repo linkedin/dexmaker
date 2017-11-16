@@ -108,6 +108,7 @@ public class MockNonPublic {
     }
 
     private static class PrivateClass implements SingleMethodInterface {
+        @Override
         public String returnA() {
             return "A";
         }
@@ -129,6 +130,7 @@ public class MockNonPublic {
     }
 
     private interface PrivateInterface extends SingleMethodInterface {
+        @Override
         String returnA();
     }
 
@@ -138,6 +140,7 @@ public class MockNonPublic {
     }
 
     private static class SubOfPrivateInterface implements PrivateInterface {
+        @Override
         public String returnA() {
             return "A";
         }
@@ -159,10 +162,12 @@ public class MockNonPublic {
     }
 
     private static abstract class PrivateAbstractClass implements DualMethodInterface {
+        @Override
         public String returnA() {
             return "A";
         }
 
+        @Override
         public abstract String returnB();
     }
 
@@ -172,6 +177,7 @@ public class MockNonPublic {
     }
 
     private static class SubOfPrivateAbstractClass extends PrivateAbstractClass {
+        @Override
         public String returnB() {
             return "B";
         }
@@ -193,6 +199,7 @@ public class MockNonPublic {
     }
 
     static class PackagePrivateClass implements SingleMethodInterface {
+        @Override
         public String returnA() {
             return "A";
         }
@@ -204,10 +211,12 @@ public class MockNonPublic {
     }
 
     static abstract class PackagePrivateAbstractClass implements DualMethodInterface {
+        @Override
         public String returnA() {
             return "A";
         }
 
+        @Override
         public abstract String returnB();
     }
 
@@ -217,6 +226,7 @@ public class MockNonPublic {
     }
 
     static class SubOfPackagePrivateAbstractClass extends PackagePrivateAbstractClass {
+        @Override
         public String returnB() {
             return "B";
         }
@@ -238,6 +248,7 @@ public class MockNonPublic {
     }
 
     interface PackagePrivateInterface extends SingleMethodInterface {
+        @Override
         String returnA();
     }
 
@@ -247,6 +258,7 @@ public class MockNonPublic {
     }
 
     static class SubOfPackagePrivateInterface implements PackagePrivateInterface {
+        @Override
         public String returnA() {
             return "A";
         }
@@ -331,6 +343,7 @@ public class MockNonPublic {
 
     public static class SubOfAbstractClassWithPackagePrivateMethod extends
             AbstractClassWithPackagePrivateMethod {
+        @Override
         String returnB() {
             return "B";
         }

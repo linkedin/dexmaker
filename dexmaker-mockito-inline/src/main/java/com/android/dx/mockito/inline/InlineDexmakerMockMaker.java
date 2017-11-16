@@ -67,7 +67,7 @@ public final class InlineDexmakerMockMaker implements MockMaker {
      * Class injected into the bootstrap classloader. All entry hooks added to methods will call
      * this class.
      */
-    private static final Class DISPATCHER_CLASS;
+    public static final Class DISPATCHER_CLASS;
 
     /*
      * One time setup to allow the system to mocking via this mock maker.

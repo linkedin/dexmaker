@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -59,7 +58,6 @@ class ClassTransformer {
                     Float.class,
                     Double.class,
                     String.class));
-    private final static Random random = new Random();
 
     /** Jvmti agent responsible for triggering transformation s*/
     private final JvmtiAgent agent;
@@ -99,7 +97,7 @@ class ClassTransformer {
                      Map<Object, InvocationHandlerAdapter> mocks) {
         this.agent = agent;
         mockedTypes = Collections.synchronizedSet(new HashSet<Class<?>>());
-        identifier = Long.toString(random.nextLong());
+        identifier = String.valueOf(System.identityHashCode(this));
         MockMethodAdvice advice = new MockMethodAdvice(mocks);
 
         try {

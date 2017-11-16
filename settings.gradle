@@ -1,2 +1,5 @@
 rootProject.name = "dexmaker-root"
-include ':dexmaker', ':dexmaker-tests', ':dexmaker-mockito', ':dexmaker-mockito-tests', ':dexmaker-mockito-inline-dispatcher', ':dexmaker-mockito-inline', ':dexmaker-mockito-inline-tests', ':dexmaker-mockito-tests'
+include ':dexmaker', ':dexmaker-tests', ':dexmaker-mockito', ':dexmaker-mockito-tests',
+        ':dexmaker-mockito-inline-dispatcher', ':dexmaker-mockito-inline',
+        ':dexmaker-mockito-inline-tests', ':dexmaker-mockito-tests',
+        ':dexmaker-mockito-inline-extended', ':dexmaker-mockito-inline-extended-tests'

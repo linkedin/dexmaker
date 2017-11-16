@@ -1,1 +1,1 @@
-com.android.dx.mockito.inline.InlineDexmakerMockMaker
+com.android.dx.mockito.inline.MockMakerMultiplexer

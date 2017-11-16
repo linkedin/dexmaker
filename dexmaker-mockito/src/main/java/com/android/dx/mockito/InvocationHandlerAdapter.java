@@ -20,6 +20,7 @@ import com.android.dx.stock.ProxyBuilder;
 
 import org.mockito.internal.creation.DelegatingMethod;
 import org.mockito.internal.debugging.LocationImpl;
+import org.mockito.internal.exceptions.VerificationAwareInvocation;
 import org.mockito.internal.invocation.ArgumentsProcessor;
 import org.mockito.internal.progress.SequenceNumber;
 import org.mockito.invocation.Invocation;
@@ -80,7 +81,7 @@ final class InvocationHandlerAdapter implements InvocationHandler {
     /**
      * Invocation on a proxy
      */
-    private class ProxyInvocation implements Invocation {
+    private class ProxyInvocation implements Invocation, VerificationAwareInvocation {
         private final Object proxy;
         private final Method method;
         private final Object[] rawArgs;

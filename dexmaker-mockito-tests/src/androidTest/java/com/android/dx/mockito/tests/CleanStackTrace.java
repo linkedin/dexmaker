@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.dx.mockito.inline.tests;
+package com.android.dx.mockito.tests;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -28,7 +29,7 @@ public class CleanStackTrace {
     }
 
     public static class TestClass {
-        public final String returnA() {
+        public String returnA() {
             return "A";
         }
     }
@@ -38,7 +39,7 @@ public class CleanStackTrace {
     }
 
     @Test
-    public void cleanStackTraceProxy() {
+    public void cleanStackTraceAbstractClass() {
         TestAbstractClass t = mock(TestAbstractClass.class);
 
         try {
@@ -54,7 +55,7 @@ public class CleanStackTrace {
     }
 
     @Test
-    public void cleanStackTraceInline() {
+    public void cleanStackTraceRegularClass() {
         TestClass t = mock(TestClass.class);
 
         try {
@@ -63,8 +64,15 @@ public class CleanStackTrace {
             try {
                 throw new Exception();
             } catch (Exception here) {
-                assertEquals(here.getStackTrace()[0].getMethodName(), verifyLocation
-                        .getStackTrace()[1].getMethodName());
+                // Depending on the mock maker TestClass.returnA might be in the stack trace or not
+                for (int i = 0; i < 2; i++) {
+                    if (verifyLocation.getStackTrace()[i].getMethodName().equals(here
+                            .getStackTrace()[0].getMethodName())) {
+                        return;
+                    }
+                }
+
+                fail();
             }
         }
     }

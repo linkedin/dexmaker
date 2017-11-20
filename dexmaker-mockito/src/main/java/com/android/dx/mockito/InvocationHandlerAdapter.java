@@ -17,16 +17,21 @@
 package com.android.dx.mockito;
 
 import com.android.dx.stock.ProxyBuilder;
+
+import org.mockito.internal.creation.DelegatingMethod;
 import org.mockito.internal.debugging.LocationImpl;
-import org.mockito.internal.invocation.InvocationImpl;
-import org.mockito.internal.invocation.MockitoMethod;
-import org.mockito.internal.invocation.realmethod.RealMethod;
+import org.mockito.internal.invocation.ArgumentsProcessor;
 import org.mockito.internal.progress.SequenceNumber;
+import org.mockito.invocation.Invocation;
+import org.mockito.invocation.Location;
 import org.mockito.invocation.MockHandler;
+import org.mockito.invocation.StubInfo;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+
+import static org.mockito.internal.exceptions.Reporter.cannotCallAbstractRealMethod;
 
 /**
  * Handles proxy method invocations to dexmaker's InvocationHandler by calling
@@ -49,9 +54,8 @@ final class InvocationHandlerAdapter implements InvocationHandler {
             return System.identityHashCode(proxy);
         }
 
-        ProxiedMethod proxiedMethod = new ProxiedMethod(method);
-        return handler.handle(new InvocationImpl(proxy, proxiedMethod, args, SequenceNumber.next(),
-                proxiedMethod, new LocationImpl()));
+        return handler.handle(new ProxyInvocation(proxy, method, args, new DelegatingMethod
+                (method), SequenceNumber.next(), new LocationImpl()));
     }
 
     public MockHandler getHandler() {
@@ -73,51 +77,107 @@ final class InvocationHandlerAdapter implements InvocationHandler {
                 && method.getParameterTypes().length == 0;
     }
 
-    private static class ProxiedMethod implements MockitoMethod, RealMethod {
+    /**
+     * Invocation on a proxy
+     */
+    private class ProxyInvocation implements Invocation {
+        private final Object proxy;
         private final Method method;
+        private final Object[] rawArgs;
+        private final int sequenceNumber;
+        private final Location location;
+        private final Object[] args;
 
-        ProxiedMethod(Method method) {
+        private StubInfo stubInfo;
+        private boolean isIgnoredForVerification;
+        private boolean verified;
+
+        private ProxyInvocation(Object proxy, Method method, Object[] rawArgs, DelegatingMethod
+                mockitoMethod, int sequenceNumber, Location location) {
+            this.rawArgs = rawArgs;
+            this.proxy = proxy;
             this.method = method;
+            this.sequenceNumber = sequenceNumber;
+            this.location = location;
+            args = ArgumentsProcessor.expandArgs(mockitoMethod, rawArgs);
         }
 
         @Override
-        public String getName() {
-            return method.getName();
+        public Object getMock() {
+            return proxy;
         }
 
         @Override
-        public Class<?> getReturnType() {
-            return method.getReturnType();
-        }
-
-        @Override
-        public Class<?>[] getParameterTypes() {
-            return method.getParameterTypes();
-        }
-
-        @Override
-        public Class<?>[] getExceptionTypes() {
-            return method.getExceptionTypes();
-        }
-
-        @Override
-        public boolean isVarArgs() {
-            return method.isVarArgs();
-        }
-
-        @Override
-        public Method getJavaMethod() {
+        public Method getMethod() {
             return method;
         }
 
         @Override
-        public Object invoke(Object target, Object[] arguments) throws Throwable {
-            return ProxyBuilder.callSuper(target, method, arguments);
+        public Object[] getArguments() {
+            return args;
         }
 
         @Override
-        public boolean isAbstract() {
-            return Modifier.isAbstract(method.getModifiers());
+        public <T> T getArgument(int index) {
+            return (T)args[index];
+        }
+
+        @Override
+        public Object callRealMethod() throws Throwable {
+            if (Modifier.isAbstract(method.getModifiers())) {
+                throw cannotCallAbstractRealMethod();
+            }
+            return ProxyBuilder.callSuper(proxy, method, rawArgs);
+        }
+
+        @Override
+        public boolean isVerified() {
+            return verified || isIgnoredForVerification;
+        }
+
+        @Override
+        public int getSequenceNumber() {
+            return sequenceNumber;
+        }
+
+        @Override
+        public Location getLocation() {
+            return location;
+        }
+
+        @Override
+        public Object[] getRawArguments() {
+            return rawArgs;
+        }
+
+        @Override
+        public Class<?> getRawReturnType() {
+            return method.getReturnType();
+        }
+
+        @Override
+        public void markVerified() {
+            verified = true;
+        }
+
+        @Override
+        public StubInfo stubInfo() {
+            return stubInfo;
+        }
+
+        @Override
+        public void markStubbed(StubInfo stubInfo) {
+            this.stubInfo = stubInfo;
+        }
+
+        @Override
+        public boolean isIgnoredForVerification() {
+            return isIgnoredForVerification;
+        }
+
+        @Override
+        public void ignoreForVerification() {
+            isIgnoredForVerification = true;
         }
     }
 }

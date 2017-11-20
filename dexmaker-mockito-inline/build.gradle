@@ -28,6 +28,6 @@ repositories {
 
 dependencies {
     compile project(':dexmaker')
-    compile 'org.mockito:mockito-core:2.11.0'
+    compile 'org.mockito:mockito-core:2.12.0'
 }
 

@@ -13,6 +13,4 @@ repositories {
 
 dependencies {
     compile 'com.jakewharton.android.repackaged:dalvik-dx:7.1.0_r7'
-
-    testCompile 'junit:junit:4.12'
 }

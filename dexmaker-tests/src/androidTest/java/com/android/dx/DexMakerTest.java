@@ -2012,8 +2012,9 @@ public final class DexMakerTest {
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         generateAndLoad();
+        int numFiles = getDataDirectory().listFiles().length;
         // DexMaker writes two files to disk at a time: Generated_XXXX.jar and Generated_XXXX.dex.
-        assertEquals(origSize + 2, getDataDirectory().listFiles().length);
+        assertTrue(origSize < numFiles);
 
         long lastModified  = getJarFiles()[0].lastModified();
 
@@ -2022,7 +2023,7 @@ public final class DexMakerTest {
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         generateAndLoad();
-        assertEquals(origSize + 2, getDataDirectory().listFiles().length);
+        assertEquals(numFiles, getDataDirectory().listFiles().length);
         assertEquals(lastModified, getJarFiles()[0].lastModified());
 
         // Create new dexmaker generators with different params.
@@ -2030,20 +2031,23 @@ public final class DexMakerTest {
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.DOUBLE);
         generateAndLoad();
-        assertEquals(origSize + 4, getDataDirectory().listFiles().length);
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
+        numFiles = getDataDirectory().listFiles().length;
 
         dexMaker = new DexMaker();
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT, TypeId.DOUBLE);
         generateAndLoad();
-        assertEquals(origSize + 6, getDataDirectory().listFiles().length);
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
+        numFiles = getDataDirectory().listFiles().length;
 
         // Create new dexmaker generator with different return types.
         dexMaker = new DexMaker();
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.DOUBLE, defaultMethodName, TypeId.INT);
         generateAndLoad();
-        assertEquals(origSize + 8, getDataDirectory().listFiles().length);
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
+        numFiles = getDataDirectory().listFiles().length;
 
         // Create new dexmaker generators with multiple methods.
         dexMaker = new DexMaker();
@@ -2051,35 +2055,38 @@ public final class DexMakerTest {
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT, TypeId.BOOLEAN); // new method
         generateAndLoad();
-        assertEquals(origSize + 10, getDataDirectory().listFiles().length);
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
+        numFiles = getDataDirectory().listFiles().length;
 
         dexMaker = new DexMaker();
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT, TypeId.BOOLEAN);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         generateAndLoad();
-        assertEquals(origSize + 10, getDataDirectory().listFiles().length); // should already be cached.
+        assertEquals(numFiles, getDataDirectory().listFiles().length); // should already be cached.
 
         dexMaker = new DexMaker();
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT, TypeId.INT, TypeId.BOOLEAN); // new method
         generateAndLoad();
-        assertEquals(origSize + 12, getDataDirectory().listFiles().length);
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
+        numFiles = getDataDirectory().listFiles().length;
 
         dexMaker = new DexMaker();
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT, TypeId.INT); // new method
         generateAndLoad();
-        assertEquals(origSize + 14, getDataDirectory().listFiles().length);
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
+        numFiles = getDataDirectory().listFiles().length;
 
         dexMaker = new DexMaker();
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addMethodToDexMakerGenerator(TypeId.INT, "differentName", TypeId.INT); // new method
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT, TypeId.BOOLEAN);
         generateAndLoad();
-        assertEquals(origSize + 16, getDataDirectory().listFiles().length);
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
     }
 
     public static class BlankClassA {}
@@ -2097,15 +2104,15 @@ public final class DexMakerTest {
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         generateAndLoad();
         // DexMaker writes two files to disk at a time: Generated_XXXX.jar and Generated_XXXX.dex.
-        assertEquals(origSize + 2, getDataDirectory().listFiles().length);
+        int numFiles = getDataDirectory().listFiles().length;
+        assertTrue(origSize < numFiles);
 
         // Create new dexmaker generator with BlankClassB as supertype.
         dexMaker = new DexMaker();
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.get(BlankClassB.class));
         addMethodToDexMakerGenerator(TypeId.INT, defaultMethodName, TypeId.INT);
         generateAndLoad();
-        assertEquals(origSize + 4, getDataDirectory().listFiles().length);
-
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
     }
 
     private void addMethodToDexMakerGenerator(TypeId<?> typeId, String methodName, TypeId<?>... params) throws Exception {
@@ -2135,7 +2142,8 @@ public final class DexMakerTest {
         addConstructorToDexMakerGenerator(TypeId.INT);
         generateAndLoad();
         // DexMaker writes two files to disk at a time: Generated_XXXX.jar and Generated_XXXX.dex.
-        assertEquals(origSize + 2, getDataDirectory().listFiles().length);
+        int numFiles = getDataDirectory().listFiles().length;
+        assertTrue(origSize < numFiles);
 
         long lastModified  = getJarFiles()[0].lastModified();
 
@@ -2143,7 +2151,7 @@ public final class DexMakerTest {
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addConstructorToDexMakerGenerator(TypeId.INT);
         generateAndLoad();
-        assertEquals(origSize + 2, getDataDirectory().listFiles().length);
+        assertEquals(numFiles, getDataDirectory().listFiles().length);
         assertEquals(lastModified, getJarFiles()[0].lastModified());
 
         // Create new dexmaker generator with Generated(boolean) constructor.
@@ -2151,7 +2159,8 @@ public final class DexMakerTest {
         dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT);
         addConstructorToDexMakerGenerator(TypeId.BOOLEAN);
         generateAndLoad();
-        assertEquals(origSize + 4, getDataDirectory().listFiles().length);
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
+        numFiles = getDataDirectory().listFiles().length;
 
         // Create new dexmaker generator with multiple constructors.
         dexMaker = new DexMaker();
@@ -2159,7 +2168,8 @@ public final class DexMakerTest {
         addConstructorToDexMakerGenerator(TypeId.INT);
         addConstructorToDexMakerGenerator(TypeId.BOOLEAN);
         generateAndLoad();
-        assertEquals(origSize + 6, getDataDirectory().listFiles().length);
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
+        numFiles = getDataDirectory().listFiles().length;
 
         // Ensure that order of constructors does not affect caching decision.
         dexMaker = new DexMaker();
@@ -2167,7 +2177,7 @@ public final class DexMakerTest {
         addConstructorToDexMakerGenerator(TypeId.BOOLEAN);
         addConstructorToDexMakerGenerator(TypeId.INT);
         generateAndLoad();
-        assertEquals(origSize + 6, getDataDirectory().listFiles().length);
+        assertEquals(numFiles, getDataDirectory().listFiles().length);
     }
 
     private void addConstructorToDexMakerGenerator(TypeId<?>... params) throws Exception {

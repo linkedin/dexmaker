@@ -314,7 +314,7 @@ public final class DexMaker {
      * Generates a dex file and returns its bytes.
      */
     public byte[] generate() {
-        if (null == outputDex) {
+        if (outputDex == null) {
             DexOptions options = new DexOptions();
             options.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
             outputDex = new DexFile(options);
@@ -492,7 +492,7 @@ public final class DexMaker {
 
             CstType thisType = type.constant;
 
-            if (null == classDefItem) {
+            if (classDefItem == null) {
                 classDefItem = new ClassDefItem(thisType, flags, supertype.constant,
                         interfaces.ropTypes, new CstString(sourceFile));
 

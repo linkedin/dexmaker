@@ -23,53 +23,100 @@ import com.android.dx.rop.annotation.NameValuePair;
 import com.android.dx.rop.cst.*;
 
 import java.lang.annotation.ElementType;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 /**
- * Identifies an annotation for a method.
+ * Identifies an annotation on a program element, see {@link java.lang.annotation.ElementType}.
  *
- * @param <D> the type declaring the method that this annotation is added to
- * @param <V> the type of value this annotation holds
+ * Currently it is only targeting Class, Method, Field and Parameter because those are supported by
+ * {@link com.android.dx.dex.file.AnnotationsDirectoryItem} so far.
+ *
+ * <p><strong>NOTE:</strong>
+ * So far it only supports adding method annotation. The annotation of class, field and parameter
+ * will be implemented later.
+ *
+ * <p><strong>WARNING:</strong>
+ * The declared element of an annotation type should either have a default value or be set a value via
+ * {@code AnnotationId.set(Element)}. Otherwise it will incur
+ * {@link java.lang.annotation.IncompleteAnnotationException} when accessing the annotation element
+ * through reflection. The example is as follows:
+ * <pre>
+ *     {@code @Retention(RetentionPolicy.RUNTIME)}
+ *     {@code @Target({ElementType.METHOD})}
+ *     {@code @interface MethodAnnotation {
+ *                boolean elementBoolean();
+ *                // boolean elementBoolean() default false;
+ *            }
+ *
+ *            TypeId<?> GENERATED = TypeId.get("LGenerated;");
+ *            MethodId<?, Void> methodId = GENERATED.getMethod(VOID, "call");
+ *            Code code = dexMaker.declare(methodId, PUBLIC);
+ *            code.returnVoid();
+ *
+ *            TypeId<MethodAnnotation> annotationTypeId = TypeId.get(MethodAnnotation.class);
+ *            AnnotationId<?, MethodAnnotation> annotationId = AnnotationId.get(GENERATED,
+ *              annotationTypeId, ElementType.METHOD);
+ *
+ *            AnnotationId.Element element = new AnnotationId.Element("elementBoolean", true);
+ *            annotationId.set(element);
+ *            annotationId.addToMethod(dexMaker, methodId);
+ *     }
+ * </pre>
+ *
+ * @param <D> the type that declares the program element.
+ * @param <V> the annotation type. It should be a known type before compile.
  */
 public final class AnnotationId<D, V> {
     private final TypeId<D> declaringType;
     private final TypeId<V> type;
-    /** The type of this annotation which is for method, field or class */
-    private final ElementType annotationType;
+    /** The type of program element to be annotated */
+    private final ElementType annotatedElement;
     /** The elements this annotation holds */
-    private final List<NameValuePair> elements;
+    private final HashMap<String, NameValuePair> elements;
 
-    private AnnotationId(TypeId<D> declaringType, TypeId<V> type, ElementType annotationType) {
+    private AnnotationId(TypeId<D> declaringType, TypeId<V> type, ElementType annotatedElement) {
         this.declaringType = declaringType;
         this.type = type;
-        this.annotationType = annotationType;
-        this.elements = new ArrayList<>();
+        this.annotatedElement = annotatedElement;
+        this.elements = new HashMap<>();
     }
 
     /**
-     *  Generate an annotation.
+     *  Construct an instance. It initially contains no elements.
      *
-     * @param declaringType the type declaring the method that this annotation is added to.
-     * @param type the type of value this annotation holds.
-     * @param annotationType The type of this annotation which is for method, field or class.
-     * @return an annotation {@code AnnotationId<D,V>}
+     * @param declaringType the type declaring the program element.
+     * @param type the annotation type.
+     * @param annotatedElement the program element type to be annotated.
+     * @return an annotation {@code AnnotationId<D,V>} instance.
      */
     public static <D, V> AnnotationId<D, V> get(TypeId<D> declaringType, TypeId<V> type,
-                                                ElementType annotationType) {
-        return new AnnotationId<>(declaringType, type, annotationType);
+                                                ElementType annotatedElement) {
+        if (annotatedElement != ElementType.TYPE &&
+                annotatedElement != ElementType.METHOD &&
+                annotatedElement != ElementType.FIELD &&
+                annotatedElement != ElementType.PARAMETER) {
+            throw new IllegalArgumentException("element type is not supported to annotate yet.");
+        }
+
+        return new AnnotationId<>(declaringType, type, annotatedElement);
     }
 
     /**
-     * Add an element to this annotation.
+     * Set an annotation element of this instance.
+     * If there is a preexisting element with the same name, it will be
+     * replaced by this method.
      *
-     * @param element annotation element to be added.
+     * @param element {@code non-null;} the annotation element to be set.
      */
-    public void addElement(Element element) {
+    public void set(Element element) {
+        if (element == null) {
+            throw new NullPointerException("element == null");
+        }
+
         CstString pairName = new CstString(element.getName());
         Constant pairValue = Element.toConstant(element.getValue());
         NameValuePair nameValuePair = new NameValuePair(pairName, pairValue);
-        elements.add(nameValuePair);
+        elements.put(element.getName(), nameValuePair);
     }
 
     /**
@@ -79,7 +126,7 @@ public final class AnnotationId<D, V> {
      * @param method Method to be added to.
      */
     public void addToMethod(DexMaker dexMaker, MethodId<?, ?> method) {
-        if (annotationType != ElementType.METHOD) {
+        if (annotatedElement != ElementType.METHOD) {
             throw new IllegalStateException("This annotation is not for method");
         }
 
@@ -105,7 +152,7 @@ public final class AnnotationId<D, V> {
 
                 // Add generated annotation
                 Annotations annotations = new Annotations();
-                for (NameValuePair nvp : elements) {
+                for (NameValuePair nvp : elements.values()) {
                     annotation.add(nvp);
                 }
                 annotations.add(annotation);
@@ -115,21 +162,40 @@ public final class AnnotationId<D, V> {
     }
 
     /**
-     *  Annotation Element
+     *  A wrapper of <code>NameValuePair</code> represents a (name, value) pair used as the contents
+     *  of an annotation.
+     *
+     *  An {@code Element} instance is stored in {@code AnnotationId.elements} by calling {@code
+     *  AnnotationId.set(Element)}.
+     *
+     *  <p><strong>WARNING: </strong></p>
+     *  the name should be exact same as the annotation element declared in the annotation type
+     *  which is referred by field {@code AnnotationId.type},otherwise the annotation will fail
+     *  to add and {@code java.lang.reflect.Method.getAnnotations()} will return nothing.
+     *
      */
     public static final class Element {
-        final TypeId type;
-        final String name;
-        final Object value;
+        /** {@code non-null;} the name */
+        private final String name;
+        /** {@code non-null;} the value */
+        private final Object value;
 
-        public Element(TypeId type, String name, Object value) {
-            this.type = type;
+        /**
+         * Construct an instance.
+         *
+         * @param name {@code non-null;} the name
+         * @param value {@code non-null;} the value
+         */
+        public Element(String name, Object value) {
+            if (name == null) {
+                throw new NullPointerException("name == null");
+            }
+
+            if (value == null) {
+                throw new NullPointerException("value == null");
+            }
             this.name = name;
             this.value = value;
-        }
-
-        public TypeId getType() {
-            return type;
         }
 
         public String getName() {
@@ -140,11 +206,36 @@ public final class AnnotationId<D, V> {
             return value;
         }
 
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return "[" + name + ", " + value + "]";
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return name.hashCode() * 31 + value.hashCode();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(Object other) {
+            if (! (other instanceof Element)) {
+                return false;
+            }
+
+            Element otherElement = (Element) other;
+
+            return name.equals(otherElement.name)
+                    && value.equals(otherElement.value);
+        }
+
         /**
          *  Convert a value of an element to a {@code Constant}.
          *  <p><strong>Warning:</strong> Array or TypeId value is not supported yet.
          *
-         * @param value an element value.
+         * @param value an annotation element value.
          * @return a Constant
          */
         static Constant toConstant(Object value) {

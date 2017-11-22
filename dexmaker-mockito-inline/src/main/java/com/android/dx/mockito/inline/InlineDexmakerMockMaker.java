@@ -62,9 +62,6 @@ public final class InlineDexmakerMockMaker implements MockMaker {
      * One time setup to allow the system to mocking via this mock maker.
      */
     static {
-        // Allow to mock package private classes
-        System.setProperty("dexmaker.share_classloader", "true");
-
         JvmtiAgent agent;
         Throwable initializationError = null;
         Class dispatcherClass = null;
@@ -221,7 +218,8 @@ public final class InlineDexmakerMockMaker implements MockMaker {
                 try {
                     // support abstract methods via dexmaker's ProxyBuilder
                     proxyClass = ProxyBuilder.forClass(typeToMock).implementing(extraInterfaces)
-                            .onlyMethods(getMethodsToProxy(settings)).buildProxyClass();
+                            .onlyMethods(getMethodsToProxy(settings)).withSharedClassLoader()
+                            .buildProxyClass();
                 } catch (RuntimeException e) {
                     throw e;
                 } catch (Exception e) {

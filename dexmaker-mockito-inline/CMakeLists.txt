@@ -8,10 +8,10 @@ include_directories(external/jdk external/slicer/)
 
 target_link_libraries(slicer z)
 
-add_library(dexmakerjvmtictsagent
+add_library(dexmakerjvmtiagent
             SHARED
-            src/main/jni/dexmakerjvmtictsagent/agent.cc)
+            src/main/jni/dexmakerjvmtiagent/agent.cc)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -frtti -Wall -Werror -Wno-unused-parameter -Wno-shift-count-overflow -Wno-error=non-virtual-dtor -Wno-sign-compare -Wno-switch -Wno-missing-braces")
 
-target_link_libraries(dexmakerjvmtictsagent slicer)
+target_link_libraries(dexmakerjvmtiagent slicer)

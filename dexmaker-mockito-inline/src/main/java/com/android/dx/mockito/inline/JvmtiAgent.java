@@ -34,7 +34,7 @@ import dalvik.system.BaseDexClassLoader;
  * Interface to the native jvmti agent in agent.cc
  */
 class JvmtiAgent {
-    private static final String AGENT_LIB_NAME = "dexmakerjvmtictsagent";
+    private static final String AGENT_LIB_NAME = "dexmakerjvmtiagent";
 
     private static final Object lock = new Object();
 

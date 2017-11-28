@@ -34,7 +34,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
-public class MockFinalTests {
+public class MockFinal {
     @Test
     public void mockFinalJavaMethod() throws Exception {
         ClassLoader fakeParent = mock(ClassLoader.class);

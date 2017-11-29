@@ -118,7 +118,7 @@ Transform(jvmtiEnv* jvmti_env,
 
             jbyte* transformed = env->GetByteArrayElements(transformedArr, 0);
 
-            *newClassData = (unsigned char*) malloc(*newClassDataLen);
+            jvmti_env->Allocate(*newClassDataLen, newClassData);
             std::memcpy(*newClassData, transformed, *newClassDataLen);
 
             env->ReleaseByteArrayElements(transformedArr, transformed, 0);

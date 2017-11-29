@@ -64,12 +64,23 @@ namespace com_android_dx_mockito_inline_tests {
         reader.CreateClassIr(index);
         std::shared_ptr<ir::DexFile> ir = reader.GetIr();
 
-        struct Allocator : public Writer::Allocator {
-            virtual void* Allocate(size_t size) {return ::malloc(size);}
-            virtual void Free(void* ptr) {::free(ptr);}
+        class Allocator : public Writer::Allocator {
+            jvmtiEnv *jvmti_env;
+
+        public:
+            Allocator(jvmtiEnv *jvmti_env) : Writer::Allocator(), jvmti_env(jvmti_env) {
+            }
+
+            virtual void *Allocate(size_t size) {
+                unsigned char *mem;
+                jvmti_env->Allocate(size, &mem);
+                return mem;
+            }
+
+            virtual void Free(void *ptr) { ::free(ptr); }
         };
 
-        Allocator allocator;
+        Allocator allocator(jvmti_env);
         Writer writer(ir);
         size_t newClassLen;
         *newClassData = writer.CreateImage(&allocator, &newClassLen);

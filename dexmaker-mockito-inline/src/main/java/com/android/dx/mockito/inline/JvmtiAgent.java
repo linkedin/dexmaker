@@ -41,6 +41,8 @@ class JvmtiAgent {
     /** Registered byte code transformers */
     private final ArrayList<ClassTransformer> transformers = new ArrayList<>();
 
+    private native void nativeRegisterTransformerHook();
+
     /**
      * Enable jvmti and load agent.
      *
@@ -103,6 +105,15 @@ class JvmtiAgent {
                         loadJvmtiException);
             }
         }
+
+        nativeRegisterTransformerHook();
+    }
+
+    private native void nativeUnregisterTransformerHook();
+
+    @Override
+    protected void finalize() throws Throwable {
+        nativeUnregisterTransformerHook();
     }
 
     private native static void nativeAppendToBootstrapClassLoaderSearch(String absolutePath);

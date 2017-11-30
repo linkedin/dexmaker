@@ -197,6 +197,7 @@ import static java.lang.reflect.Modifier.STATIC;
  */
 public final class DexMaker {
     private final Map<TypeId<?>, TypeDeclaration> types = new LinkedHashMap<>();
+    private ClassLoader sharedClassLoader;
 
     /**
      * Creates a new {@code DexMaker} instance, which can be used to create a
@@ -355,11 +356,22 @@ public final class DexMaker {
         return "Generated_" + checksum +".jar";
     }
 
+    public void setSharedClassLoader(ClassLoader classLoader) {
+        this.sharedClassLoader = classLoader;
+    }
+
     private ClassLoader generateClassLoader(File result, File dexCache, ClassLoader parent) {
         try {
-            return (ClassLoader) Class.forName("dalvik.system.DexClassLoader")
-                    .getConstructor(String.class, String.class, String.class, ClassLoader.class)
-                    .newInstance(result.getPath(), dexCache.getAbsolutePath(), null, parent);
+            if (sharedClassLoader != null) {
+                ClassLoader loader = parent != null ? parent : sharedClassLoader;
+                loader.getClass().getMethod("addDexPath", String.class).invoke(loader,
+                        result.getPath());
+                return loader;
+            } else {
+                return (ClassLoader) Class.forName("dalvik.system.DexClassLoader")
+                        .getConstructor(String.class, String.class, String.class, ClassLoader.class)
+                        .newInstance(result.getPath(), dexCache.getAbsolutePath(), null, parent);
+            }
         } catch (ClassNotFoundException e) {
             throw new UnsupportedOperationException("load() requires a Dalvik VM", e);
         } catch (InvocationTargetException e) {

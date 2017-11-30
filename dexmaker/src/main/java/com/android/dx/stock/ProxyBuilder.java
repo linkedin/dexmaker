@@ -141,6 +141,7 @@ public final class ProxyBuilder<T> {
     private Object[] constructorArgValues = new Object[0];
     private Set<Class<?>> interfaces = new HashSet<>();
     private Method[] methods;
+    private boolean sharedClassLoader;
 
     private ProxyBuilder(Class<T> clazz) {
         baseClass = clazz;
@@ -201,6 +202,10 @@ public final class ProxyBuilder<T> {
         return this;
     }
 
+    public ProxyBuilder<T> withSharedClassLoader() {
+        this.sharedClassLoader = true;
+        return this;
+    }
 
     /**
      * Create a new instance of the class to proxy.
@@ -255,10 +260,18 @@ public final class ProxyBuilder<T> {
         // we only populate the map with matching types
         @SuppressWarnings("unchecked")
         Class<? extends T> proxyClass = (Class) generatedProxyClasses.get(baseClass);
-        if (proxyClass != null
-                && proxyClass.getClassLoader().getParent() == parentClassLoader
-                && interfaces.equals(asSet(proxyClass.getInterfaces()))) {
-            return proxyClass; // cache hit!
+        if (proxyClass != null) {
+            boolean validClassLoader;
+            if (sharedClassLoader) {
+                ClassLoader parent = parentClassLoader != null ? parentClassLoader : baseClass
+                        .getClassLoader();
+                validClassLoader = proxyClass.getClassLoader() == parent;
+            } else {
+                validClassLoader = proxyClass.getClassLoader().getParent() == parentClassLoader;
+            }
+            if (validClassLoader && interfaces.equals(asSet(proxyClass.getInterfaces()))) {
+                return proxyClass; // cache hit!
+            }
         }
 
         // the cache missed; generate the class
@@ -285,6 +298,9 @@ public final class ProxyBuilder<T> {
 
         generateCodeForAllMethods(dexMaker, generatedType, methodsToProxy, superType);
         dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType, getInterfacesAsTypeIds());
+        if (sharedClassLoader) {
+            dexMaker.setSharedClassLoader(baseClass.getClassLoader());
+        }
         ClassLoader classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache);
         try {
             proxyClass = loadClass(classLoader, generatedName);
@@ -687,13 +703,15 @@ public final class ProxyBuilder<T> {
                 continue;
             }
             if (!Modifier.isPublic(method.getModifiers())
-					&& !Modifier.isProtected(method.getModifiers())) {
+                    && !Modifier.isProtected(method.getModifiers())
+                    && (!sharedClassLoader || Modifier.isPrivate(method.getModifiers()))) {
                 // Skip private methods, since they are invoked through direct
                 // invocation (as opposed to virtual). Therefore, it would not
                 // be possible to intercept any private method defined inside
                 // the proxy class except through reflection.
 
-                // Skip package-private methods as well. The proxy class does
+                // Skip package-private methods as well (for non-shared class
+                // loaders). The proxy class does
                 // not actually inherit package-private methods from the parent
                 // class because it is not a member of the parent's package.
                 // This is even true if the two classes have the same package
@@ -723,7 +741,7 @@ public final class ProxyBuilder<T> {
     }
 
     private static <T> String getMethodNameForProxyOf(Class<T> clazz) {
-        return clazz.getSimpleName() + "_Proxy";
+        return clazz.getName().replace(".", "/") + "_Proxy";
     }
 
     private static TypeId<?>[] classArrayToTypeArray(Class<?>[] input) {

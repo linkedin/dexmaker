@@ -29,17 +29,21 @@ public final class DexmakerStackTraceCleaner implements StackTraceCleanerProvide
         return new StackTraceCleaner() {
             @Override
             public boolean isIn(StackTraceElement candidate) {
+                String className = candidate.getClassName();
+
                 return defaultCleaner.isIn(candidate)
                         // dexmaker class proxies
-                        && !candidate.getClassName().endsWith("_Proxy")
+                        && !className.endsWith("_Proxy")
 
-                        && !candidate.getClassName().startsWith("java.lang.reflect.Method")
-                        && !candidate.getClassName().startsWith("java.lang.reflect.Proxy")
-                        && !candidate.getClassName().startsWith("com.android.dx.mockito.")
+                        && !className.startsWith("java.lang.reflect.Method")
+                        && !className.startsWith("java.lang.reflect.Proxy")
+                        && !(className.startsWith("com.android.dx.mockito.")
+                             // Do not clean unit tests
+                             && !className.startsWith("com.android.dx.mockito.inline.tests"))
 
                         // dalvik interface proxies
-                        && !candidate.getClassName().startsWith("$Proxy")
-                        && !candidate.getClassName().matches(".*\\.\\$Proxy[\\d]+");
+                        && !className.startsWith("$Proxy")
+                        && !className.matches(".*\\.\\$Proxy[\\d]+");
             }
         };
     }

@@ -40,8 +40,6 @@ namespace com_android_dx_mockito_inline {
 static jvmtiEnv* localJvmtiEnv;
 
 static jobject sTransformer;
-static jint sNumTransformedClasses;
-static jclass* sTransformedClasses;
 
 // Converts a class name to a type descriptor
 // (ex. "java.lang.String" to "Ljava/lang/String;")
@@ -72,64 +70,58 @@ Transform(jvmtiEnv* jvmti_env,
           jint* newClassDataLen,
           unsigned char** newClassData) {
     if (sTransformer != NULL) {
-        for (int i = 0; i < sNumTransformedClasses; i++) {
-            if (env->IsSameObject(sTransformedClasses[i], classBeingRedefined)) {
-                // Isolate byte code of class class. This is needed as Android usually gives us more
-                // than the class we need.
-                Reader reader(classData, classDataLen);
+        // Isolate byte code of class class. This is needed as Android usually gives us more
+        // than the class we need.
+        Reader reader(classData, classDataLen);
 
-                u4 index = reader.FindClassIndex(ClassNameToDescriptor(name).c_str());
-                reader.CreateClassIr(index);
-                std::shared_ptr<ir::DexFile> ir = reader.GetIr();
+        u4 index = reader.FindClassIndex(ClassNameToDescriptor(name).c_str());
+        reader.CreateClassIr(index);
+        std::shared_ptr<ir::DexFile> ir = reader.GetIr();
 
-                struct Allocator : public Writer::Allocator {
-                    virtual void* Allocate(size_t size) {return ::malloc(size);}
-                    virtual void Free(void* ptr) {::free(ptr);}
-                };
+        struct Allocator : public Writer::Allocator {
+            virtual void* Allocate(size_t size) {return ::malloc(size);}
+            virtual void Free(void* ptr) {::free(ptr);}
+        };
 
-                Allocator allocator;
-                Writer writer(ir);
-                size_t isolatedClassLen = 0;
-                std::shared_ptr<jbyte> isolatedClass((jbyte*)writer.CreateImage(&allocator,
-                                                                                &isolatedClassLen));
+        Allocator allocator;
+        Writer writer(ir);
+        size_t isolatedClassLen = 0;
+        std::shared_ptr<jbyte> isolatedClass((jbyte*)writer.CreateImage(&allocator,
+                                                                        &isolatedClassLen));
 
-                // Create jbyteArray with isolated byte code of class
-                jbyteArray isolatedClassArr = env->NewByteArray(isolatedClassLen);
-                env->SetByteArrayRegion(isolatedClassArr, 0, isolatedClassLen,
-                                        isolatedClass.get());
+        // Create jbyteArray with isolated byte code of class
+        jbyteArray isolatedClassArr = env->NewByteArray(isolatedClassLen);
+        env->SetByteArrayRegion(isolatedClassArr, 0, isolatedClassLen,
+                                isolatedClass.get());
 
-                jstring nameStr = env->NewStringUTF(name);
+        jstring nameStr = env->NewStringUTF(name);
 
-                // Call JvmtiAgent#runTransformers
-                jclass cls = env->GetObjectClass(sTransformer);
-                jmethodID runTransformers = env->GetMethodID(cls, "runTransformers",
-                                                             "(Ljava/lang/ClassLoader;"
-                                                             "Ljava/lang/String;"
-                                                             "Ljava/lang/Class;"
-                                                             "Ljava/security/ProtectionDomain;"
-                                                             "[B)[B");
+        // Call JvmtiAgent#runTransformers
+        jclass cls = env->GetObjectClass(sTransformer);
+        jmethodID runTransformers = env->GetMethodID(cls, "runTransformers",
+                                                     "(Ljava/lang/ClassLoader;"
+                                                     "Ljava/lang/String;"
+                                                     "Ljava/lang/Class;"
+                                                     "Ljava/security/ProtectionDomain;"
+                                                     "[B)[B");
 
-                jbyteArray transformedArr = (jbyteArray) env->CallObjectMethod(sTransformer,
-                                                                               runTransformers,
-                                                                               loader, nameStr,
-                                                                               classBeingRedefined,
-                                                                               protectionDomain,
-                                                                               isolatedClassArr);
+        jbyteArray transformedArr = (jbyteArray) env->CallObjectMethod(sTransformer,
+                                                                       runTransformers,
+                                                                       loader, nameStr,
+                                                                       classBeingRedefined,
+                                                                       protectionDomain,
+                                                                       isolatedClassArr);
 
-                // Set transformed byte code
-                if (!env->ExceptionOccurred() && transformedArr != NULL) {
-                    *newClassDataLen = env->GetArrayLength(transformedArr);
+        // Set transformed byte code
+        if (!env->ExceptionOccurred() && transformedArr != NULL) {
+            *newClassDataLen = env->GetArrayLength(transformedArr);
 
-                    jbyte* transformed = env->GetByteArrayElements(transformedArr, 0);
+            jbyte* transformed = env->GetByteArrayElements(transformedArr, 0);
 
-                    *newClassData = (unsigned char*) malloc(*newClassDataLen);
-                    std::memcpy(*newClassData, transformed, *newClassDataLen);
+            jvmti_env->Allocate(*newClassDataLen, newClassData);
+            std::memcpy(*newClassData, transformed, *newClassDataLen);
 
-                    env->ReleaseByteArrayElements(transformedArr, transformed, 0);
-                }
-
-                break;
-            }
+            env->ReleaseByteArrayElements(transformedArr, transformed, 0);
         }
     }
 }
@@ -836,33 +828,39 @@ static void throwRuntimeExpection(JNIEnv* env, const char* fmt, ...) {
     env->ThrowNew(exceptionClass, msgBuf);
 }
 
-// Triggers retransformation of classes
+// Register transformer hook
+extern "C" JNIEXPORT void JNICALL
+Java_com_android_dx_mockito_inline_JvmtiAgent_nativeRegisterTransformerHook(JNIEnv* env,
+                                                                            jobject thiz) {
+    sTransformer = env->NewGlobalRef(thiz);
+}
+
+// Unregister transformer hook
+extern "C" JNIEXPORT void JNICALL
+Java_com_android_dx_mockito_inline_JvmtiAgent_nativeUnregisterTransformerHook(JNIEnv* env,
+                                                                              jobject thiz) {
+    env->DeleteGlobalRef(sTransformer);
+    sTransformer = NULL;
+}
+
+// Triggers retransformation of classes via this file's Transform method
 extern "C" JNIEXPORT void JNICALL
 Java_com_android_dx_mockito_inline_JvmtiAgent_nativeRetransformClasses(JNIEnv* env,
                                                                        jobject thiz,
                                                                        jobjectArray classes) {
-    sNumTransformedClasses = env->GetArrayLength(classes);
-    sTransformedClasses = (jclass*) malloc(sNumTransformedClasses * sizeof(jclass));
-    for (int i = 0; i < sNumTransformedClasses; i++) {
-         sTransformedClasses[i] = (jclass) env->NewGlobalRef(env->GetObjectArrayElement(classes,
-                                                                                        i));
+    jsize numTransformedClasses = env->GetArrayLength(classes);
+    jclass *transformedClasses = (jclass*) malloc(numTransformedClasses * sizeof(jclass));
+    for (int i = 0; i < numTransformedClasses; i++) {
+        transformedClasses[i] = (jclass) env->NewGlobalRef(env->GetObjectArrayElement(classes, i));
     }
 
-    sTransformer = env->NewGlobalRef(thiz);
+    jvmtiError error = localJvmtiEnv->RetransformClasses(numTransformedClasses,
+                                                         transformedClasses);
 
-    jvmtiError error = localJvmtiEnv->RetransformClasses(sNumTransformedClasses,
-                                                         sTransformedClasses);
-
-    env->DeleteGlobalRef(sTransformer);
-    sTransformer = NULL;
-
-    for (int i = 0; i < sNumTransformedClasses; i++) {
-        env->DeleteGlobalRef(sTransformedClasses[i]);
+    for (int i = 0; i < numTransformedClasses; i++) {
+        env->DeleteGlobalRef(transformedClasses[i]);
     }
-    free(sTransformedClasses);
-    sTransformedClasses = NULL;
-
-    sNumTransformedClasses = 0;
+    free(transformedClasses);
 
     if (error != JVMTI_ERROR_NONE) {
         throwRuntimeExpection(env, "Could not retransform classes: %d", error);

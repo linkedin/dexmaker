@@ -172,9 +172,8 @@ class ClassTransformer {
      *
      * @return transformed class
      */
-    @SuppressWarnings("unused")
-    public byte[] transform(Class<?> classBeingRedefined,
-                            byte[] classfileBuffer) throws IllegalClassFormatException {
+    byte[] transform(Class<?> classBeingRedefined, byte[] classfileBuffer) throws
+            IllegalClassFormatException {
         if (classBeingRedefined == null
                 || !mockedTypes.contains(classBeingRedefined)) {
             return null;

@@ -20,17 +20,18 @@ import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.exceptions.base.MockitoException;
+import org.mockito.exceptions.verification.NoInteractionsWanted;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
-public class MockTests {
+public class GeneralMocking {
     public static class TestClass {
         public String returnA() {
             return "A";
@@ -86,34 +87,23 @@ public class MockTests {
     }
 
     @Test
-    public void cleanStackTraceProxy() {
+    public void verifyAdditionalInvocations() {
         TestClass t = mock(TestClass.class);
 
+        t.returnA();
+        t.returnA();
+
         try {
-            verify(t).returnA();
-        } catch (Throwable verifyLocation) {
+            verifyNoMoreInteractions(t);
+        } catch (NoInteractionsWanted e) {
             try {
                 throw new Exception();
             } catch (Exception here) {
-                assertEquals(here.getStackTrace()[0].getMethodName(), verifyLocation
-                        .getStackTrace()[0].getMethodName());
+                // The error message should indicate where the additional invocations have been made
+                assertTrue(e.getMessage(),
+                        e.getMessage().contains(here.getStackTrace()[0].getMethodName()));
             }
-        }
-    }
 
-    @Test
-    public void cleanStackTraceInterface() {
-        TestInterface t = mock(TestInterface.class);
-
-        try {
-            verify(t).returnA();
-        } catch (Throwable verifyLocation) {
-            try {
-                throw new Exception();
-            } catch (Exception here) {
-                assertEquals(here.getStackTrace()[0].getMethodName(), verifyLocation
-                        .getStackTrace()[0].getMethodName());
-            }
         }
     }
 }

@@ -39,6 +39,7 @@ public final class DexmakerStackTraceCleaner implements StackTraceCleanerProvide
                         && !className.startsWith("java.lang.reflect.Proxy")
                         && !(className.startsWith("com.android.dx.mockito.")
                              // Do not clean unit tests
+                             && !className.startsWith("com.android.dx.mockito.tests")
                              && !className.startsWith("com.android.dx.mockito.inline.tests"))
 
                         // dalvik interface proxies

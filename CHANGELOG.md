@@ -1,5 +1,12 @@
 # Change Log
 
+## Version 2.12.0 (2018-01-15)
+- Update underlying Mockito version to 2.12.0
+- Add support for generating static initializers - #57
+- Add support for generating if-testz instructions - #58
+- Add support for generating method annotations - #75
+- Fixed bug where `ProxyBuilder` did not correctly identify all interfaces to be implemented - #61
+
 ## Version 2.2.0 (2016-12-09)
 - Update underlying Mockito version to 2.2.29
 - Major and minor version numbers will now be in sync with the Mockito version that's supported by dexmaker-mockito

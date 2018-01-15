@@ -44,5 +44,5 @@ artifactory {
 }
 
 task distributeBuild(type: DistributeTask) {
-    dependsOn ':artifactoryPublish', 'dexmaker:artifactoryPublish', 'dexmaker-mockito:artifactoryPublish', 'dexmaker-mockito-inline:artifactoryPublish'
+    dependsOn ':artifactoryPublish', 'dexmaker:artifactoryPublish', 'dexmaker-mockito:artifactoryPublish'
 }

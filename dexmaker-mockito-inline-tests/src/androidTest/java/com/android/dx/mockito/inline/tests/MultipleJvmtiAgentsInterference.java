@@ -34,7 +34,7 @@ import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.mock;
 
 public class MultipleJvmtiAgentsInterference {
-    private static final String AGENT_LIB_NAME = "multiplejvmtiagentsinterferenceagent";
+    private static final String AGENT_LIB_NAME = "libmultiplejvmtiagentsinterferenceagent.so";
 
     public class TestClass {
         public String returnA() {
@@ -47,29 +47,10 @@ public class MultipleJvmtiAgentsInterference {
         // TODO (moltmann@google.com): Replace with proper check for >= P
         assumeTrue(Build.VERSION.CODENAME.equals("P"));
 
-        // Currently Debug.attachJvmtiAgent requires a file in the right directory
-        File copiedAgent = File.createTempFile("testagent", ".so");
-        copiedAgent.deleteOnExit();
-
-        try (InputStream is = new FileInputStream(((BaseDexClassLoader)
-                MultipleJvmtiAgentsInterference.class.getClassLoader()).findLibrary
-                (AGENT_LIB_NAME))) {
-            try (OutputStream os = new FileOutputStream(copiedAgent)) {
-                byte[] buffer = new byte[64 * 1024];
-
-                while (true) {
-                    int numRead = is.read(buffer);
-                    if (numRead == -1) {
-                        break;
-                    }
-                    os.write(buffer, 0, numRead);
-                }
-            }
-        }
-
         // TODO (moltmann@google.com): Replace with regular method call once the API becomes public
         Class.forName("android.os.Debug").getMethod("attachJvmtiAgent", String.class, String
-                .class).invoke(null, copiedAgent.getAbsolutePath(), null);
+                .class, ClassLoader.class).invoke(null, AGENT_LIB_NAME, null,
+                MultipleJvmtiAgentsInterference.class.getClassLoader());
     }
 
     @Test

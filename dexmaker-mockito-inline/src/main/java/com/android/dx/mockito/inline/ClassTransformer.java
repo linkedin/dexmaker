@@ -186,5 +186,16 @@ class ClassTransformer {
         }
     }
 
+    /**
+     * Check if the class should be transformed.
+     *
+     * @param classBeingRedefined The class that might need to transformed
+     *
+     * @return {@code true} iff the class needs to be transformed
+     */
+    boolean shouldTransform(Class<?> classBeingRedefined) {
+        return classBeingRedefined != null && mockedTypes.contains(classBeingRedefined);
+    }
+
     private native byte[] nativeRedefine(String identifier, byte[] original);
 }

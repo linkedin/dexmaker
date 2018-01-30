@@ -70,6 +70,19 @@ Transform(jvmtiEnv* jvmti_env,
           jint* newClassDataLen,
           unsigned char** newClassData) {
     if (sTransformer != NULL) {
+        // Even reading the classData array is expensive as the data is only generated when the
+        // memory is touched. Hence call JvmtiAgent#shouldTransform to check if we need to transform
+        // the class.
+        jclass cls = env->GetObjectClass(sTransformer);
+        jmethodID shouldTransformMethod = env->GetMethodID(cls, "shouldTransform",
+                                                           "(Ljava/lang/Class;)Z");
+
+        jboolean shouldTransform = env->CallBooleanMethod(sTransformer, shouldTransformMethod,
+                                                          classBeingRedefined);
+        if (!shouldTransform) {
+            return;
+        }
+
         // Isolate byte code of class class. This is needed as Android usually gives us more
         // than the class we need.
         Reader reader(classData, classDataLen);
@@ -97,16 +110,15 @@ Transform(jvmtiEnv* jvmti_env,
         jstring nameStr = env->NewStringUTF(name);
 
         // Call JvmtiAgent#runTransformers
-        jclass cls = env->GetObjectClass(sTransformer);
-        jmethodID runTransformers = env->GetMethodID(cls, "runTransformers",
-                                                     "(Ljava/lang/ClassLoader;"
-                                                     "Ljava/lang/String;"
-                                                     "Ljava/lang/Class;"
-                                                     "Ljava/security/ProtectionDomain;"
-                                                     "[B)[B");
+        jmethodID runTransformersMethod = env->GetMethodID(cls, "runTransformers",
+                                                           "(Ljava/lang/ClassLoader;"
+                                                           "Ljava/lang/String;"
+                                                           "Ljava/lang/Class;"
+                                                           "Ljava/security/ProtectionDomain;"
+                                                           "[B)[B");
 
         jbyteArray transformedArr = (jbyteArray) env->CallObjectMethod(sTransformer,
-                                                                       runTransformers,
+                                                                       runTransformersMethod,
                                                                        loader, nameStr,
                                                                        classBeingRedefined,
                                                                        protectionDomain,

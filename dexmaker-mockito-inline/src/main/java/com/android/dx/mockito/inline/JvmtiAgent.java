@@ -34,7 +34,7 @@ import dalvik.system.BaseDexClassLoader;
  * Interface to the native jvmti agent in agent.cc
  */
 class JvmtiAgent {
-    private static final String AGENT_LIB_NAME = "dexmakerjvmtiagent";
+    private static final String AGENT_LIB_NAME = "libdexmakerjvmtiagent.so";
 
     private static final Object lock = new Object();
 
@@ -65,32 +65,13 @@ class JvmtiAgent {
                     + "by a BaseDexClassLoader");
         }
 
-        // Currently Debug.attachJvmtiAgent requires a file in the right directory
-        File copiedAgent = File.createTempFile("agent", ".so");
-        copiedAgent.deleteOnExit();
-
-        try (InputStream is = new FileInputStream(
-                ((BaseDexClassLoader) cl).findLibrary(AGENT_LIB_NAME))) {
-            try (OutputStream os = new FileOutputStream(copiedAgent)) {
-                byte[] buffer = new byte[64 * 1024];
-
-                while (true) {
-                    int numRead = is.read(buffer);
-                    if (numRead == -1) {
-                        break;
-                    }
-                    os.write(buffer, 0, numRead);
-                }
-            }
-        }
-
         try {
             /*
              * TODO (moltmann@google.com): Replace with regular method call once the API becomes
              *                             public
              */
             Class.forName("android.os.Debug").getMethod("attachJvmtiAgent", String.class,
-                    String.class).invoke(null, copiedAgent.getAbsolutePath(), null);
+                    String.class, ClassLoader.class).invoke(null, AGENT_LIB_NAME, null, cl);
         } catch (InvocationTargetException e) {
             loadJvmtiException = e.getCause();
         } catch (IllegalAccessException | ClassNotFoundException | NoSuchMethodException e) {

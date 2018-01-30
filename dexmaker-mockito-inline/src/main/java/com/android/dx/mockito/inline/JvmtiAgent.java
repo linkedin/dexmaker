@@ -144,6 +144,18 @@ class JvmtiAgent {
         }
     }
 
+    // called by JNI
+    @SuppressWarnings("unused")
+    public boolean shouldTransform(Class<?> classBeingRedefined) {
+        for (ClassTransformer transformer : transformers) {
+            if (transformer.shouldTransform(classBeingRedefined)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Register a transformer. These are called for each class when a transformation was triggered
      * via {@link #requestTransformClasses(Class[])}.

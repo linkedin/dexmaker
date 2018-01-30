@@ -18,6 +18,7 @@ package com.android.dx.mockito.inline.tests;
 
 import android.os.Build;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -68,5 +69,11 @@ public class MultipleJvmtiAgentsInterference {
         assertNull(t.returnA());
     }
 
+    @AfterClass
+    public static void DisableRetransfromHook() {
+        disableRetransformHook();
+    }
+
     private native int nativeRetransformClasses(Class<?>[] classes);
+    private static native int disableRetransformHook();
 }

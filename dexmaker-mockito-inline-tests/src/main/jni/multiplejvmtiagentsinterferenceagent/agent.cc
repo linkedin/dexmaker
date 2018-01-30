@@ -148,4 +148,15 @@ namespace com_android_dx_mockito_inline_tests {
 
         return error;
     }
+
+    // Disable hook to not slow down test
+    extern "C" JNIEXPORT jint JNICALL
+    Java_com_android_dx_mockito_inline_tests_MultipleJvmtiAgentsInterference_disableRetransformHook(
+            JNIEnv *env,
+            jclass ignored) {
+        return localJvmtiEnv->SetEventNotificationMode(JVMTI_DISABLE,
+                                                       JVMTI_EVENT_CLASS_FILE_LOAD_HOOK,
+                                                       NULL);
+
+    }
 }

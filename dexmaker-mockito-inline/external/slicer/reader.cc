@@ -930,7 +930,9 @@ void Reader::ParseInstructions(slicer::ArrayView<const dex::u2> code) {
 void Reader::ValidateHeader() {
   CHECK(size_ > sizeof(dex::Header));
 
-  CHECK(header_->file_size == size_);
+  // Known issue: For performance reasons the initial size_ passed to jvmti events might be an
+  // estimate. b/72402467
+  CHECK(header_->file_size <= size_);
   CHECK(header_->header_size == sizeof(dex::Header));
   CHECK(header_->endian_tag == dex::kEndianConstant);
   CHECK(header_->data_size % 4 == 0);
@@ -953,11 +955,15 @@ void Reader::ValidateHeader() {
   CHECK(header_->map_off % 4 == 0);
 
   // we seem to have .dex files with extra bytes at the end ...
-  WEAK_CHECK(header_->data_off + header_->data_size == size_);
+  // Known issue: For performance reasons the initial size_ passed to jvmti events might be an
+  // estimate. b/72402467
+  WEAK_CHECK(header_->data_off + header_->data_size <= size_);
 
   // but we should still have the whole data section
 
   // Known issue: The fields might be slighly corrupted b/65452964
+  // Known issue: For performance reasons the initial size_ passed to jvmti events might be an
+  // estimate. b/72402467
   // CHECK(header_->data_off + header_->data_size <= size_);
 
   // validate the map

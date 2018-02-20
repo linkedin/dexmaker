@@ -17,17 +17,18 @@
 package com.android.dx.mockito.inline;
 
 import android.os.AsyncTask;
+import android.os.Build;
 import android.util.ArraySet;
 
 import com.android.dx.stock.ProxyBuilder;
 import com.android.dx.stock.ProxyBuilder.MethodSetEntry;
 
+import org.mockito.Mockito;
 import org.mockito.exceptions.base.MockitoException;
-import org.mockito.internal.configuration.plugins.Plugins;
 import org.mockito.internal.creation.instance.Instantiator;
-import org.mockito.internal.util.Platform;
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
+import org.mockito.plugins.InstantiatorProvider;
 import org.mockito.plugins.MockMaker;
 
 import java.io.IOException;
@@ -135,7 +136,8 @@ public final class InlineDexmakerMockMaker implements MockMaker {
             throw new RuntimeException(
                     "Could not initialize inline mock maker.\n"
                     + "\n"
-                    + Platform.describe(), INITIALIZATION_ERROR);
+                    + "Release: Android " + Build.VERSION.RELEASE + " " + Build.VERSION.INCREMENTAL
+                    + "Device: " + Build.BRAND + " " + Build.MODEL, INITIALIZATION_ERROR);
         }
 
         mocks = new MockMap();
@@ -221,7 +223,8 @@ public final class InlineDexmakerMockMaker implements MockMaker {
 
             Class<? extends T> proxyClass;
 
-            Instantiator instantiator = Plugins.getInstantiatorProvider().getInstantiator(settings);
+            Instantiator instantiator = Mockito.framework().getPlugins()
+                    .getDefaultPlugin(InstantiatorProvider.class).getInstantiator(settings);
 
             if (subclassingRequired) {
                 try {

@@ -5,7 +5,6 @@
 
 package com.android.dx.mockito.inline;
 
-import org.mockito.internal.exceptions.stacktrace.ConditionalStackTraceFilter;
 import org.mockito.internal.util.concurrent.WeakConcurrentMap;
 
 import java.lang.reflect.InvocationTargetException;
@@ -48,12 +47,7 @@ class MockMethodAdvice {
         try {
             return origin.invoke(instance, arguments);
         } catch (InvocationTargetException exception) {
-            Throwable cause = exception.getCause();
-
-            new ConditionalStackTraceFilter().filter(hideRecursiveCall(cause,
-                    new Throwable().getStackTrace().length, origin.getDeclaringClass()));
-
-            throw cause;
+            throw exception.getCause();
         }
     }
 

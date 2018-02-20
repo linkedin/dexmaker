@@ -18,13 +18,24 @@ package com.android.dx.mockito.tests;
 
 import android.support.test.runner.AndroidJUnit4;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.exceptions.base.MockitoException;
 import org.mockito.exceptions.verification.NoInteractionsWanted;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -36,10 +47,32 @@ public class GeneralMocking {
         public String returnA() {
             return "A";
         }
+
+        public String throwThrowable() throws Throwable {
+            throw new Throwable();
+        }
+
+        public String throwOutOfMemoryError() throws OutOfMemoryError {
+            throw new OutOfMemoryError();
+        }
+
+        public void throwNullPointerException() {
+            throw new NullPointerException();
+        }
+
+        public String concat(String a, String b) {
+            return a + b;
+        }
+    }
+
+    public static class TestSubClass extends TestClass {
+
     }
 
     public interface TestInterface {
         String returnA();
+
+        String concat(String a, String b);
     }
 
     @Test
@@ -103,7 +136,146 @@ public class GeneralMocking {
                 assertTrue(e.getMessage(),
                         e.getMessage().contains(here.getStackTrace()[0].getMethodName()));
             }
-
         }
+    }
+
+    @Test
+    public void spyThrowingMethod() throws Exception {
+        TestClass t = spy(TestClass.class);
+
+        try {
+            t.throwThrowable();
+        } catch (Throwable e) {
+            assertEquals("throwThrowable", e.getStackTrace()[0].getMethodName());
+            return;
+        }
+
+        fail();
+    }
+
+    @Test()
+    public void spyErrorMethod() throws Exception {
+        TestClass t = spy(TestClass.class);
+
+        try {
+            t.throwOutOfMemoryError();
+            fail();
+        } catch (OutOfMemoryError e) {
+            assertEquals("throwOutOfMemoryError", e.getStackTrace()[0].getMethodName());
+        }
+    }
+
+    @Test()
+    public void spyExceptingMethod() throws Exception {
+        TestClass t = spy(TestClass.class);
+
+        try {
+            t.throwNullPointerException();
+            fail();
+        } catch (NullPointerException e) {
+            assertEquals("throwNullPointerException", e.getStackTrace()[0].getMethodName());
+        }
+    }
+
+
+    @Test
+    public void callAbstractRealMethod() throws Exception {
+        TestInterface t = mock(TestInterface.class);
+
+        try {
+            when(t.returnA()).thenCallRealMethod();
+        } catch (MockitoException e) {
+            assertEquals("callAbstractRealMethod", e.getStackTrace()[0].getMethodName());
+        }
+    }
+
+    @Test
+    public void callInterfaceWithoutMatcher() throws Exception {
+        TestInterface t = mock(TestInterface.class);
+
+        when(t.concat("a", "b")).thenReturn("match");
+
+        assertEquals("match", t.concat("a", "b"));
+        assertNull(t.concat("b", "a"));
+    }
+
+    @Test
+    public void callInterfaceWithMatcher() throws Exception {
+        TestInterface t = mock(TestInterface.class);
+
+        when(t.concat(eq("a"), anyString())).thenReturn("match");
+
+        assertEquals("match", t.concat("a", "b"));
+        assertNull(t.concat("b", "a"));
+    }
+
+    @Test
+    public void callInterfaceWithNullMatcher() throws Exception {
+        TestInterface t = mock(TestInterface.class);
+
+        when(t.concat(eq("a"), (String) isNull())).thenReturn("match");
+
+        assertEquals("match", t.concat("a", null));
+        assertNull(t.concat("a", "b"));
+    }
+
+    @Test
+    public void callClassWithoutMatcher() throws Exception {
+        TestClass t = spy(TestClass.class);
+
+        when(t.concat("a", "b")).thenReturn("match");
+
+        assertEquals("match", t.concat("a", "b"));
+        assertEquals("ba", t.concat("b", "a"));
+    }
+
+    @Test
+    public void callClassWithMatcher() throws Exception {
+        TestClass t = spy(TestClass.class);
+
+        when(t.concat(eq("a"), anyString())).thenReturn("match");
+
+        assertEquals("match", t.concat("a", "b"));
+        assertEquals("ba", t.concat("b", "a"));
+    }
+
+    @Test
+    public void callClassWithNullMatcher() throws Exception {
+        TestClass t = spy(TestClass.class);
+
+        when(t.concat(eq("a"), (String) isNull())).thenReturn("match");
+
+        assertEquals("match", t.concat("a", null));
+        assertEquals("ab", t.concat("a", "b"));
+    }
+
+    @Test
+    public void callSubClassWithoutMatcher() throws Exception {
+        TestSubClass t = spy(TestSubClass.class);
+
+        when(t.concat("a", "b")).thenReturn("match");
+
+        assertEquals("match", t.concat("a", "b"));
+        assertEquals("ba", t.concat("b", "a"));
+    }
+
+    @Test
+    public void callSubClassWithMatcher() throws Exception {
+        TestSubClass t = spy(TestSubClass.class);
+
+        when(t.concat(eq("a"), anyString())).thenReturn("match");
+
+        assertEquals("match", t.concat("a", "b"));
+        assertEquals("ba", t.concat("b", "a"));
+    }
+
+    @Test
+    public void callSubClassWithNullMatcher() throws Exception {
+        TestSubClass t = spy(TestSubClass.class);
+
+        when(t.concat(eq("a"), (String) isNull())).thenReturn("match");
+
+        assertEquals("match", t.concat("a", null));
+        assertEquals("ab", t.concat("a", "b"));
     }
 }

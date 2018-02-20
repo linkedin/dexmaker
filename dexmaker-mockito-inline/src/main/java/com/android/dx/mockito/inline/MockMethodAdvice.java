@@ -259,7 +259,7 @@ class MockMethodAdvice {
     /**
      * Used to call the read (non mocked) method.
      */
-    private static class SuperMethodCall implements InterceptedInvocation.SuperMethod {
+    private static class SuperMethodCall implements InvocationHandlerAdapter.SuperMethod {
         private final SelfCallInfo selfCallInfo;
         private final Method origin;
         private final Object instance;
@@ -271,11 +271,6 @@ class MockMethodAdvice {
             this.origin = origin;
             this.instance = instance;
             this.arguments = arguments;
-        }
-
-        @Override
-        public boolean isInvokable() {
-            return true;
         }
 
         /**

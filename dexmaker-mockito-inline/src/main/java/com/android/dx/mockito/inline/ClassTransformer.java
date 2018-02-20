@@ -17,15 +17,15 @@
 package com.android.dx.mockito.inline;
 
 import org.mockito.exceptions.base.MockitoException;
-import org.mockito.internal.util.concurrent.WeakConcurrentMap;
-import org.mockito.internal.util.concurrent.WeakConcurrentSet;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -65,7 +65,7 @@ class ClassTransformer {
     private final JvmtiAgent agent;
 
     /** Types that have already be transformed */
-    private final WeakConcurrentSet<Class<?>> mockedTypes;
+    private final Set<Class<?>> mockedTypes;
 
     /**
      * A unique identifier that is baked into the transformed classes. The entry hooks will then
@@ -96,9 +96,9 @@ class ClassTransformer {
      *              mocked or not.
      */
     ClassTransformer(JvmtiAgent agent, Class dispatcherClass,
-                     WeakConcurrentMap<Object, InvocationHandlerAdapter> mocks) {
+                     Map<Object, InvocationHandlerAdapter> mocks) {
         this.agent = agent;
-        mockedTypes = new WeakConcurrentSet<>(WeakConcurrentSet.Cleaner.INLINE);
+        mockedTypes = Collections.synchronizedSet(new HashSet<Class<?>>());
         identifier = Long.toString(random.nextLong());
         MockMethodAdvice advice = new MockMethodAdvice(mocks);
 

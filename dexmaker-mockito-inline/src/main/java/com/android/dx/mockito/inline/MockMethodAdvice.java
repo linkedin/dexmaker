@@ -5,12 +5,11 @@
 
 package com.android.dx.mockito.inline;
 
-import org.mockito.internal.util.concurrent.WeakConcurrentMap;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,14 +19,14 @@ import java.util.regex.Pattern;
  * be ignored.
  */
 class MockMethodAdvice {
-    private final WeakConcurrentMap<Object, InvocationHandlerAdapter> interceptors;
+    private final Map<Object, InvocationHandlerAdapter> interceptors;
 
     /** Pattern to decompose a instrumentedMethodWithTypeAndSignature */
     private final Pattern methodPattern = Pattern.compile("(.*)#(.*)\\((.*)\\)");
 
     private final SelfCallInfo selfCallInfo = new SelfCallInfo();
 
-    MockMethodAdvice(WeakConcurrentMap<Object, InvocationHandlerAdapter> interceptors) {
+    MockMethodAdvice(Map<Object, InvocationHandlerAdapter> interceptors) {
         this.interceptors = interceptors;
     }
 

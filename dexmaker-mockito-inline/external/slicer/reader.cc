@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "reader.h"
-#include "dex_bytecode.h"
-#include "chronometer.h"
-#include "dex_leb128.h"
+#include "slicer/reader.h"
+#include "slicer/dex_bytecode.h"
+#include "slicer/chronometer.h"
+#include "slicer/dex_leb128.h"
 
 #include <assert.h>
 #include <string.h>
@@ -88,7 +88,7 @@ void Reader::CreateFullIr() {
 
 void Reader::CreateClassIr(dex::u4 index) {
   auto ir_class = GetClass(index);
-  CHECK(ir_class != nullptr);
+  SLICER_CHECK(ir_class != nullptr);
 }
 
 // Returns the index of the class with the specified
@@ -119,102 +119,102 @@ dex::u4 Reader::FindClassIndex(const char* class_descriptor) const {
 //     (we use the dummy value to guard against this too)
 //
 ir::Class* Reader::GetClass(dex::u4 index) {
-  CHECK(index != dex::kNoIndex);
+  SLICER_CHECK(index != dex::kNoIndex);
   auto& p = dex_ir_->classes_map[index];
   auto dummy = reinterpret_cast<ir::Class*>(1);
   if (p == nullptr) {
     p = dummy;
     auto newClass = ParseClass(index);
-    CHECK(p == dummy);
+    SLICER_CHECK(p == dummy);
     p = newClass;
     dex_ir_->classes_indexes.MarkUsedIndex(index);
   }
-  CHECK(p != dummy);
+  SLICER_CHECK(p != dummy);
   return p;
 }
 
 // map a .dex index to corresponding .dex IR node
 // (see the Reader::GetClass() comments)
 ir::Type* Reader::GetType(dex::u4 index) {
-  CHECK(index != dex::kNoIndex);
+  SLICER_CHECK(index != dex::kNoIndex);
   auto& p = dex_ir_->types_map[index];
   auto dummy = reinterpret_cast<ir::Type*>(1);
   if (p == nullptr) {
     p = dummy;
     auto newType = ParseType(index);
-    CHECK(p == dummy);
+    SLICER_CHECK(p == dummy);
     p = newType;
     dex_ir_->types_indexes.MarkUsedIndex(index);
   }
-  CHECK(p != dummy);
+  SLICER_CHECK(p != dummy);
   return p;
 }
 
 // map a .dex index to corresponding .dex IR node
 // (see the Reader::GetClass() comments)
 ir::FieldDecl* Reader::GetFieldDecl(dex::u4 index) {
-  CHECK(index != dex::kNoIndex);
+  SLICER_CHECK(index != dex::kNoIndex);
   auto& p = dex_ir_->fields_map[index];
   auto dummy = reinterpret_cast<ir::FieldDecl*>(1);
   if (p == nullptr) {
     p = dummy;
     auto newField = ParseFieldDecl(index);
-    CHECK(p == dummy);
+    SLICER_CHECK(p == dummy);
     p = newField;
     dex_ir_->fields_indexes.MarkUsedIndex(index);
   }
-  CHECK(p != dummy);
+  SLICER_CHECK(p != dummy);
   return p;
 }
 
 // map a .dex index to corresponding .dex IR node
 // (see the Reader::GetClass() comments)
 ir::MethodDecl* Reader::GetMethodDecl(dex::u4 index) {
-  CHECK(index != dex::kNoIndex);
+  SLICER_CHECK(index != dex::kNoIndex);
   auto& p = dex_ir_->methods_map[index];
   auto dummy = reinterpret_cast<ir::MethodDecl*>(1);
   if (p == nullptr) {
     p = dummy;
     auto newMethod = ParseMethodDecl(index);
-    CHECK(p == dummy);
+    SLICER_CHECK(p == dummy);
     p = newMethod;
     dex_ir_->methods_indexes.MarkUsedIndex(index);
   }
-  CHECK(p != dummy);
+  SLICER_CHECK(p != dummy);
   return p;
 }
 
 // map a .dex index to corresponding .dex IR node
 // (see the Reader::GetClass() comments)
 ir::Proto* Reader::GetProto(dex::u4 index) {
-  CHECK(index != dex::kNoIndex);
+  SLICER_CHECK(index != dex::kNoIndex);
   auto& p = dex_ir_->protos_map[index];
   auto dummy = reinterpret_cast<ir::Proto*>(1);
   if (p == nullptr) {
     p = dummy;
     auto newProto = ParseProto(index);
-    CHECK(p == dummy);
+    SLICER_CHECK(p == dummy);
     p = newProto;
     dex_ir_->protos_indexes.MarkUsedIndex(index);
   }
-  CHECK(p != dummy);
+  SLICER_CHECK(p != dummy);
   return p;
 }
 
 // map a .dex index to corresponding .dex IR node
 // (see the Reader::GetClass() comments)
 ir::String* Reader::GetString(dex::u4 index) {
-  CHECK(index != dex::kNoIndex);
+  SLICER_CHECK(index != dex::kNoIndex);
   auto& p = dex_ir_->strings_map[index];
   auto dummy = reinterpret_cast<ir::String*>(1);
   if (p == nullptr) {
     p = dummy;
     auto newString = ParseString(index);
-    CHECK(p == dummy);
+    SLICER_CHECK(p == dummy);
     p = newString;
     dex_ir_->strings_indexes.MarkUsedIndex(index);
   }
-  CHECK(p != dummy);
+  SLICER_CHECK(p != dummy);
   return p;
 }
 
@@ -282,7 +282,7 @@ ir::AnnotationsDirectory* Reader::ExtractAnnotations(dex::u4 offset) {
     return nullptr;
   }
 
-  CHECK(offset % 4 == 0);
+  SLICER_CHECK(offset % 4 == 0);
 
   // first check if we already extracted the same "annotations_directory_item"
   auto& ir_annotations = annotations_directories_[offset];
@@ -312,7 +312,7 @@ ir::AnnotationsDirectory* Reader::ExtractAnnotations(dex::u4 offset) {
 }
 
 ir::Annotation* Reader::ExtractAnnotationItem(dex::u4 offset) {
-  CHECK(offset != 0);
+  SLICER_CHECK(offset != 0);
 
   // first check if we already extracted the same "annotation_item"
   auto& ir_annotation = annotations_[offset];
@@ -330,7 +330,7 @@ ir::AnnotationSet* Reader::ExtractAnnotationSet(dex::u4 offset) {
     return nullptr;
   }
 
-  CHECK(offset % 4 == 0);
+  SLICER_CHECK(offset % 4 == 0);
 
   // first check if we already extracted the same "annotation_set_item"
   auto& ir_annotation_set = annotation_sets_[offset];
@@ -348,7 +348,7 @@ ir::AnnotationSet* Reader::ExtractAnnotationSet(dex::u4 offset) {
 }
 
 ir::AnnotationSetRefList* Reader::ExtractAnnotationSetRefList(dex::u4 offset) {
-  CHECK(offset % 4 == 0);
+  SLICER_CHECK(offset % 4 == 0);
 
   auto dex_annotation_set_ref_list = dataPtr<dex::AnnotationSetRefList>(offset);
   auto ir_annotation_set_ref_list = dex_ir_->Alloc<ir::AnnotationSetRefList>();
@@ -357,7 +357,7 @@ ir::AnnotationSetRefList* Reader::ExtractAnnotationSetRefList(dex::u4 offset) {
     dex::u4 entry_offset = dex_annotation_set_ref_list->list[i].annotations_off;
     if (entry_offset != 0) {
       auto ir_annotation_set = ExtractAnnotationSet(entry_offset);
-      CHECK(ir_annotation_set != nullptr);
+      SLICER_CHECK(ir_annotation_set != nullptr);
       ir_annotation_set_ref_list->annotations.push_back(ir_annotation_set);
     }
   }
@@ -373,7 +373,7 @@ ir::FieldAnnotation* Reader::ParseFieldAnnotation(const dex::u1** pptr) {
 
   ir_field_annotation->annotations =
       ExtractAnnotationSet(dex_field_annotation->annotations_off);
-  CHECK(ir_field_annotation->annotations != nullptr);
+  SLICER_CHECK(ir_field_annotation->annotations != nullptr);
 
   *pptr += sizeof(dex::FieldAnnotationsItem);
   return ir_field_annotation;
@@ -388,7 +388,7 @@ ir::MethodAnnotation* Reader::ParseMethodAnnotation(const dex::u1** pptr) {
 
   ir_method_annotation->annotations =
       ExtractAnnotationSet(dex_method_annotation->annotations_off);
-  CHECK(ir_method_annotation->annotations != nullptr);
+  SLICER_CHECK(ir_method_annotation->annotations != nullptr);
 
   *pptr += sizeof(dex::MethodAnnotationsItem);
   return ir_method_annotation;
@@ -403,7 +403,7 @@ ir::ParamAnnotation* Reader::ParseParamAnnotation(const dex::u1** pptr) {
 
   ir_param_annotation->annotations =
       ExtractAnnotationSetRefList(dex_param_annotation->annotations_off);
-  CHECK(ir_param_annotation->annotations != nullptr);
+  SLICER_CHECK(ir_param_annotation->annotations != nullptr);
 
   *pptr += sizeof(dex::ParameterAnnotationsItem);
   return ir_param_annotation;
@@ -413,9 +413,9 @@ ir::EncodedField* Reader::ParseEncodedField(const dex::u1** pptr, dex::u4* base_
   auto ir_encoded_field = dex_ir_->Alloc<ir::EncodedField>();
 
   auto field_index = dex::ReadULeb128(pptr);
-  CHECK(field_index != dex::kNoIndex);
+  SLICER_CHECK(field_index != dex::kNoIndex);
   if (*base_index != dex::kNoIndex) {
-    CHECK(field_index != 0);
+    SLICER_CHECK(field_index != 0);
     field_index += *base_index;
   }
   *base_index = field_index;
@@ -432,8 +432,8 @@ template <class T>
 static T ParseIntValue(const dex::u1** pptr, size_t size) {
   static_assert(std::is_integral<T>::value, "must be an integral type");
 
-  CHECK(size > 0);
-  CHECK(size <= sizeof(T));
+  SLICER_CHECK(size > 0);
+  SLICER_CHECK(size <= sizeof(T));
 
   T value = 0;
   for (int i = 0; i < size; ++i) {
@@ -453,8 +453,8 @@ static T ParseIntValue(const dex::u1** pptr, size_t size) {
 // (zero-extend to the right)
 template <class T>
 static T ParseFloatValue(const dex::u1** pptr, size_t size) {
-  CHECK(size > 0);
-  CHECK(size <= sizeof(T));
+  SLICER_CHECK(size > 0);
+  SLICER_CHECK(size <= sizeof(T));
 
   T value = 0;
   int start_byte = sizeof(T) - size;
@@ -468,7 +468,7 @@ static T ParseFloatValue(const dex::u1** pptr, size_t size) {
 ir::EncodedValue* Reader::ParseEncodedValue(const dex::u1** pptr) {
   auto ir_encoded_value = dex_ir_->Alloc<ir::EncodedValue>();
 
-  EXTRA(auto base_ptr = *pptr);
+  SLICER_EXTRA(auto base_ptr = *pptr);
 
   dex::u1 header = *(*pptr)++;
   dex::u1 type = header & dex::kEncodedValueTypeMask;
@@ -531,29 +531,29 @@ ir::EncodedValue* Reader::ParseEncodedValue(const dex::u1** pptr) {
     } break;
 
     case dex::kEncodedArray:
-      CHECK(arg == 0);
+      SLICER_CHECK(arg == 0);
       ir_encoded_value->u.array_value = ParseEncodedArray(pptr);
       break;
 
     case dex::kEncodedAnnotation:
-      CHECK(arg == 0);
+      SLICER_CHECK(arg == 0);
       ir_encoded_value->u.annotation_value = ParseAnnotation(pptr);
       break;
 
     case dex::kEncodedNull:
-      CHECK(arg == 0);
+      SLICER_CHECK(arg == 0);
       break;
 
     case dex::kEncodedBoolean:
-      CHECK(arg < 2);
+      SLICER_CHECK(arg < 2);
       ir_encoded_value->u.bool_value = (arg == 1);
       break;
 
     default:
-      CHECK(!"unexpected value type");
+      SLICER_CHECK(!"unexpected value type");
   }
 
-  EXTRA(ir_encoded_value->original = slicer::MemView(base_ptr, *pptr - base_ptr));
+  SLICER_EXTRA(ir_encoded_value->original = slicer::MemView(base_ptr, *pptr - base_ptr));
 
   return ir_encoded_value;
 }
@@ -703,7 +703,7 @@ ir::Code* Reader::ExtractCode(dex::u4 offset) {
     return nullptr;
   }
 
-  CHECK(offset % 4 == 0);
+  SLICER_CHECK(offset % 4 == 0);
 
   auto dex_code = dataPtr<dex::Code>(offset);
   auto ir_code = dex_ir_->Alloc<ir::Code>();
@@ -738,7 +738,7 @@ ir::Code* Reader::ExtractCode(dex::u4 offset) {
     auto ptr = handlers_list;
 
     dex::u4 handlers_count = dex::ReadULeb128(&ptr);
-    WEAK_CHECK(handlers_count <= dex_code->tries_size);
+    SLICER_WEAK_CHECK(handlers_count <= dex_code->tries_size);
 
     for (dex::u4 handler_index = 0; handler_index < handlers_count; ++handler_index) {
       int catch_count = dex::ReadSLeb128(&ptr);
@@ -769,9 +769,9 @@ ir::EncodedMethod* Reader::ParseEncodedMethod(const dex::u1** pptr, dex::u4* bas
   auto ir_encoded_method = dex_ir_->Alloc<ir::EncodedMethod>();
 
   auto method_index = dex::ReadULeb128(pptr);
-  CHECK(method_index != dex::kNoIndex);
+  SLICER_CHECK(method_index != dex::kNoIndex);
   if (*base_index != dex::kNoIndex) {
-    CHECK(method_index != 0);
+    SLICER_CHECK(method_index != 0);
     method_index += *base_index;
   }
   *base_index = method_index;
@@ -833,7 +833,7 @@ ir::TypeList* Reader::ExtractTypeList(dex::u4 offset) {
     ir_type_list = dex_ir_->Alloc<ir::TypeList>();
 
     auto dex_type_list = dataPtr<dex::TypeList>(offset);
-    WEAK_CHECK(dex_type_list->size > 0);
+    SLICER_WEAK_CHECK(dex_type_list->size > 0);
 
     for (dex::u4 i = 0; i < dex_type_list->size; ++i) {
       ir_type_list->types.push_back(GetType(dex_type_list->list[i].type_idx));
@@ -920,59 +920,59 @@ void Reader::ParseInstructions(slicer::ArrayView<const dex::u2> code) {
     }
 
     auto isize = dex::GetWidthFromBytecode(ptr);
-    CHECK(isize > 0);
+    SLICER_CHECK(isize > 0);
     ptr += isize;
   }
-  CHECK(ptr == code.end());
+  SLICER_CHECK(ptr == code.end());
 }
 
 // Basic .dex header structural checks
 void Reader::ValidateHeader() {
-  CHECK(size_ > sizeof(dex::Header));
+  SLICER_CHECK(size_ > sizeof(dex::Header));
 
   // Known issue: For performance reasons the initial size_ passed to jvmti events might be an
   // estimate. b/72402467
-  CHECK(header_->file_size <= size_);
-  CHECK(header_->header_size == sizeof(dex::Header));
-  CHECK(header_->endian_tag == dex::kEndianConstant);
-  CHECK(header_->data_size % 4 == 0);
+  SLICER_CHECK(header_->file_size <= size_);
+  SLICER_CHECK(header_->header_size == sizeof(dex::Header));
+  SLICER_CHECK(header_->endian_tag == dex::kEndianConstant);
+  SLICER_CHECK(header_->data_size % 4 == 0);
 
   // Known issue: The fields might be slighly corrupted b/65452964
-  // CHECK(header_->data_off + header_->data_size <= size_);
+  // SLICER_CHECK(header_->data_off + header_->data_size <= size_);
 
-  CHECK(header_->string_ids_off % 4 == 0);
-  CHECK(header_->type_ids_size < 65536);
-  CHECK(header_->type_ids_off % 4 == 0);
-  CHECK(header_->proto_ids_size < 65536);
-  CHECK(header_->proto_ids_off % 4 == 0);
-  CHECK(header_->field_ids_off % 4 == 0);
-  CHECK(header_->method_ids_off % 4 == 0);
-  CHECK(header_->class_defs_off % 4 == 0);
-  CHECK(header_->map_off >= header_->data_off && header_->map_off < size_);
-  CHECK(header_->link_size == 0);
-  CHECK(header_->link_off == 0);
-  CHECK(header_->data_off % 4 == 0);
-  CHECK(header_->map_off % 4 == 0);
+  SLICER_CHECK(header_->string_ids_off % 4 == 0);
+  SLICER_CHECK(header_->type_ids_size < 65536);
+  SLICER_CHECK(header_->type_ids_off % 4 == 0);
+  SLICER_CHECK(header_->proto_ids_size < 65536);
+  SLICER_CHECK(header_->proto_ids_off % 4 == 0);
+  SLICER_CHECK(header_->field_ids_off % 4 == 0);
+  SLICER_CHECK(header_->method_ids_off % 4 == 0);
+  SLICER_CHECK(header_->class_defs_off % 4 == 0);
+  SLICER_CHECK(header_->map_off >= header_->data_off && header_->map_off < size_);
+  SLICER_CHECK(header_->link_size == 0);
+  SLICER_CHECK(header_->link_off == 0);
+  SLICER_CHECK(header_->data_off % 4 == 0);
+  SLICER_CHECK(header_->map_off % 4 == 0);
 
   // we seem to have .dex files with extra bytes at the end ...
   // Known issue: For performance reasons the initial size_ passed to jvmti events might be an
   // estimate. b/72402467
-  WEAK_CHECK(header_->data_off + header_->data_size <= size_);
+  SLICER_WEAK_CHECK(header_->data_off + header_->data_size <= size_);
 
   // but we should still have the whole data section
 
   // Known issue: The fields might be slighly corrupted b/65452964
   // Known issue: For performance reasons the initial size_ passed to jvmti events might be an
   // estimate. b/72402467
-  // CHECK(header_->data_off + header_->data_size <= size_);
+  // SLICER_CHECK(header_->data_off + header_->data_size <= size_);
 
   // validate the map
   // (map section size = sizeof(MapList::size) + sizeof(MapList::list[size])
   auto map_list = ptr<dex::MapList>(header_->map_off);
-  CHECK(map_list->size > 0);
+  SLICER_CHECK(map_list->size > 0);
   auto map_section_size =
       sizeof(dex::u4) + sizeof(dex::MapItem) * map_list->size;
-  CHECK(header_->map_off + map_section_size <= size_);
+  SLICER_CHECK(header_->map_off + map_section_size <= size_);
 }
 
 }  // namespace dex

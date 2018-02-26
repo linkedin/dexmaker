@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "dex_format.h"
+#include "slicer/dex_format.h"
 
 namespace dex {
 

@@ -25,13 +25,13 @@
 
 #include "jvmti.h"
 
-#include <dex_ir.h>
-#include <code_ir.h>
-#include <dex_ir_builder.h>
-#include <dex_utf8.h>
-#include <writer.h>
-#include <reader.h>
-#include <instrumentation.h>
+#include <slicer/dex_ir.h>
+#include <slicer/code_ir.h>
+#include <slicer/dex_ir_builder.h>
+#include <slicer/dex_utf8.h>
+#include <slicer/writer.h>
+#include <slicer/reader.h>
+#include <slicer/instrumentation.h>
 
 using namespace dex;
 using namespace lir;

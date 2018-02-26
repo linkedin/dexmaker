@@ -46,7 +46,7 @@ class EntryHook : public Transformation {
       : hook_method_id_(hook_method_id),
         use_object_type_for_this_argument_(use_object_type_for_this_argument) {
     // hook method signature is generated automatically
-    CHECK(hook_method_id_.signature == nullptr);
+    SLICER_CHECK(hook_method_id_.signature == nullptr);
   }
 
   virtual bool Apply(lir::CodeIr* code_ir) override;
@@ -66,7 +66,7 @@ class ExitHook : public Transformation {
  public:
   explicit ExitHook(const ir::MethodId& hook_method_id) : hook_method_id_(hook_method_id) {
     // hook method signature is generated automatically
-    CHECK(hook_method_id_.signature == nullptr);
+    SLICER_CHECK(hook_method_id_.signature == nullptr);
   }
 
   virtual bool Apply(lir::CodeIr* code_ir) override;
@@ -85,7 +85,7 @@ class DetourVirtualInvoke : public Transformation {
     : orig_method_id_(orig_method_id), detour_method_id_(detour_method_id) {
     // detour method signature is automatically created
     // to match the original method and must not be explicitly specified
-    CHECK(detour_method_id_.signature == nullptr);
+    SLICER_CHECK(detour_method_id_.signature == nullptr);
   }
 
   virtual bool Apply(lir::CodeIr* code_ir) override;
@@ -100,13 +100,13 @@ class AllocateScratchRegs : public Transformation {
  public:
   explicit AllocateScratchRegs(int allocate_count, bool allow_renumbering = true)
     : allocate_count_(allocate_count), allow_renumbering_(allow_renumbering) {
-    CHECK(allocate_count > 0);
+    SLICER_CHECK(allocate_count > 0);
   }
 
   virtual bool Apply(lir::CodeIr* code_ir) override;
 
   const std::set<dex::u4>& ScratchRegs() const {
-    CHECK(scratch_regs_.size() == static_cast<size_t>(allocate_count_));
+    SLICER_CHECK(scratch_regs_.size() == static_cast<size_t>(allocate_count_));
     return scratch_regs_;
   }
 
@@ -134,7 +134,7 @@ class AllocateScratchRegs : public Transformation {
 //    slicer::MethodInstrumenter mi(dex_ir);
 //    mi.AddTransformation<slicer::EntryHook>(ir::MethodId("LTracer;", "OnEntry"));
 //    mi.AddTransformation<slicer::ExitHook>(ir::MethodId("LTracer;", "OnExit"));
-//    CHECK(mi.InstrumentMethod(ir::MethodId("LHello;", "Test", "(I)I")));
+//    SLICER_CHECK(mi.InstrumentMethod(ir::MethodId("LHello;", "Test", "(I)I")));
 //    ...
 //
 class MethodInstrumenter {

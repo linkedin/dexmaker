@@ -39,18 +39,18 @@ class Section : public slicer::Buffer {
   Section& operator=(const Section&) = delete;
 
   void SetOffset(dex::u4 offset) {
-    CHECK(offset > 0 && offset % 4 == 0);
+    SLICER_CHECK(offset > 0 && offset % 4 == 0);
     offset_ = offset;
   }
 
   dex::u4 SectionOffset() const {
-    CHECK(offset_ > 0 && offset_ % 4 == 0);
+    SLICER_CHECK(offset_ > 0 && offset_ % 4 == 0);
     return ItemsCount() > 0 ? offset_ : 0;
   }
 
   dex::u4 AbsoluteOffset(dex::u4 itemOffset) const {
-    CHECK(offset_ > 0);
-    CHECK(itemOffset < size());
+    SLICER_CHECK(offset_ > 0);
+    SLICER_CHECK(itemOffset < size());
     return offset_ + itemOffset;
   }
 
@@ -96,7 +96,7 @@ class Index {
   }
 
   dex::u4 SectionOffset() const {
-    CHECK(offset_ > 0 && offset_ % 4 == 0);
+    SLICER_CHECK(offset_ > 0 && offset_ % 4 == 0);
     return ItemsCount() > 0 ? offset_ : 0;
   }
 
@@ -110,7 +110,7 @@ class Index {
   dex::u4 size() const { return count_ * sizeof(T); }
 
   T& operator[](int i) {
-    CHECK(i >= 0 && i < count_);
+    SLICER_CHECK(i >= 0 && i < count_);
     return values_[i];
   }
 

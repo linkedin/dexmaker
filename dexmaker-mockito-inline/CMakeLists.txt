@@ -20,7 +20,7 @@ add_library(slicer
             STATIC
             ${slicer_sources})
 
-include_directories(external/jdk external/slicer/)
+include_directories(external/jdk external/slicer/export/)
 
 target_link_libraries(slicer z)
 

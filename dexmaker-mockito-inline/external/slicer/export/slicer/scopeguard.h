@@ -24,7 +24,7 @@ namespace slicer {
 // Here is how it's used:
 //
 //  FILE* file = std::fopen(...);
-//  SCOPE_EXIT {
+//  SLICER_SCOPE_EXIT {
 //      std::fclose(file);
 //  };
 //
@@ -65,12 +65,12 @@ public:
     }
 };
 
-#define SG_MACRO_CONCAT2(a, b) a ## b
-#define SG_MACRO_CONCAT(a, b) SG_MACRO_CONCAT2(a, b)
-#define SG_ANONYMOUS(prefix)  SG_MACRO_CONCAT(prefix, __COUNTER__)
+#define SLICER_SG_MACRO_CONCAT2(a, b) a ## b
+#define SLICER_SG_MACRO_CONCAT(a, b) SLICER_SG_MACRO_CONCAT2(a, b)
+#define SLICER_SG_ANONYMOUS(prefix)  SLICER_SG_MACRO_CONCAT(prefix, __COUNTER__)
 
-#define SCOPE_EXIT \
-    auto SG_ANONYMOUS(_scope_guard_) = slicer::ScopeGuardHelper() << [&]()
+#define SLICER_SCOPE_EXIT \
+    auto SLICER_SG_ANONYMOUS(_scope_guard_) = slicer::ScopeGuardHelper() << [&]()
 
 } // namespace slicer
 

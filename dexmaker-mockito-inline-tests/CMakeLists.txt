@@ -20,7 +20,7 @@ add_library(slicer
             STATIC
             ${slicer_sources})
 
-include_directories(../dexmaker-mockito-inline/external/jdk ../dexmaker-mockito-inline/external/slicer/)
+include_directories(../dexmaker-mockito-inline/external/jdk ../dexmaker-mockito-inline/external/slicer/export/)
 
 target_link_libraries(slicer z)
 

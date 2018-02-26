@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "control_flow_graph.h"
-#include "chronometer.h"
+#include "slicer/control_flow_graph.h"
+#include "slicer/chronometer.h"
 
 namespace lir {
 
@@ -30,8 +30,8 @@ std::vector<BasicBlock> BasicBlocksVisitor::Finish() {
   //  have labels, annotations, directives, etc. For example it's possible to have
   //  debug annotations (.line, .endlocal, ...) after the last bytecode.
   //
-  WEAK_CHECK(state_ == State::Outside);
-  CHECK(state_ != State::BlockBody);
+  SLICER_WEAK_CHECK(state_ == State::Outside);
+  SLICER_CHECK(state_ != State::BlockBody);
   current_block_.region = {};
   state_ = State::Outside;
   return std::move(basic_blocks_);

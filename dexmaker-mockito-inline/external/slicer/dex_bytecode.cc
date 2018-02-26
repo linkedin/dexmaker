@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "dex_bytecode.h"
-#include "common.h"
+#include "slicer/dex_bytecode.h"
+#include "slicer/common.h"
 
 #include <assert.h>
 #include <array>
@@ -24,7 +24,7 @@ namespace dex {
 
 Opcode OpcodeFromBytecode(u2 bytecode) {
   Opcode opcode = Opcode(bytecode & 0xff);
-  CHECK(opcode != OP_UNUSED_FF);
+  SLICER_CHECK(opcode != OP_UNUSED_FF);
   return opcode;
 }
 
@@ -194,7 +194,7 @@ static constexpr std::array<OpcodeFlags, kNumPackedOpcodes> gOpcodeFlagsTable = 
   /* CONST_CLASS                */ kInstrCanContinue|kInstrCanThrow,
   /* MONITOR_ENTER              */ kInstrCanContinue|kInstrCanThrow,
   /* MONITOR_EXIT               */ kInstrCanContinue|kInstrCanThrow,
-  /* CHECK_CAST                 */ kInstrCanContinue|kInstrCanThrow,
+  /* SLICER_CHECK_CAST                 */ kInstrCanContinue|kInstrCanThrow,
   /* INSTANCE_OF                */ kInstrCanContinue|kInstrCanThrow,
   /* ARRAY_LENGTH               */ kInstrCanContinue|kInstrCanThrow,
   /* NEW_INSTANCE               */ kInstrCanContinue|kInstrCanThrow,
@@ -849,7 +849,7 @@ Instruction DecodeInstruction(const u2* bytecode) {
       switch (dec.vA) {
         case 5:
           // A fifth arg is verboten for inline invokes
-          CHECK(format != kFmt35mi);
+          SLICER_CHECK(format != kFmt35mi);
 
           // Per note at the top of this format decoder, the
           // fifth argument comes from the A field in the
@@ -872,7 +872,7 @@ Instruction DecodeInstruction(const u2* bytecode) {
           // Valid, but no need to do anything
           break;
         default:
-          CHECK(!"Invalid arg count in 35c/35ms/35mi");
+          SLICER_CHECK(!"Invalid arg count in 35c/35ms/35mi");
           break;
       }
     } break;
@@ -888,7 +888,7 @@ Instruction DecodeInstruction(const u2* bytecode) {
       dec.vB_wide = FetchU8(bytecode + 1);
       break;
     default:
-      FATAL("Can't decode unexpected format 0x%02x", format);
+      SLICER_FATAL("Can't decode unexpected format 0x%02x", format);
   }
 
   return dec;

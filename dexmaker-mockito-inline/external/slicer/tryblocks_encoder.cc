@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "tryblocks_encoder.h"
-#include "chronometer.h"
-#include "common.h"
+#include "slicer/tryblocks_encoder.h"
+#include "slicer/chronometer.h"
+#include "slicer/common.h"
 
 #include <assert.h>
 
@@ -25,8 +25,8 @@ namespace lir {
 bool TryBlocksEncoder::Visit(TryBlockEnd* try_end) {
   const dex::u4 begin_offset = try_end->try_begin->offset;
   const dex::u4 end_offset = try_end->offset;
-  CHECK(end_offset > begin_offset);
-  CHECK(end_offset - begin_offset < (1 << 16));
+  SLICER_CHECK(end_offset > begin_offset);
+  SLICER_CHECK(end_offset - begin_offset < (1 << 16));
 
   // generate the "try_item"
   dex::TryBlock try_block = {};
@@ -43,12 +43,12 @@ bool TryBlocksEncoder::Visit(TryBlockEnd* try_end) {
     // type_idx
     handlers_.PushULeb128(handler.ir_type->orig_index);
     // address
-    CHECK(handler.label->offset != kInvalidOffset);
+    SLICER_CHECK(handler.label->offset != kInvalidOffset);
     handlers_.PushULeb128(handler.label->offset);
   }
   if (try_end->catch_all != nullptr) {
     // address
-    CHECK(try_end->catch_all->offset != kInvalidOffset);
+    SLICER_CHECK(try_end->catch_all->offset != kInvalidOffset);
     handlers_.PushULeb128(try_end->catch_all->offset);
   }
 
@@ -56,8 +56,8 @@ bool TryBlocksEncoder::Visit(TryBlockEnd* try_end) {
 }
 
 void TryBlocksEncoder::Encode(ir::Code* ir_code, std::shared_ptr<ir::DexFile> dex_ir) {
-  CHECK(handlers_.empty());
-  CHECK(tries_.empty());
+  SLICER_CHECK(handlers_.empty());
+  SLICER_CHECK(tries_.empty());
 
   // first, count the number of try blocks
   int tries_count = 0;
@@ -66,7 +66,7 @@ void TryBlocksEncoder::Encode(ir::Code* ir_code, std::shared_ptr<ir::DexFile> de
       ++tries_count;
     }
   }
-  CHECK(tries_count < (1 << 16));
+  SLICER_CHECK(tries_count < (1 << 16));
 
   // no try blocks?
   if (tries_count == 0) {
@@ -91,8 +91,8 @@ void TryBlocksEncoder::Encode(ir::Code* ir_code, std::shared_ptr<ir::DexFile> de
   for (auto instr : instructions_) {
     instr->Accept(this);
   }
-  CHECK(!tries_.empty());
-  CHECK(!handlers_.empty());
+  SLICER_CHECK(!tries_.empty());
+  SLICER_CHECK(!handlers_.empty());
   tries_.Seal(1);
   handlers_.Seal(1);
 

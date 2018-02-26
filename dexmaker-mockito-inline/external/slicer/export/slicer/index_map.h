@@ -17,39 +17,35 @@
 #pragma once
 
 #include "common.h"
+#include "dex_format.h"
 
-#include <stdlib.h>
+#include <vector>
 
-namespace slicer {
+namespace ir {
 
-// A shallow array view
-template <class T>
-class ArrayView {
+// A simple index tracking and allocator
+class IndexMap {
  public:
-  ArrayView() = default;
-
-  ArrayView(const ArrayView&) = default;
-  ArrayView& operator=(const ArrayView&) = default;
-
-  ArrayView(T* ptr, size_t count) : begin_(ptr), end_(ptr + count) {}
-
-  T* begin() const { return begin_; }
-  T* end() const { return end_; }
-
-  T* data() const { return begin_; }
-
-  T& operator[](size_t i) const {
-    CHECK(i < size());
-    return *(begin_ + i);
+  dex::u4 AllocateIndex() {
+    const auto size = indexes_map_.size();
+    while (alloc_pos_ < size && indexes_map_[alloc_pos_]) {
+      ++alloc_pos_;
+    }
+    MarkUsedIndex(alloc_pos_);
+    return alloc_pos_++;
   }
 
-  size_t size() const { return end_ - begin_; }
-  bool empty() const { return begin_ == end_; }
+  void MarkUsedIndex(dex::u4 index) {
+    if (index >= indexes_map_.size()) {
+      indexes_map_.resize(index + 1);
+    }
+    SLICER_CHECK(!indexes_map_[index]);
+    indexes_map_[index] = true;
+  }
 
  private:
-  T* begin_ = nullptr;
-  T* end_ = nullptr;
+  std::vector<bool> indexes_map_;
+  dex::u4 alloc_pos_ = 0;
 };
 
-} // namespace slicer
-
+}  // namespace ir

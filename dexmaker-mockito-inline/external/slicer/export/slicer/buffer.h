@@ -60,7 +60,7 @@ class Buffer {
  public:
   // Align the total size and prevent further changes
   size_t Seal(size_t alignment) {
-    CHECK(!sealed_);
+    SLICER_CHECK(!sealed_);
     Align(alignment);
     sealed_ = true;
     return size();
@@ -73,7 +73,7 @@ class Buffer {
   //
   template <class T>
   T* ptr(size_t offset) {
-    CHECK(offset + sizeof(T) <= size_);
+    SLICER_CHECK(offset + sizeof(T) <= size_);
     return reinterpret_cast<T*>(buff_ + offset);
   }
 
@@ -115,7 +115,7 @@ class Buffer {
   }
 
   size_t Push(const Buffer& buff) {
-    CHECK(&buff != this);
+    SLICER_CHECK(&buff != this);
     return Push(buff.data(), buff.size());
   }
 
@@ -153,17 +153,17 @@ class Buffer {
   }
 
   const dex::u1* data() const {
-    CHECK(buff_ != nullptr);
+    SLICER_CHECK(buff_ != nullptr);
     return buff_;
   }
 
  private:
   void Expand(size_t size) {
-    CHECK(!sealed_);
+    SLICER_CHECK(!sealed_);
     if (size_ + size > capacity_) {
       capacity_ = std::max(size_t(capacity_ * 1.5), size_ + size);
       buff_ = static_cast<dex::u1*>(::realloc(buff_, capacity_));
-      CHECK(buff_ != nullptr);
+      SLICER_CHECK(buff_ != nullptr);
     }
     size_ += size;
   }

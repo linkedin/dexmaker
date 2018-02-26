@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "bytecode_encoder.h"
-#include "common.h"
-#include "chronometer.h"
+#include "slicer/bytecode_encoder.h"
+#include "slicer/common.h"
+#include "slicer/chronometer.h"
 
 #include <assert.h>
 
@@ -25,68 +25,68 @@ namespace lir {
 // Pack a 16bit word: 00AA
 static dex::u2 Pack_Z_8(dex::u4 a) {
   dex::u2 fa = (a & 0xff);
-  CHECK(fa == a);
+  SLICER_CHECK(fa == a);
   return fa;
 }
 
 // Pack a 16bit word: AABB
 static dex::u2 Pack_8_8(dex::u4 a, dex::u4 b) {
   dex::u2 fa = (a & 0xff);
-  CHECK(fa == a);
+  SLICER_CHECK(fa == a);
   dex::u2 fb = (b & 0xff);
-  CHECK(fb == b);
+  SLICER_CHECK(fb == b);
   return (fa << 8) | fb;
 }
 
 // Pack a 16bit word: ABCC
 static dex::u2 Pack_4_4_8(dex::u4 a, dex::u4 b, dex::u4 c) {
   dex::u2 fa = (a & 0xf);
-  CHECK(fa == a);
+  SLICER_CHECK(fa == a);
   dex::u2 fb = (b & 0xf);
-  CHECK(fb == b);
+  SLICER_CHECK(fb == b);
   dex::u2 fc = (c & 0xff);
-  CHECK(fc == c);
+  SLICER_CHECK(fc == c);
   return (fa << 12) | (fb << 8) | fc;
 }
 
 // Pack a 16bit word: ABCD
 static dex::u2 Pack_4_4_4_4(dex::u4 a, dex::u4 b, dex::u4 c, dex::u4 d) {
   dex::u2 fa = (a & 0xf);
-  CHECK(fa == a);
+  SLICER_CHECK(fa == a);
   dex::u2 fb = (b & 0xf);
-  CHECK(fb == b);
+  SLICER_CHECK(fb == b);
   dex::u2 fc = (c & 0xf);
-  CHECK(fc == c);
+  SLICER_CHECK(fc == c);
   dex::u2 fd = (d & 0xf);
-  CHECK(fd == d);
+  SLICER_CHECK(fd == d);
   return (fa << 12) | (fb << 8) | (fc << 4) | fd;
 }
 
 // Pack a 16bit word: AAAA
 static dex::u2 Pack_16(dex::u4 a) {
   dex::u2 fa = (a & 0xffff);
-  CHECK(fa == a);
+  SLICER_CHECK(fa == a);
   return fa;
 }
 
 // Trim a 4bit signed integer, making sure we're not discarding significant bits
 static dex::u4 Trim_S0(dex::u4 value) {
   dex::u4 trim = value & 0xf;
-  CHECK(dex::u4(dex::s4(trim << 28) >> 28) == value);
+  SLICER_CHECK(dex::u4(dex::s4(trim << 28) >> 28) == value);
   return trim;
 }
 
 // Trim a 8bit signed integer, making sure we're not discarding significant bits
 static dex::u4 Trim_S1(dex::u4 value) {
   dex::u4 trim = value & 0xff;
-  CHECK(dex::u4(dex::s4(trim << 24) >> 24) == value);
+  SLICER_CHECK(dex::u4(dex::s4(trim << 24) >> 24) == value);
   return trim;
 }
 
 // Trim a 16bit signed integer, making sure we're not discarding significant bits
 static dex::u4 Trim_S2(dex::u4 value) {
   dex::u4 trim = value & 0xffff;
-  CHECK(dex::u4(dex::s4(trim << 16) >> 16) == value);
+  SLICER_CHECK(dex::u4(dex::s4(trim << 16) >> 16) == value);
   return trim;
 }
 
@@ -139,13 +139,13 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
   switch (format) {
     case dex::kFmt10x:  // op
     {
-      CHECK(bytecode->operands.size() == 0);
+      SLICER_CHECK(bytecode->operands.size() == 0);
       bytecode_.Push<dex::u2>(Pack_Z_8(opcode));
     } break;
 
     case dex::kFmt12x:  // op vA, vB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 vB = GetRegB(bytecode, 1);
       bytecode_.Push<dex::u2>(Pack_4_4_8(vB, vA, opcode));
@@ -153,7 +153,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt22x:  // op vAA, vBBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 vB = GetRegB(bytecode, 1);
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
@@ -162,7 +162,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt32x:  // op vAAAA, vBBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 vB = GetRegB(bytecode, 1);
       bytecode_.Push<dex::u2>(Pack_Z_8(opcode));
@@ -172,7 +172,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt11n:  // op vA, #+B
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = Trim_S0(bytecode->CastOperand<Const32>(1)->u.u4_value);
       bytecode_.Push<dex::u2>(Pack_4_4_8(B, vA, opcode));
@@ -180,7 +180,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt21s:  // op vAA, #+BBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = Trim_S2(bytecode->CastOperand<Const32>(1)->u.u4_value);
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
@@ -189,14 +189,14 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt11x:  // op vAA
     {
-      CHECK(bytecode->operands.size() == 1);
+      SLICER_CHECK(bytecode->operands.size() == 1);
       dex::u4 vA = GetRegA(bytecode, 0);
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
     } break;
 
     case dex::kFmt31i:  // op vAA, #+BBBBBBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = bytecode->CastOperand<Const32>(1)->u.u4_value;
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
@@ -206,14 +206,14 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt20t:  // op +AAAA
     {
-      CHECK(bytecode->operands.size() == 1);
+      SLICER_CHECK(bytecode->operands.size() == 1);
       auto label = bytecode->CastOperand<CodeLocation>(0)->label;
       dex::u4 A = 0;
       if (label->offset != kInvalidOffset) {
         assert(label->offset <= offset_);
         A = label->offset - offset_;
-        CHECK(A != 0);
-        CHECK((A >> 16) == 0xffff);  // TODO: out of range!
+        SLICER_CHECK(A != 0);
+        SLICER_CHECK((A >> 16) == 0xffff);  // TODO: out of range!
       } else {
         fixups_.push_back(LabelFixup(offset_, label, true));
       }
@@ -223,7 +223,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt30t:  // op +AAAAAAAA
     {
-      CHECK(bytecode->operands.size() == 1);
+      SLICER_CHECK(bytecode->operands.size() == 1);
       auto label = bytecode->CastOperand<CodeLocation>(0)->label;
       dex::u4 A = 0;
       if (label->offset != kInvalidOffset) {
@@ -240,15 +240,15 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt21t:  // op vAA, +BBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       auto label = bytecode->CastOperand<CodeLocation>(1)->label;
       dex::u4 B = 0;
       if (label->offset != kInvalidOffset) {
         assert(label->offset <= offset_);
         B = label->offset - offset_;
-        CHECK(B != 0);
-        CHECK((B >> 16) == 0xffff);  // TODO: out of range!
+        SLICER_CHECK(B != 0);
+        SLICER_CHECK((B >> 16) == 0xffff);  // TODO: out of range!
       } else {
         fixups_.push_back(LabelFixup(offset_, label, true));
       }
@@ -258,7 +258,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt22t:  // op vA, vB, +CCCC
     {
-      CHECK(bytecode->operands.size() == 3);
+      SLICER_CHECK(bytecode->operands.size() == 3);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 vB = GetRegB(bytecode, 1);
       auto label = bytecode->CastOperand<CodeLocation>(2)->label;
@@ -266,8 +266,8 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
       if (label->offset != kInvalidOffset) {
         assert(label->offset <= offset_);
         C = label->offset - offset_;
-        CHECK(C != 0);
-        CHECK((C >> 16) == 0xffff);  // TODO: out of range!
+        SLICER_CHECK(C != 0);
+        SLICER_CHECK((C >> 16) == 0xffff);  // TODO: out of range!
       } else {
         fixups_.push_back(LabelFixup(offset_, label, true));
       }
@@ -277,14 +277,14 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt31t:  // op vAA, +BBBBBBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       auto label = bytecode->CastOperand<CodeLocation>(1)->label;
       dex::u4 B = 0;
       if (label->offset != kInvalidOffset) {
         assert(label->offset <= offset_);
         B = label->offset - offset_;
-        CHECK(B != 0);
+        SLICER_CHECK(B != 0);
       } else {
         fixups_.push_back(LabelFixup(offset_, label, false));
       }
@@ -295,7 +295,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt23x:  // op vAA, vBB, vCC
     {
-      CHECK(bytecode->operands.size() == 3);
+      SLICER_CHECK(bytecode->operands.size() == 3);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 vB = GetRegB(bytecode, 1);
       dex::u4 vC = GetRegC(bytecode, 2);
@@ -305,7 +305,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt22b:  // op vAA, vBB, #+CC
     {
-      CHECK(bytecode->operands.size() == 3);
+      SLICER_CHECK(bytecode->operands.size() == 3);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 vB = GetRegB(bytecode, 1);
       dex::u4 C = Trim_S1(bytecode->CastOperand<Const32>(2)->u.u4_value);
@@ -315,7 +315,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt22s:  // op vA, vB, #+CCCC
     {
-      CHECK(bytecode->operands.size() == 3);
+      SLICER_CHECK(bytecode->operands.size() == 3);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 vB = GetRegB(bytecode, 1);
       dex::u4 C = Trim_S2(bytecode->CastOperand<Const32>(2)->u.u4_value);
@@ -325,7 +325,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt22c:  // op vA, vB, thing@CCCC
     {
-      CHECK(bytecode->operands.size() == 3);
+      SLICER_CHECK(bytecode->operands.size() == 3);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 vB = GetRegB(bytecode, 1);
       dex::u4 C = bytecode->CastOperand<IndexedOperand>(2)->index;
@@ -335,7 +335,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt21c:  // op vAA, thing@BBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = bytecode->CastOperand<IndexedOperand>(1)->index;
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
@@ -344,7 +344,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt31c:  // op vAA, string@BBBBBBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = bytecode->CastOperand<IndexedOperand>(1)->index;
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
@@ -354,7 +354,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt35c:  // op {vC,vD,vE,vF,vG}, thing@BBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       const auto& regs = bytecode->CastOperand<VRegList>(0)->registers;
       dex::u4 B = bytecode->CastOperand<IndexedOperand>(1)->index;
       dex::u4 A = regs.size();
@@ -375,7 +375,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt3rc:  // op {vCCCC .. v(CCCC+AA-1)}, thing@BBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       auto vreg_range = bytecode->CastOperand<VRegRange>(0);
       dex::u4 A = vreg_range->count;
       dex::u4 B = bytecode->CastOperand<IndexedOperand>(1)->index;
@@ -392,7 +392,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
 
     case dex::kFmt51l:  // op vAA, #+BBBBBBBBBBBBBBBB
     {
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       dex::u4 vA = GetRegA(bytecode, 0);
       dex::u8 B = bytecode->CastOperand<Const64>(1)->u.u8_value;
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
@@ -403,7 +403,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     } break;
 
     case dex::kFmt21h:  // op vAA, #+BBBB0000[00000000]
-      CHECK(bytecode->operands.size() == 2);
+      SLICER_CHECK(bytecode->operands.size() == 2);
       switch (opcode) {
         case dex::OP_CONST_HIGH16: {
           dex::u4 vA = GetRegA(bytecode, 0);
@@ -420,26 +420,26 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
         } break;
 
         default:
-          FATAL("Unexpected fmt21h opcode: 0x%02x", opcode);
+          SLICER_FATAL("Unexpected fmt21h opcode: 0x%02x", opcode);
       }
       break;
 
     default:
-      FATAL("Unexpected format: 0x%02x", format);
+      SLICER_FATAL("Unexpected format: 0x%02x", format);
   }
 
-  CHECK(bytecode_.size() - buff_offset == 2 * GetWidthFromOpcode(opcode));
+  SLICER_CHECK(bytecode_.size() - buff_offset == 2 * GetWidthFromOpcode(opcode));
   offset_ += GetWidthFromOpcode(opcode);
   return true;
 }
 
 bool BytecodeEncoder::Visit(PackedSwitchPayload* packed_switch) {
-  CHECK(offset_ % 2 == 0);
+  SLICER_CHECK(offset_ % 2 == 0);
 
   // keep track of the switches
   packed_switch->offset = offset_;
   auto& instr = packed_switches_[offset_];
-  CHECK(instr == nullptr);
+  SLICER_CHECK(instr == nullptr);
   instr = packed_switch;
 
   // we're going to fix up the offsets in a later pass
@@ -458,12 +458,12 @@ bool BytecodeEncoder::Visit(PackedSwitchPayload* packed_switch) {
 }
 
 bool BytecodeEncoder::Visit(SparseSwitchPayload* sparse_switch) {
-  CHECK(offset_ % 2 == 0);
+  SLICER_CHECK(offset_ % 2 == 0);
 
   // keep track of the switches
   sparse_switch->offset = offset_;
   auto& instr = sparse_switches_[offset_];
-  CHECK(instr == nullptr);
+  SLICER_CHECK(instr == nullptr);
   instr = sparse_switch;
 
   // we're going to fix up the offsets in a later pass
@@ -482,7 +482,7 @@ bool BytecodeEncoder::Visit(SparseSwitchPayload* sparse_switch) {
 }
 
 bool BytecodeEncoder::Visit(ArrayData* array_data) {
-  CHECK(offset_ % 2 == 0);
+  SLICER_CHECK(offset_ % 2 == 0);
 
   array_data->offset = offset_;
   auto orig_size = bytecode_.size();
@@ -539,20 +539,20 @@ void BytecodeEncoder::FixupSwitchOffsets() {
       FixupSparseSwitch(offset, offset + dex::s4(dex_instr.vB));
     }
     auto isize = dex::GetWidthFromBytecode(ptr);
-    CHECK(isize > 0);
+    SLICER_CHECK(isize > 0);
     ptr += isize;
   }
-  CHECK(ptr == end);
+  SLICER_CHECK(ptr == end);
 }
 
 void BytecodeEncoder::FixupPackedSwitch(dex::u4 base_offset,
                                         dex::u4 payload_offset) {
   auto instr = packed_switches_[payload_offset];
-  CHECK(instr != nullptr);
+  SLICER_CHECK(instr != nullptr);
 
   auto payload = bytecode_.ptr<dex::PackedSwitchPayload>(payload_offset * 2);
-  CHECK(payload->ident == dex::kPackedSwitchSignature);
-  CHECK(reinterpret_cast<dex::u1*>(payload->targets + payload->size) <=
+  SLICER_CHECK(payload->ident == dex::kPackedSwitchSignature);
+  SLICER_CHECK(reinterpret_cast<dex::u1*>(payload->targets + payload->size) <=
         bytecode_.data() + bytecode_.size());
 
   for (int i = 0; i < payload->size; ++i) {
@@ -565,13 +565,13 @@ void BytecodeEncoder::FixupPackedSwitch(dex::u4 base_offset,
 void BytecodeEncoder::FixupSparseSwitch(dex::u4 base_offset,
                                         dex::u4 payload_offset) {
   auto instr = sparse_switches_[payload_offset];
-  CHECK(instr != nullptr);
+  SLICER_CHECK(instr != nullptr);
 
   auto payload = bytecode_.ptr<dex::SparseSwitchPayload>(payload_offset * 2);
-  CHECK(payload->ident == dex::kSparseSwitchSignature);
+  SLICER_CHECK(payload->ident == dex::kSparseSwitchSignature);
 
   dex::s4* const targets = payload->data + payload->size;
-  CHECK(reinterpret_cast<dex::u1*>(targets + payload->size) <=
+  SLICER_CHECK(reinterpret_cast<dex::u1*>(targets + payload->size) <=
         bytecode_.data() + bytecode_.size());
 
   for (int i = 0; i < payload->size; ++i) {
@@ -587,7 +587,7 @@ void BytecodeEncoder::FixupLabels() {
     assert(label_offset != kInvalidOffset);
     assert(label_offset > fixup.offset);
     dex::u4 rel_offset = label_offset - fixup.offset;
-    CHECK(rel_offset != 0);
+    SLICER_CHECK(rel_offset != 0);
     dex::u2* instr = bytecode_.ptr<dex::u2>(fixup.offset * 2);
     if (fixup.short_fixup) {
       // TODO: explicit out-of-range check
@@ -603,9 +603,9 @@ void BytecodeEncoder::FixupLabels() {
 }
 
 void BytecodeEncoder::Encode(ir::Code* ir_code, std::shared_ptr<ir::DexFile> dex_ir) {
-  CHECK(bytecode_.empty());
-  CHECK(offset_ == 0);
-  CHECK(outs_count_ == 0);
+  SLICER_CHECK(bytecode_.empty());
+  SLICER_CHECK(offset_ == 0);
+  SLICER_CHECK(outs_count_ == 0);
 
   packed_switches_.clear();
   sparse_switches_.clear();

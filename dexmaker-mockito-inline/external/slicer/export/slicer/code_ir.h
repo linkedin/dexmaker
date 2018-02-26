@@ -242,7 +242,7 @@ struct Bytecode : public Instruction {
   template<class T>
   T* CastOperand(int index) const {
     T* operand = dynamic_cast<T*>(operands[index]);
-    CHECK(operand != nullptr);
+    SLICER_CHECK(operand != nullptr);
     return operand;
   }
 
@@ -312,7 +312,7 @@ struct LineNumber : public Operand {
   int line = 0;
 
   LineNumber(int line) : line(line) {
-    WEAK_CHECK(line > 0);
+    SLICER_WEAK_CHECK(line > 0);
   }
 
   virtual bool Accept(Visitor* visitor) override { return visitor->Visit(this); }
@@ -327,7 +327,7 @@ struct DbgInfoAnnotation : public Instruction {
   template<class T>
   T* CastOperand(int index) const {
     T* operand = dynamic_cast<T*>(operands[index]);
-    CHECK(operand != nullptr);
+    SLICER_CHECK(operand != nullptr);
     return operand;
   }
 

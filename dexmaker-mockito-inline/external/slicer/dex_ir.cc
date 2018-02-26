@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "dex_ir.h"
-#include "chronometer.h"
-#include "dex_utf8.h"
-#include "dex_format.h"
+#include "slicer/dex_ir.h"
+#include "slicer/chronometer.h"
+#include "slicer/dex_utf8.h"
+#include "slicer/dex_format.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -140,7 +140,7 @@ void DexFile::TopSortClassIndex(Class* irClass, dex::u4* nextIndex) {
       }
     }
 
-    CHECK(*nextIndex < classes.size());
+    SLICER_CHECK(*nextIndex < classes.size());
     irClass->index = (*nextIndex)++;
   }
 }
@@ -162,7 +162,7 @@ void DexFile::SortClassIndexes() {
 static void SortEncodedFields(std::vector<EncodedField*>* fields) {
   std::sort(fields->begin(), fields->end(),
             [](const EncodedField* a, const EncodedField* b) {
-              CHECK(a->decl->index != b->decl->index || a == b);
+              SLICER_CHECK(a->decl->index != b->decl->index || a == b);
               return a->decl->index < b->decl->index;
             });
 }
@@ -171,7 +171,7 @@ static void SortEncodedFields(std::vector<EncodedField*>* fields) {
 static void SortEncodedMethods(std::vector<EncodedMethod*>* methods) {
   std::sort(methods->begin(), methods->end(),
             [](const EncodedMethod* a, const EncodedMethod* b) {
-              CHECK(a->decl->index != b->decl->index || a == b);
+              SLICER_CHECK(a->decl->index != b->decl->index || a == b);
               return a->decl->index < b->decl->index;
             });
 }
@@ -256,9 +256,9 @@ void DexFile::Normalize() {
   SortClassIndexes();
 
   IndexItems(classes, [&](const own<Class>& a, const own<Class>& b) {
-    CHECK(a->index < classes.size());
-    CHECK(b->index < classes.size());
-    CHECK(a->index != b->index || a == b);
+    SLICER_CHECK(a->index < classes.size());
+    SLICER_CHECK(b->index < classes.size());
+    SLICER_CHECK(a->index != b->index || a == b);
     return a->index < b->index;
   });
 

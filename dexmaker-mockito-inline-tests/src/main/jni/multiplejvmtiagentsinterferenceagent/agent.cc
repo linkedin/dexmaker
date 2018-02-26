@@ -22,9 +22,9 @@
 
 #include "jvmti.h"
 
-#include <dex_ir.h>
-#include <writer.h>
-#include <reader.h>
+#include <slicer/dex_ir.h>
+#include <slicer/writer.h>
+#include <slicer/reader.h>
 
 using namespace dex;
 

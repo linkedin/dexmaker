@@ -124,7 +124,7 @@ HashTable<Key, T, Hash>::Partition::Partition(Index size, const Hash& hasher)
 //
 template<class Key, class T, class Hash>
 bool HashTable<Key, T, Hash>::Partition::Insert(T* value) {
-  CHECK(value != nullptr);
+  SLICER_CHECK(value != nullptr);
   // overflow?
   if (buckets_.size() + 1 > buckets_.capacity()) {
     return false;
@@ -163,7 +163,7 @@ template<class Key, class T, class Hash>
 void HashTable<Key, T, Hash>::Partition::InsertAll(const Partition& src) {
   for (const auto& bucket : src.buckets_) {
     if (bucket.value != nullptr) {
-      CHECK(Insert(bucket.value));
+      SLICER_CHECK(Insert(bucket.value));
     }
   }
 }
@@ -180,7 +180,7 @@ void HashTable<Key, T, Hash>::Insert(T* value) {
     if (full_table_) {
       new_hash_table->InsertAll(*full_table_);
     }
-    CHECK(new_hash_table->Insert(value));
+    SLICER_CHECK(new_hash_table->Insert(value));
     full_table_ = std::move(insertion_table_);
     insertion_table_ = std::move(new_hash_table);
   }
@@ -211,7 +211,7 @@ void HashTable<Key, T, Hash>::Partition::PrintStats(const char* name, bool verbo
       ++used_buckets;
       int chain_length = 0;
       for (Index ci = i; buckets_[ci].next != kInvalidIndex; ci = buckets_[ci].next) {
-        CHECK(buckets_[ci].value != nullptr);
+        SLICER_CHECK(buckets_[ci].value != nullptr);
         ++chain_length;
         if (verbose) printf("*");
       }

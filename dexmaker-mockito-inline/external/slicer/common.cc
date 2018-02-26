@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "common.h"
+#include "slicer/common.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,23 +24,23 @@
 
 namespace slicer {
 
-// Helper for the default CHECK() policy
+// Helper for the default SLICER_CHECK() policy
 void _checkFailed(const char* expr, int line, const char* file) {
-  printf("\nCHECK failed [%s] at %s:%d\n\n", expr, file, line);
+  printf("\nSLICER_CHECK failed [%s] at %s:%d\n\n", expr, file, line);
   abort();
 }
 
 // keep track of the failures we already saw to avoid spamming with duplicates
 thread_local std::set<std::pair<int, const char*>> weak_failures;
 
-// Helper for the default WEAK_CHECK() policy
+// Helper for the default SLICER_WEAK_CHECK() policy
 //
 // TODO: implement a modal switch (abort/continue)
 //
 void _weakCheckFailed(const char* expr, int line, const char* file) {
   auto failure_id = std::make_pair(line, file);
   if (weak_failures.find(failure_id) == weak_failures.end()) {
-    printf("\nWEAK_CHECK failed [%s] at %s:%d\n\n", expr, file, line);
+    printf("\nSLICER_WEAK_CHECK failed [%s] at %s:%d\n\n", expr, file, line);
     weak_failures.insert(failure_id);
   }
 }

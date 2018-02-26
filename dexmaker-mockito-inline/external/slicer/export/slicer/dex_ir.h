@@ -40,11 +40,11 @@
 // it's expected to construct the IR for the single modified class only
 // (and include only the nodes referenced from that class)
 
-#define IR_TYPE     \
+#define SLICER_IR_TYPE     \
   using Node::Node; \
   friend struct DexFile;
 
-#define IR_INDEXED_TYPE           \
+#define SLICER_IR_INDEXED_TYPE           \
   using IndexedNode::IndexedNode; \
   friend struct DexFile;
 
@@ -114,7 +114,7 @@ struct Node {
 // TODO: consider moving the indexing to the writer.
 //
 struct IndexedNode : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   // this is the index in the generated image
   // (not the original index)
@@ -126,7 +126,7 @@ struct IndexedNode : public Node {
 };
 
 struct EncodedValue : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   dex::u1 type;
   union {
@@ -147,17 +147,17 @@ struct EncodedValue : public Node {
     bool bool_value;
   } u;
 
-  EXTRA(slicer::MemView original);
+  SLICER_EXTRA(slicer::MemView original);
 };
 
 struct EncodedArray : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   std::vector<EncodedValue*> values;
 };
 
 struct String : public IndexedNode {
-  IR_INDEXED_TYPE;
+  SLICER_IR_INDEXED_TYPE;
 
   // opaque DEX "string_data_item"
   slicer::MemView data;
@@ -170,7 +170,7 @@ struct String : public IndexedNode {
 };
 
 struct Type : public IndexedNode {
-  IR_INDEXED_TYPE;
+  SLICER_IR_INDEXED_TYPE;
 
   enum class Category { Void, Scalar, WideScalar, Reference };
 
@@ -182,13 +182,13 @@ struct Type : public IndexedNode {
 };
 
 struct TypeList : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   std::vector<Type*> types;
 };
 
 struct Proto : public IndexedNode {
-  IR_INDEXED_TYPE;
+  SLICER_IR_INDEXED_TYPE;
 
   String* shorty;
   Type* return_type;
@@ -198,7 +198,7 @@ struct Proto : public IndexedNode {
 };
 
 struct FieldDecl : public IndexedNode {
-  IR_INDEXED_TYPE;
+  SLICER_IR_INDEXED_TYPE;
 
   String* name;
   Type* type;
@@ -206,14 +206,14 @@ struct FieldDecl : public IndexedNode {
 };
 
 struct EncodedField : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   FieldDecl* decl;
   dex::u4 access_flags;
 };
 
 struct DebugInfo : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   dex::u4 line_start;
   std::vector<String*> param_names;
@@ -224,7 +224,7 @@ struct DebugInfo : public Node {
 };
 
 struct Code : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   dex::u2 registers;
   dex::u2 ins_count;
@@ -236,7 +236,7 @@ struct Code : public Node {
 };
 
 struct MethodDecl : public IndexedNode {
-  IR_INDEXED_TYPE;
+  SLICER_IR_INDEXED_TYPE;
 
   String* name;
   Proto* prototype;
@@ -244,7 +244,7 @@ struct MethodDecl : public IndexedNode {
 };
 
 struct EncodedMethod : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   MethodDecl* decl;
   Code* code;
@@ -252,14 +252,14 @@ struct EncodedMethod : public Node {
 };
 
 struct AnnotationElement : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   String* name;
   EncodedValue* value;
 };
 
 struct Annotation : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   Type* type;
   std::vector<AnnotationElement*> elements;
@@ -267,40 +267,40 @@ struct Annotation : public Node {
 };
 
 struct AnnotationSet : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   std::vector<Annotation*> annotations;
 };
 
 struct AnnotationSetRefList : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   std::vector<AnnotationSet*> annotations;
 };
 
 struct FieldAnnotation : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   FieldDecl* field_decl;
   AnnotationSet* annotations;
 };
 
 struct MethodAnnotation : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   MethodDecl* method_decl;
   AnnotationSet* annotations;
 };
 
 struct ParamAnnotation : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   MethodDecl* method_decl;
   AnnotationSetRefList* annotations;
 };
 
 struct AnnotationsDirectory : public Node {
-  IR_TYPE;
+  SLICER_IR_TYPE;
 
   AnnotationSet* class_annotation;
   std::vector<FieldAnnotation*> field_annotations;
@@ -309,7 +309,7 @@ struct AnnotationsDirectory : public Node {
 };
 
 struct Class : public IndexedNode {
-  IR_INDEXED_TYPE;
+  SLICER_IR_INDEXED_TYPE;
 
   Type* type;
   dex::u4 access_flags;
@@ -471,5 +471,5 @@ private:
 
 }  // namespace ir
 
-#undef IR_TYPE
-#undef IR_INDEXED_TYPE
+#undef SLICER_IR_TYPE
+#undef SLICER_IR_INDEXED_TYPE

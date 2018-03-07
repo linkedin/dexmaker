@@ -17,18 +17,11 @@
 package com.android.dx.mockito.inline.tests;
 
 import android.os.Build;
+import android.os.Debug;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import dalvik.system.BaseDexClassLoader;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assume.assumeTrue;
@@ -48,9 +41,7 @@ public class MultipleJvmtiAgentsInterference {
         // TODO (moltmann@google.com): Replace with proper check for >= P
         assumeTrue(Build.VERSION.CODENAME.equals("P"));
 
-        // TODO (moltmann@google.com): Replace with regular method call once the API becomes public
-        Class.forName("android.os.Debug").getMethod("attachJvmtiAgent", String.class, String
-                .class, ClassLoader.class).invoke(null, AGENT_LIB_NAME, null,
+        Debug.attachJvmtiAgent(AGENT_LIB_NAME, null,
                 MultipleJvmtiAgentsInterference.class.getClassLoader());
     }
 

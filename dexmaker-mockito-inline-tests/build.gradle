@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 'android-P'
     buildToolsVersion "25.0.0"
 
     lintOptions {

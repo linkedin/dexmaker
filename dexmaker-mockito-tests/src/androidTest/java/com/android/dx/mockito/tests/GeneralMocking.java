@@ -184,6 +184,7 @@ public class GeneralMocking {
 
         try {
             when(t.returnA()).thenCallRealMethod();
+            fail();
         } catch (MockitoException e) {
             assertEquals("callAbstractRealMethod", e.getStackTrace()[0].getMethodName());
         }

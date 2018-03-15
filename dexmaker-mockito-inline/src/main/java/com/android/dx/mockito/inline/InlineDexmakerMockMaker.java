@@ -322,7 +322,7 @@ public final class InlineDexmakerMockMaker implements MockMaker {
         private static final int MAX_GET_WITHOUT_CLEAN = 16384;
 
         private final Object lock = new Object();
-        private static StrongKey cachedKey;
+        private StrongKey cachedKey;
 
         private HashMap<WeakKey, InvocationHandlerAdapter> adapters = new HashMap<>();
 

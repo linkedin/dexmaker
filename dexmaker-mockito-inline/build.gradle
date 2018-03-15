@@ -2,15 +2,15 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 'android-P'
-    buildToolsVersion "25.0.0"
+    buildToolsVersion '27.0.3'
 
     lintOptions {
         abortOnError false
     }
 
     defaultConfig {
-        minSdkVersion 25
-        targetSdkVersion 25
+        minSdkVersion 27
+        targetSdkVersion 27
         versionName VERSION_NAME
     }
 
@@ -19,7 +19,6 @@ android {
             path 'CMakeLists.txt'
         }
     }
-
 }
 
 repositories {
@@ -27,7 +26,8 @@ repositories {
 }
 
 dependencies {
-    compile project(':dexmaker')
-    compile 'org.mockito:mockito-core:2.16.0', { exclude group: "net.bytebuddy" }
+    implementation project(':dexmaker')
+
+    implementation 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
 }
 

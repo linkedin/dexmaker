@@ -1,17 +1,17 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
 
     lintOptions {
         abortOnError false
     }
 
     defaultConfig {
-        applicationId "com.android.dexmaker.mockito.inline.dispatcher"
-        minSdkVersion 25
-        targetSdkVersion 25
+        applicationId 'com.android.dexmaker.mockito.inline.dispatcher'
+        minSdkVersion 27
+        targetSdkVersion 27
         versionName VERSION_NAME
     }
 }

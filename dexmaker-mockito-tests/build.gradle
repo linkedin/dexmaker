@@ -24,9 +24,9 @@ repositories {
 }
 
 dependencies {
-    androidTestCompile project(':dexmaker-mockito')
+    androidTestImplementation project(':dexmaker-mockito')
 
-    androidTestCompile 'com.android.support.test:runner:0.5'
-    androidTestCompile 'junit:junit:4.12'
-    androidTestCompile 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
+    androidTestImplementation 'com.android.support.test:runner:0.5'
+    androidTestImplementation 'junit:junit:4.12'
+    androidTestImplementation 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
 }

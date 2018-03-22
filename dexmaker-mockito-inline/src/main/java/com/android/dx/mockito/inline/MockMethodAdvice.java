@@ -24,6 +24,7 @@ class MockMethodAdvice {
     /** Pattern to decompose a instrumentedMethodWithTypeAndSignature */
     private final Pattern methodPattern = Pattern.compile("(.*)#(.*)\\((.*)\\)");
 
+    @SuppressWarnings("ThreadLocalUsage")
     private final SelfCallInfo selfCallInfo = new SelfCallInfo();
 
     MockMethodAdvice(Map<Object, InvocationHandlerAdapter> interceptors) {

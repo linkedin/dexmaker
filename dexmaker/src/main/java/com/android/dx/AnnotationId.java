@@ -130,7 +130,7 @@ public final class AnnotationId<D, V> {
             throw new IllegalStateException("This annotation is not for method");
         }
 
-        if (method.declaringType != declaringType) {
+        if (!method.declaringType.equals(declaringType)) {
             throw new IllegalArgumentException("Method" + method + "'s declaring type is inconsistent with" + this);
         }
 

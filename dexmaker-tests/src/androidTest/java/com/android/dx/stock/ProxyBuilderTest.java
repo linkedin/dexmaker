@@ -202,6 +202,7 @@ public class ProxyBuilderTest {
         }
     }
 
+    @Test
     public void testProxyingPackagePrivateMethods_NotIntercepted()
             throws Throwable {
         HasPackagePrivateMethod proxy = proxyFor(HasPackagePrivateMethod.class)
@@ -215,10 +216,10 @@ public class ProxyBuilderTest {
 
         try {
             proxy.result();
-            fail();
         } catch (AssertionFailedError expected) {
-
+            return;
         }
+        fail();
     }
 
     public static class HasProtectedMethod {
@@ -271,7 +272,7 @@ public class ProxyBuilderTest {
     }
 
     @Test
-    @SuppressWarnings("EqualsWithItself")
+    @SuppressWarnings({"EqualsWithItself", "SelfEquals"})
     public void testObjectMethodsAreAlsoProxied() throws Throwable {
         Object proxy = proxyFor(Object.class).build();
         fakeHandler.setFakeResult("mystring");
@@ -335,6 +336,7 @@ public class ProxyBuilderTest {
     }
 
     public static class InvokeSuperHandler implements InvocationHandler {
+        @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             return ProxyBuilder.callSuper(proxy, method, args);
         }
@@ -405,6 +407,7 @@ public class ProxyBuilderTest {
     @Test
     public void testSinglePrimitiveParameter() throws Throwable {
         InvocationHandler handler = new InvocationHandler() {
+            @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 return "asdf" + ((Integer) args[0]).intValue();
             }
@@ -486,6 +489,7 @@ public class ProxyBuilderTest {
     @Test
     public void testSometimesDelegateToSuper() throws Exception {
         InvocationHandler delegatesOddValues = new InvocationHandler() {
+            @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 if (method.getName().equals("method")) {
                     int intValue = ((Integer) args[0]).intValue();
@@ -508,6 +512,7 @@ public class ProxyBuilderTest {
     @Test
     public void testCallSuperThrows() throws Exception {
         InvocationHandler handler = new InvocationHandler() {
+            @Override
             public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
                 return ProxyBuilder.callSuper(o, method, objects);
             }
@@ -616,10 +621,11 @@ public class ProxyBuilderTest {
         }
         try {
             proxyFor(CtorHasError.class).build();
-            fail();
         } catch (Error expected) {
             assertEquals("my message again", expected.getMessage());
+            return;
         }
+        fail();
     }
 
     @Test
@@ -771,6 +777,7 @@ public class ProxyBuilderTest {
     @Test
     public void testImplementInterfaceCallingThroughConcreteClass() throws Throwable {
         InvocationHandler invocationHandler = new InvocationHandler() {
+            @Override
             public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
                 assertEquals("a", ProxyBuilder.callSuper(o, method, objects));
                 return "b";
@@ -796,6 +803,7 @@ public class ProxyBuilderTest {
         final AtomicInteger count = new AtomicInteger();
 
         InvocationHandler invocationHandler = new InvocationHandler() {
+            @Override
             public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
                 count.incrementAndGet();
                 return ProxyBuilder.callSuper(o, method, objects);
@@ -817,6 +825,7 @@ public class ProxyBuilderTest {
     }
 
     public static class ImplementsCallable implements Callable<String> {
+        @Override
         public String call() throws Exception {
             return "a";
         }
@@ -831,6 +840,7 @@ public class ProxyBuilderTest {
     @Test
     public void testInterfacesSameNamesDifferentReturnTypes() throws Throwable {
         InvocationHandler handler = new InvocationHandler() {
+            @Override
             public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
                 if (method.getReturnType() == void.class) {
                     return null;
@@ -974,6 +984,7 @@ public class ProxyBuilderTest {
     private static class FakeInvocationHandler implements InvocationHandler {
         private Object fakeResult = "fake result";
 
+        @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             return fakeResult;
         }
@@ -1077,6 +1088,7 @@ public class ProxyBuilderTest {
     }
 
     public static class ConcreteClassA implements FooReturnsInt {
+        @Override
         // from FooReturnsInt
         public int foo() {
             return 1;
@@ -1089,6 +1101,7 @@ public class ProxyBuilderTest {
     }
 
     public static class ConcreteClassB implements FooReturnsInt {
+        @Override
         // from FooReturnsInt
         public int foo() {
             return 0;
@@ -1150,6 +1163,7 @@ public class ProxyBuilderTest {
         }
 
         InvocationHandler handler = new InvokeSuperHandler() {
+            @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 if (method.getName().equals("returnA")) {
                     return "fake A";

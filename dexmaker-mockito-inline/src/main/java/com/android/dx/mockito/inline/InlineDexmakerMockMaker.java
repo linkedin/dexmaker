@@ -388,6 +388,7 @@ public final class InlineDexmakerMockMaker implements MockMaker {
             return adapters.isEmpty();
         }
 
+        @SuppressWarnings("CollectionIncompatibleType")
         @Override
         public boolean containsKey(Object mock) {
             synchronized (lock) {
@@ -406,6 +407,7 @@ public final class InlineDexmakerMockMaker implements MockMaker {
             }
         }
 
+        @SuppressWarnings("CollectionIncompatibleType")
         @Override
         public InvocationHandlerAdapter get(Object mock) {
             synchronized (lock) {
@@ -468,6 +470,7 @@ public final class InlineDexmakerMockMaker implements MockMaker {
             }
         }
 
+        @SuppressWarnings("CollectionIncompatibleType")
         @Override
         public InvocationHandlerAdapter remove(Object mock) {
             synchronized (lock) {

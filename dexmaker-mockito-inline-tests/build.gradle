@@ -1,3 +1,15 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "net.ltgt.gradle:gradle-errorprone-plugin:0.0.13"
+    }
+}
+
+apply plugin: "net.ltgt.errorprone"
 apply plugin: 'com.android.application'
 
 android {
@@ -30,9 +42,9 @@ repositories {
 }
 
 dependencies {
-    androidTestCompile project(':dexmaker-mockito-inline')
+    androidTestImplementation project(':dexmaker-mockito-inline')
 
-    androidTestCompile 'junit:junit:4.12'
-    androidTestCompile 'com.android.support.test:runner:1.0.1'
-    androidTestCompile 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
+    androidTestImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
 }

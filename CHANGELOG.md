@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 2.16.0 (SNAPSHOT)
+## Version 2.16.0 (2018-03-26)
 - New dexmaker-mockito-inline artifact which implements the Mockito inline API and allows mocking final classes & methods on Android P+
   - **NOTE:** Using this artifact requires compiling and running with at least Android P Developer Preview 1
 - ByteBuddy is now excluded from the transitive dependency on Mockito, which should bring significant method count savings for dexmaker-mockito users - #82

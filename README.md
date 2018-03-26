@@ -20,6 +20,11 @@ Android projects by generating Dalvik bytecode class proxies. Just add an
 
 The version of Mockito that Dexmaker targets can be found in `dexmaker-mockito`'s [build.gradle](https://github.com/linkedin/dexmaker/blob/master/dexmaker-mockito/build.gradle) file. The general rule is that the major and minor version of Dexmaker will match the underlying major and minor version of Mockito.
 
+### Mocking Final Classes & Methods
+Starting in Android "P", it is possible to mock final classes and methods using the `dexmaker-mockito-inline` library. If you execute your tests on a device or emulator running Android P or above, you can add an `androidTestCompile` dependency on `dexmaker-mockito-inline` (instead of `dexmaker-mockito`; don't add both) and you can use the normal Mockito APIs to mock final classes and methods in your Android Instrumentation tests.
+
+**NOTE:** This functionality requires OS APIs which were introduced in Android P and cannot work on older versions of Android.
+
 ### Class Proxies
 Dexmaker includes a stock code generator for [class proxies](https://github.com/crittercism/dexmaker/blob/master/dexmaker/src/main/java/com/android/dx/stock/ProxyBuilder.java).
 If you just want to do AOP or class mocking, you don't need to mess around with bytecodes.

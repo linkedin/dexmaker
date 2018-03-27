@@ -24,11 +24,11 @@ import com.android.dx.stock.ProxyBuilder;
 import com.android.dx.stock.ProxyBuilder.MethodSetEntry;
 
 import org.mockito.Mockito;
+import org.mockito.creation.instance.Instantiator;
 import org.mockito.exceptions.base.MockitoException;
-import org.mockito.internal.creation.instance.Instantiator;
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
-import org.mockito.plugins.InstantiatorProvider;
+import org.mockito.plugins.InstantiatorProvider2;
 import org.mockito.plugins.MockMaker;
 
 import java.io.IOException;
@@ -51,6 +51,7 @@ import java.util.Set;
  *
  * <p>This is done by transforming the byte code of the classes to add method entry hooks.
  */
+
 public final class InlineDexmakerMockMaker implements MockMaker {
     private static final String DISPATCHER_CLASS_NAME =
             "com.android.dx.mockito.inline.MockMethodDispatcher";
@@ -224,7 +225,7 @@ public final class InlineDexmakerMockMaker implements MockMaker {
             Class<? extends T> proxyClass;
 
             Instantiator instantiator = Mockito.framework().getPlugins()
-                    .getDefaultPlugin(InstantiatorProvider.class).getInstantiator(settings);
+                    .getDefaultPlugin(InstantiatorProvider2.class).getInstantiator(settings);
 
             if (subclassingRequired) {
                 try {
@@ -240,7 +241,7 @@ public final class InlineDexmakerMockMaker implements MockMaker {
 
                 try {
                     mock = instantiator.newInstance(proxyClass);
-                } catch (org.mockito.internal.creation.instance.InstantiationException e) {
+                } catch (org.mockito.creation.instance.InstantiationException e) {
                     throw new MockitoException("Unable to create mock instance of type '"
                             + proxyClass.getSuperclass().getSimpleName() + "'", e);
                 }
@@ -249,7 +250,7 @@ public final class InlineDexmakerMockMaker implements MockMaker {
             } else {
                 try {
                     mock = instantiator.newInstance(typeToMock);
-                } catch (org.mockito.internal.creation.instance.InstantiationException e) {
+                } catch (org.mockito.creation.instance.InstantiationException e) {
                     throw new MockitoException("Unable to create mock instance of type '"
                             + typeToMock.getSimpleName() + "'", e);
                 }

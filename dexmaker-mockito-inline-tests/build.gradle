@@ -16,10 +16,6 @@ android {
     compileSdkVersion 'android-P'
     buildToolsVersion '27.0.3'
 
-    lintOptions {
-        abortOnError false
-    }
-
     defaultConfig {
         applicationId 'com.android.dexmaker.mockito.inline.tests'
         minSdkVersion 27

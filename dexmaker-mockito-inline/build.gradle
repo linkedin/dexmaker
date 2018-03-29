@@ -21,8 +21,11 @@ android {
     compileSdkVersion 'android-P'
     buildToolsVersion '27.0.3'
 
-    lintOptions {
-        abortOnError false
+    android {
+        lintOptions {
+            disable 'InvalidPackage'
+            warning 'NewApi'
+        }
     }
 
     defaultConfig {

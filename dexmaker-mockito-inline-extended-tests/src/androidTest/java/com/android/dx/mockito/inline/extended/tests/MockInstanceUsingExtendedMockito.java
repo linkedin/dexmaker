@@ -16,9 +16,13 @@
 
 package com.android.dx.mockito.inline.extended.tests;
 
+import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+
 import org.junit.Test;
+import org.mockito.Mock;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static org.junit.Assert.assertEquals;
@@ -26,6 +30,9 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.eq;
 
 public class MockInstanceUsingExtendedMockito {
+    @Mock
+    private TestClass mockField;
+
     public static class TestClass {
         public String echo(String arg) {
             return arg;
@@ -42,5 +49,20 @@ public class MockInstanceUsingExtendedMockito {
         assertEquals("B", t.echo("stubbed"));
         verify(t).echo("mocked");
         verify(t).echo("stubbed");
+    }
+
+    @Test
+    public void useMockitoSession() throws Exception {
+        StaticMockitoSession session = mockitoSession().initMocks(this).startMocking();
+        try {
+            assertNull(mockField.echo("mocked"));
+
+            when(mockField.echo(eq("stubbed"))).thenReturn("B");
+            assertEquals("B", mockField.echo("stubbed"));
+            verify(mockField).echo("mocked");
+            verify(mockField).echo("stubbed");
+        } finally {
+            session.finishMocking();
+        }
     }
 }

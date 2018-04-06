@@ -1,0 +1,294 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.dx.mockito.inline.extended.tests;
+
+import android.content.ContentResolver;
+import android.provider.Settings;
+import android.support.test.InstrumentationRegistry;
+
+import org.junit.Test;
+import org.mockito.MockingDetails;
+import org.mockito.MockitoSession;
+import org.mockito.exceptions.misusing.MissingMethodInvocationException;
+import org.mockito.quality.Strictness;
+
+import static android.provider.Settings.Global.DEVICE_NAME;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.clearInvocations;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockingDetails;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.reset;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+
+public class MockStatic {
+    private static class SuperClass {
+        final String returnA() {
+            return "superA";
+        }
+
+        static String returnB() {
+            return "superB";
+        }
+
+        static String returnC() {
+            return "superC";
+        }
+    }
+
+    private static final class SubClass extends SuperClass {
+        static String recorded = null;
+
+        static String returnC() {
+            return "subC";
+        }
+
+        static final String record(String toRecord) {
+            recorded = toRecord;
+            return "record";
+        }
+    }
+
+    @Test
+    public void spyStatic() throws Exception {
+        ContentResolver resolver = InstrumentationRegistry.getTargetContext().getContentResolver();
+        String deviceName = Settings.Global.getString(resolver, DEVICE_NAME);
+
+        MockitoSession session = mockitoSession().spyStatic(Settings.Global.class).startMocking();
+        try {
+            // Make sure non-mocked methods work as before
+            assertEquals(deviceName, Settings.Global.getString(resolver, DEVICE_NAME));
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void mockStatic() throws Exception {
+        ContentResolver resolver = InstrumentationRegistry.getTargetContext().getContentResolver();
+        String deviceName = Settings.Global.getString(resolver, DEVICE_NAME);
+
+        MockitoSession session = mockitoSession().mockStatic(Settings.Global.class).startMocking();
+        try {
+            // By default all static methods of the mocked class should return null/0/false
+            assertNull(Settings.Global.getString(resolver, DEVICE_NAME));
+
+            when(Settings.Global.getString(any(ContentResolver.class), eq(DEVICE_NAME)))
+                    .thenReturn("This is a test");
+
+            // Make sure behavior is changed
+            assertEquals("This is a test", Settings.Global.getString(resolver, DEVICE_NAME));
+        } finally {
+            session.finishMocking();
+        }
+
+        // Once the mocking is removed, the behavior should be back to normal
+        assertEquals(deviceName, Settings.Global.getString(resolver, DEVICE_NAME));
+    }
+
+    @Test
+    public void mockOverriddenStaticMethod() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(SubClass.class).startMocking();
+        try {
+            // By default all static methods of the mocked class should return the default answers
+            assertNull(SubClass.returnB());
+            assertNull(SubClass.returnC());
+
+            // Super class is not mocked
+            assertEquals("superB", SuperClass.returnB());
+            assertEquals("superC", SuperClass.returnC());
+
+            when(SubClass.returnB()).thenReturn("fakeB");
+            when(SubClass.returnC()).thenReturn("fakeC");
+
+            // Make sure behavior is changed
+            assertEquals("fakeB", SubClass.returnB());
+            assertEquals("fakeC", SubClass.returnC());
+
+            // Super class should not be affected
+            assertEquals("superB", SuperClass.returnB());
+            assertEquals("superC", SuperClass.returnC());
+        } finally {
+            session.finishMocking();
+        }
+
+        // Mocking should be stopped
+        assertEquals("superB", SubClass.returnB());
+        assertEquals("subC", SubClass.returnC());
+    }
+
+    @Test
+    public void mockSuperMethod() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(SuperClass.class).startMocking();
+        try {
+            // By default all static methods of the mocked class should return the default answers
+            assertNull(SuperClass.returnB());
+            assertNull(SuperClass.returnC());
+
+            // Sub class should not be affected
+            assertEquals("superB", SubClass.returnB());
+            assertEquals("subC", SubClass.returnC());
+
+            when(SuperClass.returnB()).thenReturn("fakeB");
+            when(SuperClass.returnC()).thenReturn("fakeC");
+
+            // Make sure behavior is changed
+            assertEquals("fakeB", SuperClass.returnB());
+            assertEquals("fakeC", SuperClass.returnC());
+
+            // Sub class should not be affected
+            assertEquals("superB", SubClass.returnB());
+            assertEquals("subC", SubClass.returnC());
+        } finally {
+            session.finishMocking();
+        }
+
+        // Mocking should be stopped
+        assertEquals("superB", SuperClass.returnB());
+        assertEquals("superC", SuperClass.returnC());
+    }
+
+    @Test(expected = MissingMethodInvocationException.class)
+    public void nonMockedTest() throws Exception {
+        when(SuperClass.returnB()).thenReturn("fakeB");
+    }
+
+    @Test
+    public void resetMock() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(SuperClass.class).startMocking();
+        try {
+            assertNull(SuperClass.returnB());
+
+            when(SuperClass.returnB()).thenReturn("fakeB");
+            assertEquals("fakeB", SuperClass.returnB());
+
+            reset(staticMockMarker(SuperClass.class));
+            assertNull(SuperClass.returnB());
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void resetSpy() throws Exception {
+        MockitoSession session = mockitoSession().spyStatic(SuperClass.class).startMocking();
+        try {
+            assertEquals("superB", SuperClass.returnB());
+
+            when(SuperClass.returnB()).thenReturn("fakeB");
+            assertEquals("fakeB", SuperClass.returnB());
+
+            reset(staticMockMarker(SuperClass.class));
+            assertEquals("superB", SuperClass.returnB());
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void staticMockingIsSeparateFromNonStaticMocking() throws Exception {
+        SuperClass objA = new SuperClass();
+        SuperClass objB;
+
+        MockitoSession session = mockitoSession().mockStatic(SuperClass.class).startMocking();
+        try {
+            assertNull(SuperClass.returnB());
+            assertNull(objA.returnB());
+
+            objB = mock(SuperClass.class);
+
+            assertEquals("superA", objA.returnA());
+
+            // Any kind of static method method call should be mocked
+            assertNull(objB.returnA());
+
+            assertNull(SuperClass.returnB());
+            assertNull(objA.returnB());
+            assertNull(objB.returnB());
+        } finally {
+            session.finishMocking();
+        }
+
+        assertEquals("superA", objA.returnA());
+        assertNull(objB.returnA());
+
+        // Any kind of static method method call should _not_ be mocked
+        assertEquals("superB", SuperClass.returnB());
+        assertEquals("superB", objA.returnB());
+        assertEquals("superB", objB.returnB());
+    }
+
+    @Test
+    public void mockWithTwoClasses() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(SuperClass.class)
+                .mockStatic(SubClass.class).startMocking();
+        try {
+            when(SuperClass.returnB()).thenReturn("fakeB");
+            assertEquals("fakeB", SuperClass.returnB());
+
+            when(SubClass.returnC()).thenReturn("fakeC");
+            assertEquals("fakeC", SubClass.returnC());
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void clearInvocationsRemovedInvocations() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(SuperClass.class).startMocking();
+        try {
+            SuperClass.returnB();
+            clearInvocations(staticMockMarker(SuperClass.class));
+            verifyZeroInteractions(staticMockMarker(SuperClass.class));
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void verifyMockingDetails() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(SuperClass.class)
+                .spyStatic(SubClass.class).startMocking();
+        try {
+            when(SuperClass.returnB()).thenReturn("fakeB");
+            SuperClass.returnB();
+            SuperClass.returnC();
+
+            MockingDetails superClassDetails = mockingDetails(staticMockMarker(SuperClass.class));
+            assertTrue(superClassDetails.isMock());
+            assertFalse(superClassDetails.isSpy());
+            assertEquals(2, superClassDetails.getInvocations().size());
+            assertEquals(1, superClassDetails.getStubbings().size());
+
+            MockingDetails subClassDetails = mockingDetails(staticMockMarker(SubClass.class));
+            assertTrue(subClassDetails.isMock());
+            assertTrue(subClassDetails.isSpy());
+        } finally {
+            session.finishMocking();
+        }
+    }
+}

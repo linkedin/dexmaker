@@ -31,6 +31,7 @@ public final class MockMakerMultiplexer implements MockMaker {
 
     static {
         String[] potentialMockMakers = new String[] {
+                "com.android.dx.mockito.inline.InlineStaticMockMaker",
                 InlineDexmakerMockMaker.class.getName()
         };
 

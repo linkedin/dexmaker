@@ -13,8 +13,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.android.dx.mockito.inline.InlineStaticMockMaker.onMethodCallDuringStubbing;
 
 /**
  * Backend for the method entry hooks. Checks if the hooks should cause an interception or should
@@ -226,6 +229,12 @@ class StaticMockMethodAdvice {
         InvocationHandlerAdapter interceptor = markersToHandler.get(marker);
         if (interceptor == null) {
             return null;
+        }
+
+        // extended.StaticCapableStubber#whenInt
+        BiConsumer<Class<?>, Method> onStub = onMethodCallDuringStubbing.get();
+        if (onStub != null) {
+            onStub.accept(clazz, origin);
         }
 
         return new ReturnValueWrapper(interceptor.interceptEntryHook(marker, origin, arguments,

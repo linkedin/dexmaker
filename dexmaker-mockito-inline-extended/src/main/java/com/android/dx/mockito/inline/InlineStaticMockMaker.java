@@ -27,10 +27,12 @@ import org.mockito.plugins.InstantiatorProvider2;
 import org.mockito.plugins.MockMaker;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 /**
  * Creates mock markers and adds stubbing hooks to static method
@@ -48,6 +50,8 @@ public final class InlineStaticMockMaker implements MockMaker {
      */
     private static final Throwable INITIALIZATION_ERROR;
     public static ThreadLocal<Class> mockingInProgressClass = new ThreadLocal<>();
+    public static ThreadLocal<BiConsumer<Class<?>, Method>> onMethodCallDuringStubbing
+            = new ThreadLocal<>();
 
     /*
      * One time setup to allow the system to mocking via this mock maker.

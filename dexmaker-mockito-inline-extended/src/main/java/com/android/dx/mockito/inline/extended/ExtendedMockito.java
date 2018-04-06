@@ -24,6 +24,26 @@ import java.util.ArrayList;
 
 /**
  * Mockito extended with the ability to stub static methods.
+ * <p>E.g.
+ * <pre>
+ *     private class C {
+ *         static int staticMethod(String arg) {
+ *             return 23;
+ *         }
+ *     }
+ *
+ *    {@literal @}Test
+ *     public void test() {
+ *         // static mocking
+ *         MockitoSession session = mockitoSession().staticSpy(C.class).startMocking();
+ *         try {
+ *             doReturn(42).when(() -> {return C.staticMethod(eq("Arg"));});
+ *             assertEquals(42, C.staticMethod("Arg"));
+ *         } finally {
+ *             session.finishMocking();
+ *         }
+ *     }
+ * </pre>
  * <p>It is possible to use this class for instance mocking too. Hence you can use it as a full
  * replacement for {@link Mockito}.
  * <p>This is a prototype that is intended to eventually be upstreamed into mockito proper. Some
@@ -35,6 +55,80 @@ public class ExtendedMockito extends Mockito {
      * Currently active {@link #mockitoSession() sessions}
      */
     private static ArrayList<StaticMockitoSession> sessions = new ArrayList<>();
+
+    /**
+     * Same as {@link Mockito#doAnswer(Answer)} but adds the ability to stub static method calls via
+     * {@link StaticCapableStubber#when(MockedMethod)} and
+     * {@link StaticCapableStubber#when(MockedVoidMethod)}.
+     */
+    public static StaticCapableStubber doAnswer(Answer answer) {
+        return new StaticCapableStubber(Mockito.doAnswer(answer));
+    }
+
+    /**
+     * Same as {@link Mockito#doCallRealMethod()} but adds the ability to stub static method calls
+     * via {@link StaticCapableStubber#when(MockedMethod)} and
+     * {@link StaticCapableStubber#when(MockedVoidMethod)}.
+     */
+    public static StaticCapableStubber doCallRealMethod() {
+        return new StaticCapableStubber(Mockito.doCallRealMethod());
+    }
+
+    /**
+     * Same as {@link Mockito#doNothing()} but adds the ability to stub static method calls via
+     * {@link StaticCapableStubber#when(MockedMethod)} and
+     * {@link StaticCapableStubber#when(MockedVoidMethod)}.
+     */
+    public static StaticCapableStubber doNothing() {
+        return new StaticCapableStubber(Mockito.doNothing());
+    }
+
+    /**
+     * Same as {@link Mockito#doReturn(Object)} but adds the ability to stub static method calls
+     * via {@link StaticCapableStubber#when(MockedMethod)} and
+     * {@link StaticCapableStubber#when(MockedVoidMethod)}.
+     */
+    public static StaticCapableStubber doReturn(Object toBeReturned) {
+        return new StaticCapableStubber(Mockito.doReturn(toBeReturned));
+    }
+
+    /**
+     * Same as {@link Mockito#doReturn(Object, Object...)} but adds the ability to stub static
+     * method calls via {@link StaticCapableStubber#when(MockedMethod)} and
+     * {@link StaticCapableStubber#when(MockedVoidMethod)}.
+     */
+    public static StaticCapableStubber doReturn(Object toBeReturned, Object... toBeReturnedNext) {
+        return new StaticCapableStubber(Mockito.doReturn(toBeReturned, toBeReturnedNext));
+    }
+
+    /**
+     * Same as {@link Mockito#doThrow(Class)} but adds the ability to stub static method calls via
+     * {@link StaticCapableStubber#when(MockedMethod)} and
+     * {@link StaticCapableStubber#when(MockedVoidMethod)}.
+     */
+    public static StaticCapableStubber doThrow(Class<? extends Throwable> toBeThrown) {
+        return new StaticCapableStubber(Mockito.doThrow(toBeThrown));
+    }
+
+    /**
+     * Same as {@link Mockito#doThrow(Class, Class...)} but adds the ability to stub static method
+     * calls via {@link StaticCapableStubber#when(MockedMethod)} and
+     * {@link StaticCapableStubber#when(MockedVoidMethod)}.
+     */
+    @SafeVarargs
+    public static StaticCapableStubber doThrow(Class<? extends Throwable> toBeThrown,
+                                               Class<? extends Throwable>... toBeThrownNext) {
+        return new StaticCapableStubber(Mockito.doThrow(toBeThrown, toBeThrownNext));
+    }
+
+    /**
+     * Same as {@link Mockito#doThrow(Throwable...)} but adds the ability to stub static method
+     * calls via {@link StaticCapableStubber#when(MockedMethod)} and
+     * {@link StaticCapableStubber#when(MockedVoidMethod)}.
+     */
+    public static StaticCapableStubber doThrow(Throwable... toBeThrown) {
+        return new StaticCapableStubber(Mockito.doThrow(toBeThrown));
+    }
 
     /**
      * Many methods of mockito take mock objects. To be able to call the same methods for static

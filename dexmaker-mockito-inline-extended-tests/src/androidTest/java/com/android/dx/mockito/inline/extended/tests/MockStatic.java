@@ -80,6 +80,19 @@ public class MockStatic {
 
         MockitoSession session = mockitoSession().spyStatic(Settings.Global.class).startMocking();
         try {
+            // Cannot call when(Settings.getString(any(ContentResolver.class), eq("...")))
+            // as any(ContentResolver.class) returns null which makes getString fail. Hence need to
+            // use less lambda API
+            doReturn("23").when(() -> Settings.Global.getString(any
+                    (ContentResolver.class), eq("twenty three")));
+
+            doReturn(42).when(() -> Settings.Global.getInt(any
+                    (ContentResolver.class), eq("fourty two")));
+
+            // Make sure behavior is changed
+            assertEquals("23", Settings.Global.getString(resolver, "twenty three"));
+            assertEquals(42, Settings.Global.getInt(resolver, "fourty two"));
+
             // Make sure non-mocked methods work as before
             assertEquals(deviceName, Settings.Global.getString(resolver, DEVICE_NAME));
         } finally {
@@ -255,6 +268,99 @@ public class MockStatic {
         } finally {
             session.finishMocking();
         }
+    }
+
+    @Test
+    public void doReturnMockWithTwoClasses() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(SuperClass.class)
+                .mockStatic(SubClass.class).startMocking();
+        try {
+            doReturn("fakeB").when(SuperClass::returnB);
+            assertEquals("fakeB", SuperClass.returnB());
+
+            doReturn("fakeD").when(() -> SubClass.record("test"));
+            assertEquals("fakeD", SubClass.record("test"));
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void doReturnTwice() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(SuperClass.class).startMocking();
+        try {
+            doReturn("fakeB").doReturn("fakeB2").when(SuperClass::returnB);
+            assertEquals("fakeB", SuperClass.returnB());
+            assertEquals("fakeB2", SuperClass.returnB());
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void doReturnSpyHasNoSideEffect() throws Exception {
+        MockitoSession session = mockitoSession().spyStatic(SubClass.class).startMocking();
+        try {
+            SubClass.recorded = null;
+            SubClass.record("no sideeffect");
+            assertEquals("no sideeffect", SubClass.recorded);
+
+            doReturn("faceRecord").when(() -> SubClass.record(eq("test")));
+            // Verify that there was no side effect as the lambda gets intercepted
+            assertEquals("no sideeffect", SubClass.recorded);
+
+            assertEquals("faceRecord", SubClass.record("test"));
+            // Verify that there was no side effect as the method is stubbed
+            assertEquals("no sideeffect", SubClass.recorded);
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void onlyOneMethodCallDuringStubbing() throws Exception {
+        MockitoSession session = mockitoSession().strictness(Strictness.LENIENT)
+                .spyStatic(SuperClass.class).startMocking();
+        try {
+            try {
+                doReturn("").when(() -> {
+                    SuperClass.returnB();
+                    SuperClass.returnC();
+                });
+                fail();
+            } catch (IllegalArgumentException e) {
+                assertTrue(e.getMessage(), e.getMessage().contains("returnB"));
+                assertTrue(e.getMessage(), e.getMessage().contains("returnC"));
+
+                assertFalse(e.getMessage(), e.getMessage().contains("returnA"));
+            }
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void atLeastOneMethodCallDuringStubbing() throws Exception {
+        Exception atLeastOneMethodCallException = null;
+
+        try {
+            MockitoSession session = mockitoSession().spyStatic(SuperClass.class).startMocking();
+            try {
+                try {
+                    doReturn("").when(() -> {
+                    });
+                    fail();
+                } catch (IllegalArgumentException expected) {
+                    atLeastOneMethodCallException = expected;
+                }
+            } finally {
+                session.finishMocking();
+            }
+        } catch (Throwable ignored) {
+            // We don't want to test exceptions form MockitoSession
+        }
+
+        assertNotNull(atLeastOneMethodCallException);
     }
 
     @Test

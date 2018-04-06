@@ -21,6 +21,7 @@ import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -64,5 +65,17 @@ public class MockInstanceUsingExtendedMockito {
         } finally {
             session.finishMocking();
         }
+    }
+
+    @Test
+    public void mockClassUsingDoReturn() throws Exception {
+        TestClass t = mock(TestClass.class);
+
+        assertNull(t.echo("mocked"));
+
+        doReturn("B").when(t).echo(eq("stubbed"));
+        assertEquals("B", t.echo("stubbed"));
+        verify(t).echo("mocked");
+        verify(t).echo("stubbed");
     }
 }

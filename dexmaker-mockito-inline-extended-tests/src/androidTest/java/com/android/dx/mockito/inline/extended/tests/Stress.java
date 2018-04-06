@@ -28,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
+
 public class Stress {
     private static final String LOG_TAG = Stress.class.getSimpleName();
 

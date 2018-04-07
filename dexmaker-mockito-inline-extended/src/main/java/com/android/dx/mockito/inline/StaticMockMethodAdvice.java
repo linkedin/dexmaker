@@ -18,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.android.dx.mockito.inline.InlineStaticMockMaker.onMethodCallDuringStubbing;
+import static com.android.dx.mockito.inline.InlineStaticMockMaker.onMethodCallDuringVerification;
 
 /**
  * Backend for the method entry hooks. Checks if the hooks should cause an interception or should
@@ -235,6 +236,12 @@ class StaticMockMethodAdvice {
         BiConsumer<Class<?>, Method> onStub = onMethodCallDuringStubbing.get();
         if (onStub != null) {
             onStub.accept(clazz, origin);
+        }
+
+        // extended.ExtendedMockito#verifyInt
+        BiConsumer<Class<?>, Method> onVerify = onMethodCallDuringVerification.get();
+        if (onVerify != null) {
+            onVerify.accept(clazz, origin);
         }
 
         return new ReturnValueWrapper(interceptor.interceptEntryHook(marker, origin, arguments,

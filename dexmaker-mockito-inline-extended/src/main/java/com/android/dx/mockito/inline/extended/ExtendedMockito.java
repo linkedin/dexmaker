@@ -18,9 +18,19 @@ package com.android.dx.mockito.inline.extended;
 
 import org.mockito.MockSettings;
 import org.mockito.Mockito;
+import org.mockito.internal.matchers.LocalizedMatcher;
+import org.mockito.internal.progress.ArgumentMatcherStorageImpl;
 import org.mockito.stubbing.Answer;
+import org.mockito.verification.VerificationMode;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
+
+import static com.android.dx.mockito.inline.InlineStaticMockMaker.onMethodCallDuringVerification;
+import static org.mockito.internal.progress.ThreadSafeMockingProgress.mockingProgress;
 
 /**
  * Mockito extended with the ability to stub static methods.
@@ -39,6 +49,7 @@ import java.util.ArrayList;
  *         try {
  *             doReturn(42).when(() -> {return C.staticMethod(eq("Arg"));});
  *             assertEquals(42, C.staticMethod("Arg"));
+ *             verify(() -> C.staticMethod(eq("Arg"));
  *         } finally {
  *             session.finishMocking();
  *         }
@@ -183,6 +194,91 @@ public class ExtendedMockito extends Mockito {
     }
 
     /**
+     * To be used for static mocks/spies in place of {@link Mockito#verify(Object)} when calling
+     * void methods.
+     * <p>E.g.
+     * <pre>
+     *     private class C {
+     *         void instanceMethod(String arg) {}
+     *         static void staticMethod(String arg) {}
+     *     }
+     *
+     *    {@literal @}Test
+     *     public void test() {
+     *         // instance mocking
+     *         C mock = mock(C.class);
+     *         mock.instanceMethod("Hello");
+     *         verify(mock).mockedVoidInstanceMethod(eq("Hello"));
+     *
+     *         // static mocking
+     *         MockitoSession session = mockitoSession().staticMock(C.class).startMocking();
+     *         C.staticMethod("World");
+     *         verify(() -> C.staticMethod(eq("World"));
+     *         session.finishMocking();
+     *     }
+     * </pre>
+     */
+    public static void verify(MockedVoidMethod method) {
+        verify(method, times(1));
+    }
+
+    /**
+     * To be used for static mocks/spies in place of {@link Mockito#verify(Object)}.
+     * <p>E.g. (please notice the 'return' in the lambda when verifying the static call)
+     * <pre>
+     *     private class C {
+     *         int instanceMethod(String arg) {
+     *             return 1;
+     *         }
+     *
+     *         int static staticMethod(String arg) {
+     *             return 2;
+     *         }
+     *     }
+     *
+     *    {@literal @}Test
+     *     public void test() {
+     *         // instance mocking
+     *         C mock = mock(C.class);
+     *         mock.instanceMethod("Hello");
+     *         verify(mock).mockedVoidInstanceMethod(eq("Hello"));
+     *
+     *         // static mocking
+     *         MockitoSession session = mockitoSession().staticMock(C.class).startMocking();
+     *         C.staticMethod("World");
+     *         verify(() -> <b>{return</b> C.staticMethod(eq("World")<b>;}</b>);
+     *         session.finishMocking();
+     *     }
+     * </pre>
+     */
+    @UnstableApi
+    public static void verify(MockedMethod method) {
+        verify(method, times(1));
+    }
+
+    /**
+     * To be used for static mocks/spies in place of
+     * {@link Mockito#verify(Object, VerificationMode)} when calling void methods.
+     *
+     * @see #verify(MockedVoidMethod)
+     */
+    @UnstableApi
+    public static void verify(MockedVoidMethod method, VerificationMode mode) {
+        verifyInt(method, mode);
+    }
+
+    /**
+     * To be used for static mocks/spies in place of
+     * {@link Mockito#verify(Object, VerificationMode)}.
+     *
+     * @see #verify(MockedMethod)
+     */
+    @UnstableApi
+    public static void verify(MockedMethod method, VerificationMode mode) {
+        verify((MockedVoidMethod) method::get, mode);
+    }
+
+    /**
      * Same as {@link Mockito#mockitoSession()} but adds the ability to mock static methods
      * calls via {@link StaticMockitoSessionBuilder#mockStatic(Class)},
      * {@link StaticMockitoSessionBuilder#mockStatic(Class, Answer)}, and {@link
@@ -191,6 +287,93 @@ public class ExtendedMockito extends Mockito {
      */
     public static StaticMockitoSessionBuilder mockitoSession() {
         return new StaticMockitoSessionBuilder(Mockito.mockitoSession());
+    }
+
+    /**
+     * Common implementation of verification of static method calls.
+     *
+     * @param method          The static method call to be verified
+     * @param mode            The verification mode
+     */
+    @SuppressWarnings({"CheckReturnValue", "MockitoUsage", "unchecked"})
+    static void verifyInt(MockedVoidMethod method, VerificationMode mode) {
+        if (onMethodCallDuringVerification.get() != null) {
+            throw new IllegalStateException("Verification is already in progress on this "
+                    + "thread.");
+        }
+
+        ArrayList<Method> verifications = new ArrayList<>();
+
+        /* Set up callback that is triggered when the next static method is called on this thread.
+         *
+         * This is necessary as we don't know which class the method will be called on. Once the
+         * call is intercepted this will
+         *    1. Remove all matchers (e.g. eq(), any()) from the matcher stack
+         *    2. Call verify on the marker for the class
+         *    3. Add the markers back to the stack
+         */
+        onMethodCallDuringVerification.set((clazz, verifiedMethod) -> {
+            // TODO: O holy reflection! Let's hope we can integrate this better.
+            try {
+                ArgumentMatcherStorageImpl argMatcherStorage = (ArgumentMatcherStorageImpl)
+                        mockingProgress().getArgumentMatcherStorage();
+                List<LocalizedMatcher> matchers;
+
+                // Matcher are called before verify, hence remove the from the storage
+                Method resetStackMethod
+                        = argMatcherStorage.getClass().getDeclaredMethod("resetStack");
+                resetStackMethod.setAccessible(true);
+
+                matchers = (List<LocalizedMatcher>) resetStackMethod.invoke(argMatcherStorage);
+
+                verify(staticMockMarker(clazz), mode);
+
+                // Add the matchers back after verify is called
+                Field matcherStackField
+                        = argMatcherStorage.getClass().getDeclaredField("matcherStack");
+                matcherStackField.setAccessible(true);
+
+                Method pushMethod = matcherStackField.getType().getDeclaredMethod("push",
+                        Object.class);
+
+                for (LocalizedMatcher matcher : matchers) {
+                    pushMethod.invoke(matcherStackField.get(argMatcherStorage), matcher);
+                }
+            } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException
+                    | InvocationTargetException | ClassCastException e) {
+                throw new Error("Reflection failed. Do you use a compatible version of "
+                        + "mockito?", e);
+            }
+
+            verifications.add(verifiedMethod);
+        });
+        try {
+            try {
+                // Trigger the method call. This call will be intercepted and trigger the
+                // onMethodCallDuringVerification callback.
+                method.run();
+            } catch (Throwable t) {
+                if (t instanceof RuntimeException) {
+                    throw (RuntimeException) t;
+                } else if (t instanceof Error) {
+                    throw (Error) t;
+                }
+                throw new RuntimeException(t);
+            }
+
+            if (verifications.isEmpty()) {
+                // Make sure something was intercepted
+                throw new IllegalArgumentException("Nothing was verified. Does the lambda call "
+                        + "a static method on a 'static' mock/spy ?");
+            } else if (verifications.size() > 1) {
+                // A lambda might call several methods. In this case it is not clear what should
+                // be verified. Hence throw an error.
+                throw new IllegalArgumentException("Multiple intercepted calls on methods "
+                        + verifications);
+            }
+        } finally {
+            onMethodCallDuringVerification.remove();
+        }
     }
 
     /**

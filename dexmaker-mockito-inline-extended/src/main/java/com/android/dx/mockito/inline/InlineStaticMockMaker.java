@@ -52,6 +52,8 @@ public final class InlineStaticMockMaker implements MockMaker {
     public static ThreadLocal<Class> mockingInProgressClass = new ThreadLocal<>();
     public static ThreadLocal<BiConsumer<Class<?>, Method>> onMethodCallDuringStubbing
             = new ThreadLocal<>();
+    public static ThreadLocal<BiConsumer<Class<?>, Method>> onMethodCallDuringVerification
+            = new ThreadLocal<>();
 
     /*
      * One time setup to allow the system to mocking via this mock maker.

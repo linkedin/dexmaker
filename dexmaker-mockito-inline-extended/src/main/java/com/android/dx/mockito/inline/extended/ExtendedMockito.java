@@ -16,6 +16,7 @@
 
 package com.android.dx.mockito.inline.extended;
 
+import org.mockito.InOrder;
 import org.mockito.MockSettings;
 import org.mockito.Mockito;
 import org.mockito.internal.matchers.LocalizedMatcher;
@@ -264,7 +265,7 @@ public class ExtendedMockito extends Mockito {
      */
     @UnstableApi
     public static void verify(MockedVoidMethod method, VerificationMode mode) {
-        verifyInt(method, mode);
+        verifyInt(method, mode, null);
     }
 
     /**
@@ -276,6 +277,21 @@ public class ExtendedMockito extends Mockito {
     @UnstableApi
     public static void verify(MockedMethod method, VerificationMode mode) {
         verify((MockedVoidMethod) method::get, mode);
+    }
+
+    /**
+     * Same as {@link Mockito#inOrder(Object...)} but adds the ability to verify static method
+     * calls via {@link StaticInOrder#verify(MockedMethod)},
+     * {@link StaticInOrder#verify(MockedVoidMethod)},
+     * {@link StaticInOrder#verify(MockedMethod, VerificationMode)}, and
+     * {@link StaticInOrder#verify(MockedVoidMethod, VerificationMode)}.
+     * <p>To verify static method calls, the result of {@link #staticMockMarker(Class)} has to be
+     * passed to the {@code mocksAndMarkers} parameter. It is possible to mix static and instance
+     * mocking.
+     */
+    @UnstableApi
+    public static StaticInOrder inOrder(Object... mocksAndMarkers) {
+        return new StaticInOrder(Mockito.inOrder(mocksAndMarkers));
     }
 
     /**
@@ -294,9 +310,11 @@ public class ExtendedMockito extends Mockito {
      *
      * @param method          The static method call to be verified
      * @param mode            The verification mode
+     * @param instanceInOrder If set, the {@link StaticInOrder} object
      */
     @SuppressWarnings({"CheckReturnValue", "MockitoUsage", "unchecked"})
-    static void verifyInt(MockedVoidMethod method, VerificationMode mode) {
+    static void verifyInt(MockedVoidMethod method, VerificationMode mode, InOrder
+            instanceInOrder) {
         if (onMethodCallDuringVerification.get() != null) {
             throw new IllegalStateException("Verification is already in progress on this "
                     + "thread.");
@@ -326,7 +344,11 @@ public class ExtendedMockito extends Mockito {
 
                 matchers = (List<LocalizedMatcher>) resetStackMethod.invoke(argMatcherStorage);
 
-                verify(staticMockMarker(clazz), mode);
+                if (instanceInOrder == null) {
+                    verify(staticMockMarker(clazz), mode);
+                } else {
+                    instanceInOrder.verify(staticMockMarker(clazz), mode);
+                }
 
                 // Add the matchers back after verify is called
                 Field matcherStackField

@@ -16,12 +16,16 @@
 
 package com.android.dx.mockito.inline.extended.tests;
 
+import com.android.dx.mockito.inline.extended.StaticInOrder;
+
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockitoSession;
 import org.mockito.exceptions.verification.NoInteractionsWanted;
+import org.mockito.exceptions.verification.VerificationInOrderFailure;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.ignoreStubs;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.inOrder;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -30,6 +34,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroI
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -97,6 +102,74 @@ public class VerifyStatic {
             assertEquals("marco!", echoCaptor.getValue());
 
             verifyNoMoreInteractions(staticMockMarker(EchoClass.class));
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void verifyInOrder() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(EchoClass.class).mockStatic
+                (ConsumeClass.class).startMocking();
+        try {
+            EchoClass.echo("marco!");
+            ConsumeClass.consume("donuts");
+            ConsumeClass.consume("nougat");
+            EchoClass.echo("polo");
+
+            StaticInOrder echoInOrder = inOrder(staticMockMarker(EchoClass.class));
+            echoInOrder.verify(() -> EchoClass.echo(eq("marco!")));
+            echoInOrder.verify(() -> EchoClass.echo(eq("polo")));
+            echoInOrder.verifyNoMoreInteractions();
+
+            StaticInOrder consumeInOrder = inOrder(staticMockMarker(ConsumeClass.class));
+            consumeInOrder.verify(() -> ConsumeClass.consume(eq("donuts")));
+            consumeInOrder.verify(() -> ConsumeClass.consume(eq("nougat")));
+            consumeInOrder.verifyNoMoreInteractions();
+
+            StaticInOrder combinedInOrder = inOrder(staticMockMarker(EchoClass.class,
+                    ConsumeClass.class));
+            combinedInOrder.verify(() -> EchoClass.echo(eq("marco!")));
+            combinedInOrder.verify(() -> ConsumeClass.consume(eq("donuts")));
+            combinedInOrder.verify(() -> ConsumeClass.consume(eq("nougat")));
+            combinedInOrder.verify(() -> EchoClass.echo(eq("polo")));
+            combinedInOrder.verifyNoMoreInteractions();
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test(expected = VerificationInOrderFailure.class)
+    public void verifyBadOrder() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(EchoClass.class).startMocking();
+        try {
+            EchoClass.echo("marco!");
+            EchoClass.echo("polo");
+
+            StaticInOrder echoInOrder = inOrder(staticMockMarker(EchoClass.class));
+            echoInOrder.verify(() -> EchoClass.echo(eq("polo")));
+            echoInOrder.verify(() -> EchoClass.echo(eq("marco!")));
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void verifyBadMatcher() throws Exception {
+        MockitoSession session = mockitoSession().mockStatic(EchoClass.class).startMocking();
+        try {
+            EchoClass.echo("marco!");
+            EchoClass.echo("polo");
+
+            StaticInOrder echoInOrder = inOrder(staticMockMarker(EchoClass.class));
+            echoInOrder.verify(() -> EchoClass.echo(eq("marco!")));
+
+            try {
+                echoInOrder.verify(() -> EchoClass.echo(eq("badMarker")));
+                fail();
+            } catch (VerificationInOrderFailure e) {
+                assertTrue(e.getMessage(), e.getMessage().contains("badMarker"));
+            }
         } finally {
             session.finishMocking();
         }

@@ -16,6 +16,8 @@
 
 package com.android.dx.mockito.inline.extended.tests;
 
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.dx.mockito.inline.extended.StaticInOrder;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import org.junit.Test;
@@ -65,6 +67,20 @@ public class MockInstanceUsingExtendedMockito {
         } finally {
             session.finishMocking();
         }
+    }
+
+    @Test
+    public void verifyInOrder() throws Exception {
+        TestClass t = mock(TestClass.class);
+
+        assertNull(t.echo("mocked"));
+
+        when(t.echo(eq("stubbed"))).thenReturn("B");
+        assertEquals("B", t.echo("stubbed"));
+
+        StaticInOrder inOrder = ExtendedMockito.inOrder(t);
+        inOrder.verify(t).echo("mocked");
+        inOrder.verify(t).echo("stubbed");
     }
 
     @Test

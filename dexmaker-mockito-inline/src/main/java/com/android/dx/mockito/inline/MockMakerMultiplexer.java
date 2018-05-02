@@ -16,6 +16,8 @@
 
 package com.android.dx.mockito.inline;
 
+import android.util.Log;
+
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.MockMaker;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
  * Multiplexes multiple mock makers
  */
 public final class MockMakerMultiplexer implements MockMaker {
+    private static final String LOG_TAG = MockMakerMultiplexer.class.getSimpleName();
     private final static MockMaker[] MOCK_MAKERS;
 
     static {
@@ -41,16 +44,9 @@ public final class MockMakerMultiplexer implements MockMaker {
                 Class<? extends MockMaker> mockMakerClass = (Class<? extends MockMaker>)
                         Class.forName(potentialMockMaker);
                 mockMakers.add(mockMakerClass.getDeclaredConstructor().newInstance());
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                    | NoSuchMethodException | InvocationTargetException e) {
+                Log.e(LOG_TAG, "Could not init mockmaker " + potentialMockMaker, e);
             }
         }
 

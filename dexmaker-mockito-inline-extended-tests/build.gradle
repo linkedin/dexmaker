@@ -10,14 +10,18 @@ buildscript {
 }
 
 apply plugin: "net.ltgt.errorprone"
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 'android-P'
-    buildToolsVersion '27.0.3'
+
+    android {
+        lintOptions {
+            disable 'InvalidPackage'
+        }
+    }
 
     defaultConfig {
-        applicationId 'com.android.dexmaker.mockito.inline.extended.tests'
         minSdkVersion 27
         targetSdkVersion 27
         versionName VERSION_NAME
@@ -25,11 +29,6 @@ android {
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
 
-    externalNativeBuild {
-        cmake {
-            path 'CMakeLists.txt'
-        }
-    }
     compileOptions {
         targetCompatibility 1.8
         sourceCompatibility 1.8
@@ -42,9 +41,11 @@ repositories {
 }
 
 dependencies {
+    implementation project(':dexmaker-mockito-inline-tests')
+    compileOnly project(':dexmaker-mockito-inline-extended')
     androidTestImplementation project(':dexmaker-mockito-inline-extended')
 
-    androidTestImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
+    implementation 'junit:junit:4.12'
+    implementation 'com.android.support.test:runner:1.0.1'
+    implementation 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
 }

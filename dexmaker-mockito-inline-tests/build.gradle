@@ -18,6 +18,7 @@ android {
     android {
         lintOptions {
             disable 'InvalidPackage'
+            warning 'NewApi'
         }
     }
 

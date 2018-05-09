@@ -18,6 +18,7 @@ package com.android.dx.mockito.inline;
 
 import android.os.Build;
 import android.os.Debug;
+import android.support.v4.os.BuildCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -51,8 +52,7 @@ class JvmtiAgent {
      * @throws IOException If jvmti could not be enabled or agent could not be loaded
      */
     JvmtiAgent() throws IOException {
-        // TODO (moltmann@google.com): Replace with proper check for >= P
-        if (!Build.VERSION.CODENAME.equals("P")) {
+        if (!BuildCompat.isAtLeastP()) {
             throw new IOException("Requires Android P. Build is " + Build.VERSION.CODENAME);
         }
 

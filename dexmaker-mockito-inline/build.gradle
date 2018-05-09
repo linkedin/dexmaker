@@ -107,11 +107,13 @@ publishing {
 
 repositories {
     jcenter()
+    google()
 }
 
 dependencies {
     implementation project(':dexmaker')
 
     implementation 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
+    implementation 'com.android.support:support-compat:27.1.1'
 }
 

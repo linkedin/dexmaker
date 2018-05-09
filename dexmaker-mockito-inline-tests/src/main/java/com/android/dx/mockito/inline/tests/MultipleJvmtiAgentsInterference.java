@@ -18,6 +18,7 @@ package com.android.dx.mockito.inline.tests;
 
 import android.os.Build;
 import android.os.Debug;
+import android.support.v4.os.BuildCompat;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -38,8 +39,7 @@ public class MultipleJvmtiAgentsInterference {
 
     @BeforeClass
     public static void installTestAgent() throws Exception {
-        // TODO (moltmann@google.com): Replace with proper check for >= P
-        assumeTrue(Build.VERSION.CODENAME.equals("P"));
+        assumeTrue(BuildCompat.isAtLeastP());
 
         Debug.attachJvmtiAgent(AGENT_LIB_NAME, null,
                 MultipleJvmtiAgentsInterference.class.getClassLoader());

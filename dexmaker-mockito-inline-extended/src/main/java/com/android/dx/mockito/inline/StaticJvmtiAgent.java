@@ -17,6 +17,7 @@
 package com.android.dx.mockito.inline;
 
 import android.os.Build;
+import android.support.v4.os.BuildCompat;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -46,8 +47,7 @@ class StaticJvmtiAgent {
      * @throws IOException If jvmti could not be enabled or agent could not be loaded
      */
     StaticJvmtiAgent() throws IOException {
-        // TODO (moltmann@google.com): Replace with proper check for >= P
-        if (!Build.VERSION.CODENAME.equals("P")) {
+        if (!BuildCompat.isAtLeastP()) {
             throw new IOException("Requires Android P. Build is " + Build.VERSION.CODENAME);
         }
 

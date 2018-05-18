@@ -5,6 +5,7 @@
 
 package com.android.dx.mockito.inline;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -303,14 +304,14 @@ class StaticMockMethodAdvice {
     private static class SuperMethodCall implements InvocationHandlerAdapter.SuperMethod {
         private final SelfCallInfo selfCallInfo;
         private final Method origin;
-        private final Object marker;
+        private final WeakReference<Object> marker;
         private final Object[] arguments;
 
         private SuperMethodCall(SelfCallInfo selfCallInfo, Method origin, Object marker,
                                 Object[] arguments) {
             this.selfCallInfo = selfCallInfo;
             this.origin = origin;
-            this.marker = marker;
+            this.marker = new WeakReference(marker);
             this.arguments = arguments;
         }
 
@@ -329,7 +330,7 @@ class StaticMockMethodAdvice {
 
             // By setting instance in the the selfCallInfo, once single method call on this instance
             // and thread will call the read method as isMocked will return false.
-            selfCallInfo.set(marker);
+            selfCallInfo.set(marker.get());
             return tryInvoke(origin, arguments);
         }
 

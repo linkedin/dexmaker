@@ -30,6 +30,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.android.dx.mockito.inline.InlineDexmakerMockMaker.onSpyInProgressInstance;
 import static com.android.dx.mockito.inline.InlineStaticMockMaker.onMethodCallDuringVerification;
 import static org.mockito.internal.progress.ThreadSafeMockingProgress.mockingProgress;
 
@@ -192,6 +193,20 @@ public class ExtendedMockito extends Mockito {
         }
 
         return markers;
+    }
+
+    public static void spyOn(Object toMock) {
+        if (onSpyInProgressInstance.get() != null) {
+            throw new IllegalStateException("Cannot set up spying on an existing object while "
+                    + "setting up spying for another existing object");
+        }
+
+        onSpyInProgressInstance.set(toMock);
+        try {
+            spy(toMock);
+        } finally {
+            onSpyInProgressInstance.remove();
+        }
     }
 
     /**

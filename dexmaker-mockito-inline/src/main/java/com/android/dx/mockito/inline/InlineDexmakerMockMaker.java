@@ -69,6 +69,12 @@ public final class InlineDexmakerMockMaker implements MockMaker {
      */
     public static final Class DISPATCHER_CLASS;
 
+    /**
+     * {@code ExtendedMockito#spyOn} allows to turn an existing object into a spy. If this operation
+     * is running this field is set to the object that should become a spy.
+     */
+    public static ThreadLocal<Object> onSpyInProgressInstance = new ThreadLocal<>();
+
     /*
      * One time setup to allow the system to mocking via this mock maker.
      */
@@ -248,11 +254,16 @@ public final class InlineDexmakerMockMaker implements MockMaker {
 
                 ProxyBuilder.setInvocationHandler(mock, handlerAdapter);
             } else {
-                try {
-                    mock = instantiator.newInstance(typeToMock);
-                } catch (org.mockito.creation.instance.InstantiationException e) {
-                    throw new MockitoException("Unable to create mock instance of type '"
-                            + typeToMock.getSimpleName() + "'", e);
+                if (settings.getSpiedInstance() != null
+                        && onSpyInProgressInstance.get() == settings.getSpiedInstance()) {
+                    mock = (T) onSpyInProgressInstance.get();
+                } else {
+                    try {
+                        mock = instantiator.newInstance(typeToMock);
+                    } catch (org.mockito.creation.instance.InstantiationException e) {
+                        throw new MockitoException("Unable to create mock instance of type '"
+                                + typeToMock.getSimpleName() + "'", e);
+                    }
                 }
             }
         }

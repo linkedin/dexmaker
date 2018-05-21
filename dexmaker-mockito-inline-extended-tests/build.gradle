@@ -47,5 +47,7 @@ dependencies {
 
     implementation 'junit:junit:4.12'
     implementation 'com.android.support.test:runner:1.0.1'
+    implementation 'com.android.support.test:rules:1.0.2'
+
     api 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
 }

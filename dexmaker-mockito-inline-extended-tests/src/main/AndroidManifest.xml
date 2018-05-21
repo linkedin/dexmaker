@@ -1,1 +1,7 @@
-<manifest package="com.android.dexmaker.mockito.inline.extended.tests" />
+<manifest package="com.android.dexmaker.mockito.inline.extended.tests"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity android:name="com.android.dx.mockito.inline.extended.tests.EmptyActivity" />
+    </application>
+</manifest>

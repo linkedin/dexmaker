@@ -143,6 +143,7 @@ public final class ProxyBuilder<T> {
     private Set<Class<?>> interfaces = new HashSet<>();
     private Method[] methods;
     private boolean sharedClassLoader;
+    private boolean markTrusted;
 
     private ProxyBuilder(Class<T> clazz) {
         baseClass = clazz;
@@ -205,6 +206,11 @@ public final class ProxyBuilder<T> {
 
     public ProxyBuilder<T> withSharedClassLoader() {
         this.sharedClassLoader = true;
+        return this;
+    }
+
+    public ProxyBuilder<T> markTrusted() {
+        this.markTrusted = true;
         return this;
     }
 
@@ -301,6 +307,18 @@ public final class ProxyBuilder<T> {
         dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType, getInterfacesAsTypeIds());
         if (sharedClassLoader) {
             dexMaker.setSharedClassLoader(baseClass.getClassLoader());
+        }
+        if (markTrusted) {
+            // The proxied class might have blacklisted methods. Blacklisting methods (and fields)
+            // is a new feature of Android P:
+            //
+            // https://android-developers.googleblog.com/2018/02/
+            // improving-stability-by-reducing-usage.html
+            //
+            // The newly generated class might not be allowed to call methods of the proxied class
+            // if it is not trusted. As it is not clear which classes have blacklisted methods, mark
+            // all generated classes as trusted.
+            dexMaker.markAsTrusted();
         }
         ClassLoader classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache);
         try {

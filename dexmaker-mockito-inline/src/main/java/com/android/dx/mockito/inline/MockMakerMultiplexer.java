@@ -46,7 +46,12 @@ public final class MockMakerMultiplexer implements MockMaker {
                 mockMakers.add(mockMakerClass.getDeclaredConstructor().newInstance());
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
                     | NoSuchMethodException | InvocationTargetException e) {
-                Log.e(LOG_TAG, "Could not init mockmaker " + potentialMockMaker, e);
+                if (potentialMockMaker.equals(InlineDexmakerMockMaker.class.getName())) {
+                    Log.e(LOG_TAG, "Could not init mockmaker " + potentialMockMaker, e);
+                } else {
+                    // Additional mock makers might not be loaded
+                    Log.e(LOG_TAG, "Could not init mockmaker " + potentialMockMaker);
+                }
             }
         }
 

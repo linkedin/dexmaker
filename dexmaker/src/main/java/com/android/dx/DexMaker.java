@@ -197,8 +197,14 @@ import static java.lang.reflect.Modifier.STATIC;
  */
 public final class DexMaker {
     private final Map<TypeId<?>, TypeDeclaration> types = new LinkedHashMap<>();
+
+    // Only warn about not being able to deal with blacklisted methods once. Often this is no
+    // problem and warning on every class load is too spammy.
+    private static boolean didWarnBlacklistedMethods;
+
     private ClassLoader sharedClassLoader;
     private DexFile outputDex;
+    private boolean markAsTrusted;
 
     /**
      * Creates a new {@code DexMaker} instance, which can be used to create a
@@ -359,12 +365,54 @@ public final class DexMaker {
         return "Generated_" + checksum +".jar";
     }
 
+    /**
+     * Set shared class loader to use.
+     *
+     * <p>If a class wants to call package private methods of another class they need to share a
+     * class loader. One common case for this requirement is a mock class wanting to mock package
+     * private methods of the original class.
+     *
+     * @param classLoader the class loader the new class should be loaded by
+     */
     public void setSharedClassLoader(ClassLoader classLoader) {
         this.sharedClassLoader = classLoader;
     }
 
+    public void markAsTrusted() {
+        this.markAsTrusted = true;
+    }
+
     private ClassLoader generateClassLoader(File result, File dexCache, ClassLoader parent) {
         try {
+            // Try to load the class so that it can call hidden APIs. This is required for spying
+            // on system classes as real-methods of these classes might call blacklisted APIs
+            if (markAsTrusted) {
+                try {
+                    if (sharedClassLoader != null) {
+                        ClassLoader loader = parent != null ? parent : sharedClassLoader;
+                        loader.getClass().getMethod("addDexPath", String.class,
+                                Boolean.TYPE).invoke(loader, result.getPath(), true);
+                        return loader;
+                    } else {
+                        return (ClassLoader) Class.forName("dalvik.system.BaseDexClassLoader")
+                                .getConstructor(String.class, File.class, String.class,
+                                        ClassLoader.class, Boolean.TYPE)
+                                .newInstance(result.getPath(), dexCache.getAbsoluteFile(), null,
+                                        parent, true);
+                    }
+                } catch (InvocationTargetException e) {
+                    if (e.getCause() instanceof SecurityException) {
+                        if (!didWarnBlacklistedMethods) {
+                            System.err.println("Cannot allow to call blacklisted super methods. "
+                                    + "This might break spying on system classes." + e.getCause());
+                            didWarnBlacklistedMethods = true;
+                        }
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+
             if (sharedClassLoader != null) {
                 ClassLoader loader = parent != null ? parent : sharedClassLoader;
                 loader.getClass().getMethod("addDexPath", String.class).invoke(loader,

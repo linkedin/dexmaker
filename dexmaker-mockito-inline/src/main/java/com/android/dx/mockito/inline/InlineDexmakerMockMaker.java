@@ -26,6 +26,7 @@ import com.android.dx.stock.ProxyBuilder.MethodSetEntry;
 import org.mockito.Mockito;
 import org.mockito.creation.instance.Instantiator;
 import org.mockito.exceptions.base.MockitoException;
+import org.mockito.internal.util.reflection.LenientCopyTool;
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
 import org.mockito.plugins.InstantiatorProvider2;
@@ -36,6 +37,7 @@ import java.io.InputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
@@ -112,6 +114,40 @@ public final class InlineDexmakerMockMaker implements MockMaker {
                         + "I/O error during the creation of this agent: " + ioe + "\n\n"
                         + "Potentially, the current VM does not support the jvmti API correctly",
                         ioe);
+            }
+
+            // Blacklisted APIs were introduced in Android P:
+            //
+            // https://android-developers.googleblog.com/2018/02/
+            // improving-stability-by-reducing-usage.html
+            //
+            // This feature prevents access to blacklisted fields and calling of blacklisted APIs
+            // if the calling class is not trusted.
+            Method allowHiddenApiReflectionFrom;
+            try {
+                Class vmDebug = Class.forName("dalvik.system.VMDebug");
+                allowHiddenApiReflectionFrom = vmDebug.getDeclaredMethod(
+                        "allowHiddenApiReflectionFrom", Class.class);
+            } catch (ClassNotFoundException | NoSuchMethodException e) {
+                throw new IllegalStateException("Cannot find "
+                        + "VMDebug#allowHiddenApiReflectionFrom.");
+            }
+
+            // The LenientCopyTool copies the fields to a spy when creating the copy from an
+            // existing object. Some of the fields might be blacklisted. Marking the LenientCopyTool
+            // as trusted allows the tool to copy all fields, including the blacklisted ones.
+            try {
+                allowHiddenApiReflectionFrom.invoke(null, LenientCopyTool.class);
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
+
+            // The MockMethodAdvice is used by methods of spies to call the real methods. As the
+            // real methods might be blacklisted, this class needs to be marked as trusted.
+            try {
+                allowHiddenApiReflectionFrom.invoke(null, MockMethodAdvice.class);
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
             }
         } catch (Throwable throwable) {
             agent = null;
@@ -236,9 +272,15 @@ public final class InlineDexmakerMockMaker implements MockMaker {
             if (subclassingRequired) {
                 try {
                     // support abstract methods via dexmaker's ProxyBuilder
-                    proxyClass = ProxyBuilder.forClass(typeToMock).implementing(extraInterfaces)
-                            .onlyMethods(getMethodsToProxy(settings)).withSharedClassLoader()
-                            .buildProxyClass();
+                    ProxyBuilder builder = ProxyBuilder.forClass(typeToMock).implementing
+                            (extraInterfaces)
+                            .onlyMethods(getMethodsToProxy(settings)).withSharedClassLoader();
+
+                    if (Build.VERSION.SDK_INT >= 28) {
+                        builder.markTrusted();
+                    }
+
+                    proxyClass = builder.buildProxyClass();
                 } catch (RuntimeException e) {
                     throw e;
                 } catch (Exception e) {

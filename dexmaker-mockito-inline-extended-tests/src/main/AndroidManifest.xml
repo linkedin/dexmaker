@@ -1,7 +1,9 @@
 <manifest package="com.android.dexmaker.mockito.inline.extended.tests"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <application>
+    <application android:debuggable="true"
+        tools:ignore="HardcodedDebugMode">
         <activity android:name="com.android.dx.mockito.inline.extended.tests.EmptyActivity" />
     </application>
 </manifest>

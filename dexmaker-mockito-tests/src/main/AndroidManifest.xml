@@ -1,1 +1,7 @@
-<manifest package="com.android.dexmaker.mockito.tests" />
+<manifest xmlns:tools="http://schemas.android.com/tools"
+    package="com.android.dexmaker.mockito.tests"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:debuggable="true"
+        tools:ignore="HardcodedDebugMode"/>
+</manifest>
+

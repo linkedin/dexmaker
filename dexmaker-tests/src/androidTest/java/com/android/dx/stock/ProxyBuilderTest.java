@@ -16,6 +16,8 @@
 
 package com.android.dx.stock;
 
+import android.os.Build;
+
 import com.android.dx.DexMakerTest;
 import junit.framework.AssertionFailedError;
 import org.junit.After;
@@ -44,6 +46,7 @@ import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 public class ProxyBuilderTest {
     private FakeInvocationHandler fakeHandler = new FakeInvocationHandler();
@@ -221,6 +224,22 @@ public class ProxyBuilderTest {
         }
         fail();
     }
+
+    public static class HasPackagePrivateMethodSharedClassLoader {
+        String result() {
+            throw new AssertionFailedError();
+        }
+    }
+
+    @Test
+    public void testProxyingPackagePrivateMethodsWithSharedClassLoader_AreIntercepted()
+            throws Throwable {
+        assumeTrue(Build.VERSION.SDK_INT >= 24);
+
+        assertEquals("fake result", proxyFor(HasPackagePrivateMethodSharedClassLoader.class)
+                .withSharedClassLoader().build().result());
+    }
+
 
     public static class HasProtectedMethod {
         protected String result() {
@@ -587,6 +606,21 @@ public class ProxyBuilderTest {
         assertEquals("fake result", proxyFor(AbstractClass.class).build().getValue());
     }
 
+    @Test
+    public void testCallAbstractSuperMethod() throws Exception {
+        AbstractClass a = proxyFor(AbstractClass.class).build();
+
+        // Setting the handler to null routes all calls to the real methods. In this case the real
+        // method is abstract and cannot be called
+        ProxyBuilder.setInvocationHandler(a, null);
+
+        try {
+            a.getValue();
+            fail();
+        } catch (AbstractMethodError expected) {
+        }
+    }
+
     public static class CtorHasDeclaredException {
         public CtorHasDeclaredException() throws IOException {
             throw new IOException();
@@ -867,6 +901,23 @@ public class ProxyBuilderTest {
 
         FooReturnsInt c = (FooReturnsInt) o;
         assertEquals(3, c.foo());
+    }
+
+
+    @Test
+    public void testCallInterfaceSuperMethod() throws Exception {
+        FooReturnsVoid f = (FooReturnsVoid)proxyFor(Object.class).implementing(FooReturnsVoid.class)
+                .build();
+
+        // Setting the handler to null routes all calls to the real methods. In this case the real
+        // method is a method of an interface and cannot be called
+        ProxyBuilder.setInvocationHandler(f, null);
+
+        try {
+            f.foo();
+            fail();
+        } catch (AbstractMethodError expected) {
+        }
     }
 
     @Test

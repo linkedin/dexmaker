@@ -195,6 +195,7 @@ public class ExtendedMockito extends Mockito {
         return markers;
     }
 
+    @UnstableApi
     public static void spyOn(Object toMock) {
         if (onSpyInProgressInstance.get() != null) {
             throw new IllegalStateException("Cannot set up spying on an existing object while "

@@ -16,16 +16,13 @@
 
 package com.android.dx.mockito.inline.tests;
 
-import android.os.Build;
 import android.os.Debug;
-import android.support.v4.os.BuildCompat;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
-import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.mock;
 
 public class MultipleJvmtiAgentsInterference {
@@ -39,8 +36,6 @@ public class MultipleJvmtiAgentsInterference {
 
     @BeforeClass
     public static void installTestAgent() throws Exception {
-        assumeTrue(BuildCompat.isAtLeastP());
-
         Debug.attachJvmtiAgent(AGENT_LIB_NAME, null,
                 MultipleJvmtiAgentsInterference.class.getClassLoader());
     }

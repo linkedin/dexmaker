@@ -13,7 +13,7 @@ apply plugin: "net.ltgt.errorprone"
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     android {
         lintOptions {
@@ -23,7 +23,7 @@ android {
 
     defaultConfig {
         minSdkVersion 8
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionName VERSION_NAME
 
         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'

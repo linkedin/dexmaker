@@ -17,7 +17,7 @@
 package com.android.dx.mockito.inline;
 
 import android.os.Build;
-import android.support.v4.os.BuildCompat;
+import android.os.Debug;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -47,11 +47,10 @@ class StaticJvmtiAgent {
      * @throws IOException If jvmti could not be enabled or agent could not be loaded
      */
     StaticJvmtiAgent() throws IOException {
-        if (!BuildCompat.isAtLeastP()) {
-            throw new IOException("Requires Android P. Build is " + Build.VERSION.CODENAME);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            throw new IOException("Requires API level " + Build.VERSION_CODES.P + ". API level is "
+                    + Build.VERSION.SDK_INT);
         }
-
-        Throwable loadJvmtiException = null;
 
         ClassLoader cl = StaticJvmtiAgent.class.getClassLoader();
         if (!(cl instanceof BaseDexClassLoader)) {
@@ -59,28 +58,7 @@ class StaticJvmtiAgent {
                     + "by a BaseDexClassLoader");
         }
 
-        try {
-            /*
-             * TODO (moltmann@google.com): Replace with regular method call once the API becomes
-             *                             public
-             */
-            Class.forName("android.os.Debug").getMethod("attachJvmtiAgent", String.class,
-                    String.class, ClassLoader.class).invoke(null, AGENT_LIB_NAME, null, cl);
-        } catch (InvocationTargetException e) {
-            loadJvmtiException = e.getCause();
-        } catch (IllegalAccessException | ClassNotFoundException | NoSuchMethodException e) {
-            loadJvmtiException = e;
-        }
-
-        if (loadJvmtiException != null) {
-            if (loadJvmtiException instanceof IOException) {
-                throw (IOException) loadJvmtiException;
-            } else {
-                throw new IOException("Could not load jvmti plugin",
-                        loadJvmtiException);
-            }
-        }
-
+        Debug.attachJvmtiAgent(AGENT_LIB_NAME, null, cl);
         nativeRegisterTransformerHook();
     }
 

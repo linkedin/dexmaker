@@ -16,7 +16,9 @@
 
 package com.android.dx;
 
+import android.os.Build;
 import android.support.test.InstrumentationRegistry;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,6 +33,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import dalvik.system.BaseDexClassLoader;
+
 import static com.android.dx.util.TestUtil.DELTA_DOUBLE;
 import static com.android.dx.util.TestUtil.DELTA_FLOAT;
 import static java.lang.reflect.Modifier.ABSTRACT;
@@ -43,8 +47,12 @@ import static java.lang.reflect.Modifier.STATIC;
 import static java.lang.reflect.Modifier.SYNCHRONIZED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * This generates a class named 'Generated' with one or more generated methods
@@ -2218,5 +2226,65 @@ public final class DexMakerTest {
     private Class<?> generateAndLoad() throws Exception {
         return dexMaker.generateAndLoad(getClass().getClassLoader(), getDataDirectory())
                 .loadClass("Generated");
+    }
+
+    private final ClassLoader commonClassLoader = new BaseDexClassLoader(
+            getDataDirectory().getPath(), getDataDirectory(), getDataDirectory().getPath(),
+            DexMakerTest.class.getClassLoader());
+
+    private final ClassLoader uncommonClassLoader = new ClassLoader() {
+        @Override
+        public Class<?> loadClass(String name) throws ClassNotFoundException {
+            throw new IllegalStateException("Not used");
+        }
+    };
+
+    private static void loadWithSharedClassLoader(ClassLoader cl, boolean markAsTrusted,
+                                                  boolean shouldUseCL) throws Exception {
+        DexMaker d = new DexMaker();
+        d.setSharedClassLoader(cl);
+
+        if (markAsTrusted) {
+            d.markAsTrusted();
+        }
+
+        ClassLoader selectedCL = d.generateAndLoad(null, getDataDirectory());
+
+        if (shouldUseCL) {
+            assertSame(cl, selectedCL);
+        } else {
+            assertNotSame(cl, selectedCL);
+
+            // An appropriate fallback should have been selected
+            assertNotNull(selectedCL);
+        }
+    }
+
+    @Test
+    public void loadWithUncommonSharedClassLoader() throws Exception{
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+
+        loadWithSharedClassLoader(uncommonClassLoader, false, false);
+    }
+
+    @Test
+    public void loadWithCommonSharedClassLoader() throws Exception{
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
+
+        loadWithSharedClassLoader(commonClassLoader, false, true);
+    }
+
+    @Test
+    public void loadAsTrustedWithUncommonSharedClassLoader() throws Exception{
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P);
+
+        loadWithSharedClassLoader(uncommonClassLoader, true, false);
+    }
+
+    @Test
+    public void loadAsTrustedWithCommonSharedClassLoader() throws Exception{
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P);
+
+        loadWithSharedClassLoader(commonClassLoader, true, true);
     }
 }

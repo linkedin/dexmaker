@@ -116,14 +116,14 @@ For Mockito support, download the latest .jar via Maven:
     <dependency>
       <groupId>com.linkedin.dexmaker</groupId>
       <artifactId>dexmaker-mockito</artifactId>
-      <version>2.16.0</version>
+      <version>2.19.0</version>
       <type>pom</type>
     </dependency>
 ```
 
 or Gradle:
 ```
-    androidTestCompile 'com.linkedin.dexmaker:dexmaker-mockito:2.16.0'
+    androidTestCompile 'com.linkedin.dexmaker:dexmaker-mockito:2.19.0'
 ```
 
 _Note: The dependency on Mockito will be transitively included, so there's no need to specify both Mockito AND dexmaker-mockito_

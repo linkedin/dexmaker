@@ -205,6 +205,7 @@ public class ExtendedMockito extends Mockito {
      * @param toMock The existing object to convert into a spy
      */
     @UnstableApi
+    @SuppressWarnings("CheckReturnValue")
     public static void spyOn(Object toMock) {
         if (onSpyInProgressInstance.get() != null) {
             throw new IllegalStateException("Cannot set up spying on an existing object while "

@@ -114,7 +114,7 @@ public class BlacklistedApis {
         parent.measure(100, 100);
     }
 
-    @SuppressLint("PrivateApi")
+    @SuppressLint({"PrivateApi", "CheckReturnValue"})
     @Test
     public void cannotCallBlackListedAfterSpying() {
         // Spying and mocking might change the View class's byte code

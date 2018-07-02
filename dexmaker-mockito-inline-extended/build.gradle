@@ -53,5 +53,5 @@ repositories {
 dependencies {
     implementation project(':dexmaker-mockito-inline')
 
-    implementation 'org.mockito:mockito-core:2.16.0', { exclude group: 'net.bytebuddy' }
+    implementation 'org.mockito:mockito-core:2.19.0', { exclude group: 'net.bytebuddy' }
 }

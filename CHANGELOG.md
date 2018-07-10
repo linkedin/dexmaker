@@ -1,5 +1,12 @@
 # Change Log
 
+## Version 2.19.0 (2018-07-06)
+- Removed last usages of internal Mockito APIs - #46
+- Added experimental support for mocking static methods on Android P+ via the `dexmaker-mockito-inline-extended` artifact - #97
+- Updated `dexmaker-mockito-inline` to compile against finalized Android P APIs
+- Updated `dexmaker-mockito-inline` to allow mocks to call blacklisted APIs on Android P - #106
+- Updated underlying Mockito version to 2.19.0
+
 ## Version 2.16.0 (2018-03-26)
 - New dexmaker-mockito-inline artifact which implements the Mockito inline API and allows mocking final classes & methods on Android P+
   - **NOTE:** Using this artifact requires compiling and running with at least Android P Developer Preview 1

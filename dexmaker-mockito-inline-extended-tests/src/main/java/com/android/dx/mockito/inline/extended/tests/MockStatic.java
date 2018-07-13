@@ -73,6 +73,18 @@ public class MockStatic {
         }
     }
 
+    private static class NoDefaultConstructorClass {
+        private static int mLastId;
+
+        NoDefaultConstructorClass(int id) {
+            mLastId = id;
+        }
+
+        static int getLastId() {
+            return mLastId;
+        }
+    }
+
     @Test
     public void spyStatic() throws Exception {
         ContentResolver resolver = InstrumentationRegistry.getTargetContext().getContentResolver();
@@ -95,6 +107,23 @@ public class MockStatic {
 
             // Make sure non-mocked methods work as before
             assertEquals(deviceName, Settings.Global.getString(resolver, DEVICE_NAME));
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void spyStaticOnObjectWithNoDefaultConstructor() throws Exception {
+        new NoDefaultConstructorClass(23);
+
+        MockitoSession session = mockitoSession().spyStatic(NoDefaultConstructorClass.class)
+                .startMocking();
+        try {
+            // Starting the spying hasn't change the static state of the class.
+            assertEquals(23, NoDefaultConstructorClass.getLastId());
+
+            when(NoDefaultConstructorClass.getLastId()).thenReturn(42);
+            assertEquals(42, NoDefaultConstructorClass.getLastId());
         } finally {
             session.finishMocking();
         }

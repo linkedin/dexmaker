@@ -26,6 +26,9 @@ import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
 
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.withSettings;
+
 /**
  * Same as {@link MockitoSessionBuilder} but adds the ability to stub static methods
  * calls via {@link #mockStatic(Class)}, {@link #mockStatic(Class, Answer)}, and
@@ -97,7 +100,8 @@ public class StaticMockitoSessionBuilder implements MockitoSessionBuilder {
      */
     @UnstableApi
     public <T> StaticMockitoSessionBuilder spyStatic(Class<T> clazz) {
-        staticMockings.add(new StaticMocking<>(clazz, () -> Mockito.spy(clazz)));
+        staticMockings.add(new StaticMocking<>(clazz, () -> Mockito.mock(clazz, withSettings()
+                .defaultAnswer(CALLS_REAL_METHODS))));
         return this;
     }
 

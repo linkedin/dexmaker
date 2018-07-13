@@ -27,6 +27,7 @@ import org.mockito.plugins.InstantiatorProvider2;
 import org.mockito.plugins.MockMaker;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -71,6 +72,31 @@ public final class InlineStaticMockMaker implements MockMaker {
                         " occured due to an I/O error during the creation of this agent: " + ioe
                         + "\n\nPotentially, the current VM does not support the jvmti API " +
                         "correctly", ioe);
+            }
+
+            // Blacklisted APIs were introduced in Android P:
+            //
+            // https://android-developers.googleblog.com/2018/02/
+            // improving-stability-by-reducing-usage.html
+            //
+            // This feature prevents access to blacklisted fields and calling of blacklisted APIs
+            // if the calling class is not trusted.
+            Method allowHiddenApiReflectionFrom;
+            try {
+                Class vmDebug = Class.forName("dalvik.system.VMDebug");
+                allowHiddenApiReflectionFrom = vmDebug.getDeclaredMethod(
+                        "allowHiddenApiReflectionFrom", Class.class);
+            } catch (ClassNotFoundException | NoSuchMethodException e) {
+                throw new IllegalStateException("Cannot find "
+                        + "VMDebug#allowHiddenApiReflectionFrom.");
+            }
+
+            // The StaticMockMethodAdvice is used by methods of spies to call the real methods. As
+            // the real methods might be blacklisted, this class needs to be marked as trusted.
+            try {
+                allowHiddenApiReflectionFrom.invoke(null, StaticMockMethodAdvice.class);
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
             }
         } catch (Throwable throwable) {
             agent = null;

@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 2.19.1 (2018-07-25)
+- Allow starting of static-spy-session for objects without 0-arg constructor
+- Allow static advice to see hidden APIs
+
 ## Version 2.19.0 (2018-07-06)
 - Removed last usages of internal Mockito APIs - #46
 - Added experimental support for mocking static methods on Android P+ via the `dexmaker-mockito-inline-extended` artifact - #97

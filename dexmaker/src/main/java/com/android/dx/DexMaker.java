@@ -388,20 +388,31 @@ public final class DexMaker {
 
     private ClassLoader generateClassLoader(File result, File dexCache, ClassLoader parent) {
         try {
-            ClassLoader preferredSharedClassLoader = null;
+            boolean shareClassLoader = sharedClassLoader != null;
+
+            ClassLoader preferredClassLoader = null;
+            if (parent != null) {
+                preferredClassLoader = parent;
+            } else if (sharedClassLoader != null) {
+                preferredClassLoader = sharedClassLoader;
+            }
+
             Class baseDexClassLoaderClass = Class.forName("dalvik.system.BaseDexClassLoader");
 
-            if (sharedClassLoader != null) {
-                if (baseDexClassLoaderClass.isAssignableFrom(sharedClassLoader.getClass())) {
-                    preferredSharedClassLoader = sharedClassLoader;
-                } else {
-                    if (!didWarnNonBaseDexClassLoader) {
-                        System.err.println("Cannot share classloader as shared classloader '"
-                                + preferredSharedClassLoader + "' is not a subclass of '"
-                                + baseDexClassLoaderClass
-                                + "'");
-                        didWarnNonBaseDexClassLoader = true;
+            if (shareClassLoader) {
+                if (!baseDexClassLoaderClass.isAssignableFrom(preferredClassLoader.getClass())) {
+                    if (!preferredClassLoader.getClass().getName().equals(
+                            "java.lang.BootClassLoader")) {
+                        if (!didWarnNonBaseDexClassLoader) {
+                            System.err.println("Cannot share classloader as shared classloader '"
+                                    + preferredClassLoader + "' is not a subclass of '"
+                                    + baseDexClassLoaderClass
+                                    + "'");
+                            didWarnNonBaseDexClassLoader = true;
+                        }
                     }
+
+                    shareClassLoader = false;
                 }
             }
 
@@ -409,17 +420,16 @@ public final class DexMaker {
             // on system classes as real-methods of these classes might call blacklisted APIs
             if (markAsTrusted) {
                 try {
-                    if (preferredSharedClassLoader != null) {
-                        ClassLoader loader = parent != null ? parent : preferredSharedClassLoader;
-                        loader.getClass().getMethod("addDexPath", String.class,
-                                Boolean.TYPE).invoke(loader, result.getPath(), true);
-                        return loader;
+                    if (shareClassLoader) {
+                        preferredClassLoader.getClass().getMethod("addDexPath", String.class,
+                                Boolean.TYPE).invoke(preferredClassLoader, result.getPath(), true);
+                        return preferredClassLoader;
                     } else {
                         return (ClassLoader) baseDexClassLoaderClass
                                 .getConstructor(String.class, File.class, String.class,
                                         ClassLoader.class, Boolean.TYPE)
                                 .newInstance(result.getPath(), dexCache.getAbsoluteFile(), null,
-                                        parent, true);
+                                        preferredClassLoader, true);
                     }
                 } catch (InvocationTargetException e) {
                     if (e.getCause() instanceof SecurityException) {
@@ -434,15 +444,15 @@ public final class DexMaker {
                 }
             }
 
-            if (preferredSharedClassLoader != null) {
-                ClassLoader loader = parent != null ? parent : preferredSharedClassLoader;
-                loader.getClass().getMethod("addDexPath", String.class).invoke(loader,
-                        result.getPath());
-                return loader;
+            if (shareClassLoader) {
+                preferredClassLoader.getClass().getMethod("addDexPath", String.class).invoke(
+                        preferredClassLoader, result.getPath());
+                return preferredClassLoader;
             } else {
                 return (ClassLoader) Class.forName("dalvik.system.DexClassLoader")
                         .getConstructor(String.class, String.class, String.class, ClassLoader.class)
-                        .newInstance(result.getPath(), dexCache.getAbsolutePath(), null, parent);
+                        .newInstance(result.getPath(), dexCache.getAbsolutePath(), null,
+                                preferredClassLoader);
             }
         } catch (ClassNotFoundException e) {
             throw new UnsupportedOperationException("load() requires a Dalvik VM", e);
@@ -477,7 +487,8 @@ public final class DexMaker {
      * property.
      *
      * @param parent the parent ClassLoader to be used when loading our
-     *     generated types
+     *     generated types (if set, overrides
+     *     {@link #setSharedClassLoader(ClassLoader) shared class loader}.
      * @param dexCache the destination directory where generated and optimized
      *     dex files will be written. If null, this class will try to guess the
      *     application's private data dir.

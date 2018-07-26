@@ -131,8 +131,8 @@ public final class ProxyBuilder<T> {
      * Android's runtime doesn't support class unloading so there's little
      * value in using weak references.
      */
-    private static final Map<Class<?>, Class<?>> generatedProxyClasses
-            = Collections.synchronizedMap(new HashMap<Class<?>, Class<?>>());
+    private static final Map<ProxiedClass<?>, Class<?>> generatedProxyClasses
+            = Collections.synchronizedMap(new HashMap<ProxiedClass<?>, Class<?>>());
 
     private final Class<T> baseClass;
     private ClassLoader parentClassLoader = ProxyBuilder.class.getClassLoader();
@@ -263,22 +263,20 @@ public final class ProxyBuilder<T> {
      * {@link #setInvocationHandler(Object, InvocationHandler)}.
      */
     public Class<? extends T> buildProxyClass() throws IOException {
+        ClassLoader requestedClassloader;
+        if (sharedClassLoader) {
+            requestedClassloader = baseClass.getClassLoader();
+        } else {
+            requestedClassloader = parentClassLoader;
+        }
+
         // try the cache to see if we've generated this one before
         // we only populate the map with matching types
         @SuppressWarnings("unchecked")
-        Class<? extends T> proxyClass = (Class) generatedProxyClasses.get(baseClass);
-        if (proxyClass != null) {
-            boolean validClassLoader;
-            if (sharedClassLoader) {
-                ClassLoader parent = parentClassLoader != null ? parentClassLoader : baseClass
-                        .getClassLoader();
-                validClassLoader = proxyClass.getClassLoader() == parent;
-            } else {
-                validClassLoader = proxyClass.getClassLoader().getParent() == parentClassLoader;
-            }
-            if (validClassLoader && interfaces.equals(asSet(proxyClass.getInterfaces()))) {
-                return proxyClass; // cache hit!
-            }
+        Class<? extends T> proxyClass = (Class) generatedProxyClasses.get(
+                new ProxiedClass<>(baseClass, requestedClassloader, sharedClassLoader));
+        if (proxyClass != null && interfaces.equals(asSet(proxyClass.getInterfaces()))) {
+            return proxyClass; // cache hit!
         }
 
         // the cache missed; generate the class
@@ -306,7 +304,7 @@ public final class ProxyBuilder<T> {
         generateCodeForAllMethods(dexMaker, generatedType, methodsToProxy, superType);
         dexMaker.declare(generatedType, generatedName + ".generated", PUBLIC, superType, getInterfacesAsTypeIds());
         if (sharedClassLoader) {
-            dexMaker.setSharedClassLoader(baseClass.getClassLoader());
+            dexMaker.setSharedClassLoader(requestedClassloader);
         }
         if (markTrusted) {
             // The proxied class might have blacklisted methods. Blacklisting methods (and fields)
@@ -320,7 +318,12 @@ public final class ProxyBuilder<T> {
             // all generated classes as trusted.
             dexMaker.markAsTrusted();
         }
-        ClassLoader classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache);
+        ClassLoader classLoader;
+        if (sharedClassLoader) {
+            classLoader = dexMaker.generateAndLoad(null, dexCache);
+        } else {
+            classLoader = dexMaker.generateAndLoad(parentClassLoader, dexCache);
+        }
         try {
             proxyClass = loadClass(classLoader, generatedName);
         } catch (IllegalAccessError e) {
@@ -332,7 +335,9 @@ public final class ProxyBuilder<T> {
             throw new AssertionError(e);
         }
         setMethodsStaticField(proxyClass, methodsToProxy);
-        generatedProxyClasses.put(baseClass, proxyClass);
+        generatedProxyClasses.put(new ProxiedClass<>(baseClass, requestedClassloader,
+                        sharedClassLoader),
+                proxyClass);
         return proxyClass;
     }
 
@@ -928,6 +933,50 @@ public final class ProxyBuilder<T> {
             result += 31 * result + returnType.hashCode();
             result += 31 * result + Arrays.hashCode(paramTypes);
             return result;
+        }
+    }
+
+    /**
+     * A class that was already proxied.
+     */
+    private static class ProxiedClass<U> {
+        final Class<U> clazz;
+
+        /**
+         * Class loader requested when the proxy class was generated. This might not be the
+         * class loader of {@code clazz} as not all class loaders can be shared.
+         *
+         * @see DexMaker#generateClassLoader(File, File, ClassLoader)
+         */
+        final ClassLoader requestedClassloader;
+
+        final boolean sharedClassLoader;
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+            if (other == null || getClass() != other.getClass()) {
+                return false;
+            }
+
+            ProxiedClass<?> that = (ProxiedClass<?>) other;
+            return clazz == that.clazz
+                    && requestedClassloader == that.requestedClassloader
+                    && sharedClassLoader == that.sharedClassLoader;
+        }
+
+        @Override
+        public int hashCode() {
+            return clazz.hashCode() + requestedClassloader.hashCode() + (sharedClassLoader ? 1 : 0);
+        }
+
+        private ProxiedClass(Class<U> clazz, ClassLoader requestedClassloader,
+                             boolean sharedClassLoader) {
+            this.clazz = clazz;
+            this.requestedClassloader = requestedClassloader;
+            this.sharedClassLoader = sharedClassLoader;
         }
     }
 }

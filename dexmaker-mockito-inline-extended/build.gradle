@@ -19,7 +19,7 @@ version = VERSION_NAME
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.0'
+    buildToolsVersion '28.0.1'
 
     android {
         lintOptions {

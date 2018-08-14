@@ -202,19 +202,19 @@ public class ExtendedMockito extends Mockito {
      * converted by this method all references to the already existing object will be affected by
      * the stubbing.
      *
-     * @param toMock The existing object to convert into a spy
+     * @param toSpy The existing object to convert into a spy
      */
     @UnstableApi
     @SuppressWarnings("CheckReturnValue")
-    public static void spyOn(Object toMock) {
+    public static void spyOn(Object toSpy) {
         if (onSpyInProgressInstance.get() != null) {
             throw new IllegalStateException("Cannot set up spying on an existing object while "
                     + "setting up spying for another existing object");
         }
 
-        onSpyInProgressInstance.set(toMock);
+        onSpyInProgressInstance.set(toSpy);
         try {
-            spy(toMock);
+            spy(toSpy);
         } finally {
             onSpyInProgressInstance.remove();
         }

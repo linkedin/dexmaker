@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.0'
+    buildToolsVersion '28.0.1'
 
     defaultConfig {
         applicationId 'com.android.dexmaker.mockito.inline.dispatcher'
@@ -10,4 +10,9 @@ android {
         targetSdkVersion 28
         versionName VERSION_NAME
     }
+}
+
+repositories {
+    jcenter()
+    google()
 }

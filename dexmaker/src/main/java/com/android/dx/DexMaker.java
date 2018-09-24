@@ -232,7 +232,8 @@ public final class DexMaker {
     public void declare(TypeId<?> type, String sourceFile, int flags,
             TypeId<?> supertype, TypeId<?>... interfaces) {
         TypeDeclaration declaration = getTypeDeclaration(type);
-        int supportedFlags = Modifier.PUBLIC | Modifier.FINAL | Modifier.ABSTRACT;
+        int supportedFlags = Modifier.PUBLIC | Modifier.FINAL | Modifier.ABSTRACT
+                | AccessFlags.ACC_SYNTHETIC;
         if ((flags & ~supportedFlags) != 0) {
             throw new IllegalArgumentException("Unexpected flag: "
                     + Integer.toHexString(flags));
@@ -265,7 +266,8 @@ public final class DexMaker {
         }
 
         int supportedFlags = Modifier.PUBLIC | Modifier.PRIVATE | Modifier.PROTECTED
-                | Modifier.STATIC | Modifier.FINAL | Modifier.SYNCHRONIZED;
+                | Modifier.STATIC | Modifier.FINAL | Modifier.SYNCHRONIZED
+                | AccessFlags.ACC_SYNTHETIC;
         if ((flags & ~supportedFlags) != 0) {
             throw new IllegalArgumentException("Unexpected flag: "
                     + Integer.toHexString(flags));

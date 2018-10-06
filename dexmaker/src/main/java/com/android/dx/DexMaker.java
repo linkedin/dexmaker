@@ -267,7 +267,7 @@ public final class DexMaker {
 
         int supportedFlags = Modifier.PUBLIC | Modifier.PRIVATE | Modifier.PROTECTED
                 | Modifier.STATIC | Modifier.FINAL | Modifier.SYNCHRONIZED
-                | AccessFlags.ACC_SYNTHETIC;
+                | AccessFlags.ACC_SYNTHETIC | AccessFlags.ACC_BRIDGE;
         if ((flags & ~supportedFlags) != 0) {
             throw new IllegalArgumentException("Unexpected flag: "
                     + Integer.toHexString(flags));
@@ -305,7 +305,8 @@ public final class DexMaker {
         }
 
         int supportedFlags = Modifier.PUBLIC | Modifier.PRIVATE | Modifier.PROTECTED
-                | Modifier.STATIC | Modifier.FINAL | Modifier.VOLATILE | Modifier.TRANSIENT;
+                | Modifier.STATIC | Modifier.FINAL | Modifier.VOLATILE | Modifier.TRANSIENT
+                | AccessFlags.ACC_SYNTHETIC;
         if ((flags & ~supportedFlags) != 0) {
             throw new IllegalArgumentException("Unexpected flag: "
                     + Integer.toHexString(flags));

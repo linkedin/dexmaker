@@ -326,7 +326,7 @@ public final class DexMaker {
     public byte[] generate() {
         if (outputDex == null) {
             DexOptions options = new DexOptions();
-            options.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
+            options.minSdkVersion = DexFormat.API_NO_EXTENDED_OPCODES;
             outputDex = new DexFile(options);
         }
 
@@ -540,7 +540,7 @@ public final class DexMaker {
     DexFile getDexFile() {
         if (outputDex == null) {
             DexOptions options = new DexOptions();
-            options.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
+            options.minSdkVersion = DexFormat.API_NO_EXTENDED_OPCODES;
             outputDex = new DexFile(options);
         }
         return outputDex;
@@ -571,7 +571,7 @@ public final class DexMaker {
             }
 
             DexOptions dexOptions = new DexOptions();
-            dexOptions.targetApiLevel = DexFormat.API_NO_EXTENDED_OPCODES;
+            dexOptions.minSdkVersion = DexFormat.API_NO_EXTENDED_OPCODES;
 
             CstType thisType = type.constant;
 

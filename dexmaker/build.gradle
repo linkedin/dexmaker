@@ -28,5 +28,5 @@ tasks.withType(JavaCompile) {
 }
 
 dependencies {
-    implementation 'com.jakewharton.android.repackaged:dalvik-dx:7.1.0_r7'
+    implementation 'com.jakewharton.android.repackaged:dalvik-dx:9.0.0_r3'
 }

@@ -294,10 +294,17 @@ public final class ProxyBuilder<T> {
         }
 
         // Sort the results array so that they are in a deterministic fashion.
+        //
+        // We use the same parameters to sort as used in {@link MethodId#hashCode}. This is needed
+        // as e.g. making a method "public" instead of "protected" should not change the id's of the
+        // methods. If the id's would change the classes loaded from the cache would be incorrect.
         Arrays.sort(methodsToProxy, new Comparator<Method>() {
             @Override
             public int compare(Method method1, Method method2) {
-                return method1.toString().compareTo(method2.toString());
+                String m1Signature = method1.getDeclaringClass() + method1.getName() + Arrays.toString(method1.getParameterTypes()) + method1.getReturnType();
+                String m2Signature = method2.getDeclaringClass() + method2.getName() + Arrays.toString(method2.getParameterTypes()) + method2.getReturnType();
+
+                return m1Signature.compareTo(m2Signature);
             }
         });
 

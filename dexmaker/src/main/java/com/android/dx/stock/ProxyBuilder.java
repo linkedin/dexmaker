@@ -281,7 +281,7 @@ public final class ProxyBuilder<T> {
 
         // the cache missed; generate the class
         DexMaker dexMaker = new DexMaker();
-        String generatedName = getMethodNameForProxyOf(baseClass);
+        String generatedName = getMethodNameForProxyOf(baseClass, interfaces);
         TypeId<? extends T> generatedType = TypeId.get("L" + generatedName + ";");
         TypeId<T> superType = TypeId.get(baseClass);
         generateConstructorsAndFields(dexMaker, generatedType, superType, baseClass);
@@ -813,8 +813,9 @@ public final class ProxyBuilder<T> {
         }
     }
 
-    private static <T> String getMethodNameForProxyOf(Class<T> clazz) {
-        return clazz.getName().replace(".", "/") + "_Proxy";
+    private static <T> String getMethodNameForProxyOf(Class<T> clazz, Set<Class<?>> interfaces) {
+        String interfacesHash = Integer.toHexString(interfaces.hashCode());
+        return clazz.getName().replace(".", "/") + "_" + interfacesHash + "_Proxy";
     }
 
     private static TypeId<?>[] classArrayToTypeArray(Class<?>[] input) {

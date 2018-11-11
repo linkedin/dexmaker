@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import static java.lang.reflect.Modifier.ABSTRACT;
 import static java.lang.reflect.Modifier.PRIVATE;
@@ -272,10 +271,11 @@ public final class ProxyBuilder<T> {
 
         // try the cache to see if we've generated this one before
         // we only populate the map with matching types
+        ProxiedClass<T> cacheKey =
+                new ProxiedClass<>(baseClass, interfaces, requestedClassloader, sharedClassLoader);
         @SuppressWarnings("unchecked")
-        Class<? extends T> proxyClass = (Class) generatedProxyClasses.get(
-                new ProxiedClass<>(baseClass, requestedClassloader, sharedClassLoader));
-        if (proxyClass != null && interfaces.equals(asSet(proxyClass.getInterfaces()))) {
+        Class<? extends T> proxyClass = (Class) generatedProxyClasses.get(cacheKey);
+        if (proxyClass != null) {
             return proxyClass; // cache hit!
         }
 
@@ -342,9 +342,7 @@ public final class ProxyBuilder<T> {
             throw new AssertionError(e);
         }
         setMethodsStaticField(proxyClass, methodsToProxy);
-        generatedProxyClasses.put(new ProxiedClass<>(baseClass, requestedClassloader,
-                        sharedClassLoader),
-                proxyClass);
+        generatedProxyClasses.put(cacheKey, proxyClass);
         return proxyClass;
     }
 
@@ -849,10 +847,6 @@ public final class ProxyBuilder<T> {
         }
     }
 
-    private static <T> Set<T> asSet(T... array) {
-        return new CopyOnWriteArraySet<>(Arrays.asList(array));
-    }
-
     private static MethodId<?, ?> getUnboxMethodForPrimitive(Class<?> methodReturnType) {
         return PRIMITIVE_TO_UNBOX_METHOD.get(methodReturnType);
     }
@@ -950,6 +944,8 @@ public final class ProxyBuilder<T> {
     private static class ProxiedClass<U> {
         final Class<U> clazz;
 
+        final Set<?> interfaces;
+
         /**
          * Class loader requested when the proxy class was generated. This might not be the
          * class loader of {@code clazz} as not all class loaders can be shared.
@@ -971,18 +967,21 @@ public final class ProxyBuilder<T> {
 
             ProxiedClass<?> that = (ProxiedClass<?>) other;
             return clazz == that.clazz
+                    && interfaces.equals(that.interfaces)
                     && requestedClassloader == that.requestedClassloader
                     && sharedClassLoader == that.sharedClassLoader;
         }
 
         @Override
         public int hashCode() {
-            return clazz.hashCode() + requestedClassloader.hashCode() + (sharedClassLoader ? 1 : 0);
+            return clazz.hashCode() + interfaces.hashCode() + requestedClassloader.hashCode()
+                    + (sharedClassLoader ? 1 : 0); 
         }
 
-        private ProxiedClass(Class<U> clazz, ClassLoader requestedClassloader,
+        private ProxiedClass(Class<U> clazz, Set<?> interfaces, ClassLoader requestedClassloader,
                              boolean sharedClassLoader) {
             this.clazz = clazz;
+            this.interfaces = interfaces;
             this.requestedClassloader = requestedClassloader;
             this.sharedClassLoader = sharedClassLoader;
         }

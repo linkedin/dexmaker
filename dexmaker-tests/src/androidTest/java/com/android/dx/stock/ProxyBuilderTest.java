@@ -33,11 +33,8 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -1253,24 +1250,5 @@ public class ProxyBuilderTest {
         Class<?> c2 = ProxyBuilder.forClass(SimpleClass.class)
                 .implementing(Callable.class).withSharedClassLoader().buildProxyClass();
         assertNotSame(c1, c2);
-    }
-
-    @Test
-    public void testImplementingDifferentInterfacesWithDexMakerCaching() throws Exception {
-        proxyFor(SimpleClass.class).implementing(Runnable.class).buildProxyClass();
-        assertEquals(1, getGeneratedProxyClasses().size());
-        assertEquals(2, versionedDxDir.listFiles().length);
-
-        proxyFor(SimpleClass.class).implementing(Callable.class).buildProxyClass();
-        assertEquals(2, getGeneratedProxyClasses().size());
-        assertEquals(3, versionedDxDir.listFiles().length);
-
-        Map<?, ?> cacheCopy = new HashMap<>(getGeneratedProxyClasses());
-        Set<?> generatedFiles = new HashSet<>(Arrays.asList(versionedDxDir.listFiles()));
-
-        proxyFor(SimpleClass.class).implementing(Runnable.class).buildProxyClass();
-        proxyFor(SimpleClass.class).implementing(Callable.class).buildProxyClass();
-        assertEquals(cacheCopy, getGeneratedProxyClasses());
-        assertEquals(generatedFiles, new HashSet<>(Arrays.asList(versionedDxDir.listFiles())));
     }
 }

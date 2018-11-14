@@ -2142,6 +2142,30 @@ public final class DexMakerTest {
         }
     }
 
+    public interface BlankInterfaceA {}
+
+    public interface BlankInterfaceB {}
+
+    @Test
+    public void testCaching_DifferentInterfaces() throws Exception {
+        int origSize = getDataDirectory().listFiles().length;
+
+        // Create new dexmaker generator with BlankInterfaceA.
+        dexMaker = new DexMaker();
+        TypeId interfaceA = TypeId.get(BlankInterfaceA.class);
+        dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT, interfaceA);
+        generateAndLoad();
+        int numFiles = getDataDirectory().listFiles().length;
+        assertTrue(origSize < numFiles);
+
+        // Create new dexmaker generator with BlankInterfaceB.
+        dexMaker = new DexMaker();
+        TypeId interfaceB = TypeId.get(BlankInterfaceB.class);
+        dexMaker.declare(GENERATED, "Generated.java", PUBLIC, TypeId.OBJECT, interfaceB);
+        generateAndLoad();
+        assertTrue(numFiles < getDataDirectory().listFiles().length);
+    }
+
     @Test
     public void testCaching_Constructors() throws Exception {
         int origSize = getDataDirectory().listFiles().length;

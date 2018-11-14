@@ -1251,4 +1251,15 @@ public class ProxyBuilderTest {
                 .implementing(Callable.class).withSharedClassLoader().buildProxyClass();
         assertNotSame(c1, c2);
     }
+
+    @Test
+    public void testInterfaceOrder() throws Exception {
+        Class<?> c1 = proxyFor(SimpleClass.class)
+                .implementing(Runnable.class, Callable.class).buildProxyClass();
+        assertEquals(new Class[]{Runnable.class, Callable.class}, c1.getInterfaces());
+
+        Class<?> c2 = proxyFor(SimpleClass.class)
+                .implementing(Callable.class, Runnable.class).buildProxyClass();
+        assertEquals(new Class[]{Callable.class, Runnable.class}, c2.getInterfaces());
+    }
 }

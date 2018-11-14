@@ -34,11 +34,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -139,7 +141,7 @@ public final class ProxyBuilder<T> {
     private File dexCache;
     private Class<?>[] constructorArgTypes = new Class[0];
     private Object[] constructorArgValues = new Object[0];
-    private Set<Class<?>> interfaces = new HashSet<>();
+    private List<Class<?>> interfaces = new ArrayList<>();
     private Method[] methods;
     private boolean sharedClassLoader;
     private boolean markTrusted;
@@ -179,11 +181,14 @@ public final class ProxyBuilder<T> {
     }
 
     public ProxyBuilder<T> implementing(Class<?>... interfaces) {
+        List<Class<?>> list = this.interfaces;
         for (Class<?> i : interfaces) {
             if (!i.isInterface()) {
                 throw new IllegalArgumentException("Not an interface: " + i.getName());
             }
-            this.interfaces.add(i);
+            if (!list.contains(i)) {
+                list.add(i);
+            }
         }
         return this;
     }
@@ -811,7 +816,7 @@ public final class ProxyBuilder<T> {
         }
     }
 
-    private static <T> String getMethodNameForProxyOf(Class<T> clazz, Set<Class<?>> interfaces) {
+    private static <T> String getMethodNameForProxyOf(Class<T> clazz, List<Class<?>> interfaces) {
         String interfacesHash = Integer.toHexString(interfaces.hashCode());
         return clazz.getName().replace(".", "/") + "_" + interfacesHash + "_Proxy";
     }
@@ -944,7 +949,7 @@ public final class ProxyBuilder<T> {
     private static class ProxiedClass<U> {
         final Class<U> clazz;
 
-        final Set<?> interfaces;
+        final List<Class<?>> interfaces;
 
         /**
          * Class loader requested when the proxy class was generated. This might not be the
@@ -978,10 +983,10 @@ public final class ProxyBuilder<T> {
                     + (sharedClassLoader ? 1 : 0); 
         }
 
-        private ProxiedClass(Class<U> clazz, Set<?> interfaces, ClassLoader requestedClassloader,
-                             boolean sharedClassLoader) {
+        private ProxiedClass(Class<U> clazz, List<Class<?>> interfaces,
+                             ClassLoader requestedClassloader, boolean sharedClassLoader) {
             this.clazz = clazz;
-            this.interfaces = interfaces;
+            this.interfaces = new ArrayList<>(interfaces);
             this.requestedClassloader = requestedClassloader;
             this.sharedClassLoader = sharedClassLoader;
         }

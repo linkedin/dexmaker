@@ -18,6 +18,7 @@ package com.android.dx;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +26,9 @@ import java.util.List;
  * Uses heuristics to guess the application's private data directory.
  */
 class AppDataDirGuesser {
+    // Copied from UserHandle, indicates range of uids allocated for a user.
+    public static final int PER_USER_RANGE = 100000;
+
     public File guess() {
         try {
             ClassLoader classLoader = guessSuitableClassLoader();
@@ -146,8 +150,14 @@ class AppDataDirGuesser {
                 end = dash;
             }
             String packageName = potential.substring(start, end);
-            File dataDir = new File("/data/data/" + packageName);
-            if (isWriteableDirectory(dataDir)) {
+            File dataDir = getWriteableDirectory("/data/data/" + packageName);
+
+            if (dataDir == null) {
+                // If we can't access "/data/data", try to guess user specific data directory.
+                dataDir = guessUserDataDirectory(packageName);
+            }
+
+            if (dataDir != null) {
                 File cacheDir = new File(dataDir, "cache");
                 // The cache directory might not exist -- create if necessary
                 if (fileOrDirExists(cacheDir) || cacheDir.mkdir()) {
@@ -178,5 +188,38 @@ class AppDataDirGuesser {
 
     boolean isWriteableDirectory(File file) {
         return file.isDirectory() && file.canWrite();
+    }
+
+    Integer getProcessUid() {
+        /* Uses reflection to try to fetch process UID. It will only work when executing on
+         * Android device. Otherwise, returns null.
+         */
+        try {
+            Method myUid = Class.forName("android.os.Process").getMethod("myUid");
+
+            // Invoke the method on a null instance, since it's a static method.
+            return (Integer) myUid.invoke(/* instance= */ null);
+        } catch (Exception e) {
+            // Catch any exceptions thrown and default to returning a null.
+            return null;
+        }
+    }
+
+    File guessUserDataDirectory(String packageName) {
+        Integer uid = getProcessUid();
+        if (uid == null) {
+            // If we couldn't retrieve process uid, return null.
+            return null;
+        }
+
+        // We're trying to get the ID of the Android user that's running the process. It can be
+        // inferred from the UID of the current process.
+        int userId = uid / PER_USER_RANGE;
+        return getWriteableDirectory(String.format("/data/user/%d/%s", userId, packageName));
+    }
+
+    private File getWriteableDirectory(String pathName) {
+        File dir = new File(pathName);
+        return isWriteableDirectory(dir) ? dir : null;
     }
 }

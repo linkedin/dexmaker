@@ -17,6 +17,7 @@
 package com.android.dx;
 
 import android.os.Build;
+import android.os.Process;
 import org.junit.Test;
 
 import java.io.File;
@@ -46,6 +47,14 @@ public final class AppDataDirGuesserTest {
         guessCacheDirFor("/data/app/a.b.c.apk:/data/app/d.e.f.apk")
                 .withNonWriteable("/data/data/a.b.c/cache")
                 .shouldGive("/data/data/d.e.f/cache");
+    }
+
+    @Test
+    public void testGuessCacheDir_ForSecondaryUser() {
+        guessCacheDirFor("/data/app/a.b.c.apk:/data/app/d.e.f.apk")
+                .withNonWriteable("/data/data/a.b.c", "/data/data/d.e.f")
+                .withProcessUid(1110009)
+                .shouldGive("/data/user/11/a.b.c/cache", "/data/user/11/d.e.f/cache");
     }
 
     @Test
@@ -121,14 +130,22 @@ public final class AppDataDirGuesserTest {
         }
     }
 
+    @Test
+    public void testGetProcessUid() {
+        AppDataDirGuesser guesser = new AppDataDirGuesser();
+        assertTrue(guesser.getProcessUid() == Process.myUid());
+    }
+
     private interface TestCondition {
         TestCondition withNonWriteable(String... files);
+        TestCondition withProcessUid(Integer uid);
         void shouldGive(String... files);
     }
 
     private TestCondition guessCacheDirFor(final String path) {
         final Set<String> notWriteable = new HashSet<>();
         return new TestCondition() {
+            private Integer processUid;
             @Override
             public void shouldGive(String... files) {
                 AppDataDirGuesser guesser = new AppDataDirGuesser() {
@@ -140,6 +157,9 @@ public final class AppDataDirGuesserTest {
                     boolean fileOrDirExists(File file) {
                         return true;
                     }
+                    @Override
+                    Integer getProcessUid() { return processUid; }
+
                 };
                 File[] results = guesser.guessPath(path);
                 assertNotNull("Null results for " + path, results);
@@ -152,6 +172,12 @@ public final class AppDataDirGuesserTest {
             @Override
             public TestCondition withNonWriteable(String... files) {
                 notWriteable.addAll(Arrays.asList(files));
+                return this;
+            }
+
+            @Override
+            public TestCondition withProcessUid(Integer uid) {
+                processUid = uid;
                 return this;
             }
         };

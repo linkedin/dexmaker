@@ -200,7 +200,6 @@ class AppDataDirGuesser {
 
             // Invoke the method on a null instance, since it's a static method.
             return (Integer) myUid.invoke(/* instance= */ null);
-
         } catch (Exception e) {
             // Catch any exceptions thrown and default to returning a null.
             return null;

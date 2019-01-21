@@ -1,5 +1,15 @@
 # Change Log
 
+## Version 2.21.0 (2019-01-21)
+- Correctly handle shared classloaders
+- Update to Mockito 2.21.0
+- Allow for AccessFlags.ACC_SYNTHETIC
+- Add support for BRIDGE methods and SYNTHETIC fields
+- Update Dalvik-dx to 9.0.0_r3
+- Do not consider method modifers while sorting [#70](https://github.com/linkedin/dexmaker/issues/70)
+- Consider interfaces implemented when generating proxy classes [#124](https://github.com/linkedin/dexmaker/issues/124)
+- Improve AppDataDirGuesser to work for secondary Android users [#128](https://github.com/linkedin/dexmaker/issues/128)
+
 ## Version 2.19.1 (2018-07-25)
 - Allow starting of static-spy-session for objects without 0-arg constructor
 - Allow static advice to see hidden APIs

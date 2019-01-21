@@ -16,7 +16,7 @@ dependencies {
     implementation 'com.google.guava:guava:24.1-jre'
 
     implementation group: 'org.apache.httpcomponents', name: 'fluent-hc', version: '4.5.5'
-    implementation('org.jfrog.buildinfo:build-info-extractor-gradle:4.7.0') {
+    implementation('org.jfrog.buildinfo:build-info-extractor-gradle:4.7.3') {
         exclude module: 'groovy-all'
     }
 }

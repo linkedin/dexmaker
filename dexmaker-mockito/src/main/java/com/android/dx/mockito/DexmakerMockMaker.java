@@ -39,10 +39,15 @@ public final class DexmakerMockMaker implements MockMaker, StackTraceCleanerProv
     private final UnsafeAllocator unsafeAllocator = UnsafeAllocator.create();
     private final boolean isApi28;
 
-    public DexmakerMockMaker() throws Exception {
-        Class buildVersion = Class.forName("android.os.Build$VERSION");
+    public DexmakerMockMaker() {
+        try {
+            Class buildVersion = Class.forName("android.os.Build$VERSION");
 
-        isApi28 = buildVersion.getDeclaredField("SDK_INT").getInt(null) >= 28;
+            isApi28 = buildVersion.getDeclaredField("SDK_INT").getInt(null) >= 28;
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            throw new IllegalStateException("Cannot find android.os.Build$VERSION#SDK_INT. " +
+                "Field is needed to determine Android version.", e);
+        }
 
         if (isApi28) {
             // Blacklisted APIs were introduced in Android P:

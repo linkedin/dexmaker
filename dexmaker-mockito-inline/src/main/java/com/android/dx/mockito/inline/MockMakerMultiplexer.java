@@ -20,6 +20,7 @@ import android.util.Log;
 
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
+import org.mockito.plugins.InlineMockMaker;
 import org.mockito.plugins.MockMaker;
 
 import java.lang.reflect.InvocationTargetException;
@@ -28,7 +29,7 @@ import java.util.ArrayList;
 /**
  * Multiplexes multiple mock makers
  */
-public final class MockMakerMultiplexer implements MockMaker {
+public final class MockMakerMultiplexer implements InlineMockMaker {
     private static final String LOG_TAG = MockMakerMultiplexer.class.getSimpleName();
     private final static MockMaker[] MOCK_MAKERS;
 
@@ -102,5 +103,29 @@ public final class MockMakerMultiplexer implements MockMaker {
         }
 
         return null;
+    }
+
+    @Override
+    public void clearMock(Object mock) {
+        for (MockMaker mockMaker : MOCK_MAKERS) {
+            if (!(mockMaker instanceof InlineMockMaker)) {
+                continue;
+            }
+
+            InlineMockMaker inlineMockMaker = (InlineMockMaker) mockMaker;
+            inlineMockMaker.clearMock(mock);
+        }
+    }
+
+    @Override
+    public void clearAllMocks() {
+        for (MockMaker mockMaker : MOCK_MAKERS) {
+            if (!(mockMaker instanceof InlineMockMaker)) {
+                continue;
+            }
+
+            InlineMockMaker inlineMockMaker = (InlineMockMaker) mockMaker;
+            inlineMockMaker.clearAllMocks();
+        }
     }
 }

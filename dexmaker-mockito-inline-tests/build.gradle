@@ -28,7 +28,7 @@ android {
         targetSdkVersion 28
         versionName VERSION_NAME
 
-        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
     externalNativeBuild {
@@ -49,6 +49,6 @@ dependencies {
     androidTestImplementation project(':dexmaker-mockito-inline')
 
     implementation 'junit:junit:4.12'
-    implementation 'com.android.support.test:runner:1.0.2'
+    implementation 'androidx.test:runner:1.1.1'
     api 'org.mockito:mockito-core:2.21.0', { exclude group: 'net.bytebuddy' }
 }

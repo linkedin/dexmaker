@@ -16,20 +16,7 @@
 
 package com.android.dx.mockito.tests;
 
-import android.support.test.runner.AndroidJUnit4;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.exceptions.base.MockitoException;
-import org.mockito.exceptions.verification.NoInteractionsWanted;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -40,6 +27,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import androidx.test.runner.AndroidJUnit4;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.exceptions.base.MockitoException;
+import org.mockito.exceptions.verification.NoInteractionsWanted;
 
 @RunWith(AndroidJUnit4.class)
 public class GeneralMocking {

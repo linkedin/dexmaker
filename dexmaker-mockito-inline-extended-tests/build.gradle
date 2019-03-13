@@ -50,5 +50,5 @@ dependencies {
     implementation 'androidx.test:runner:1.1.1'
     implementation 'androidx.test:rules:1.1.1'
 
-    api 'org.mockito:mockito-core:2.21.0', { exclude group: 'net.bytebuddy' }
+    api 'org.mockito:mockito-core:2.25.0', { exclude group: 'net.bytebuddy' }
 }

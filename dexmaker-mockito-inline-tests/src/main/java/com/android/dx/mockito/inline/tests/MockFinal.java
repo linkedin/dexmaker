@@ -16,15 +16,6 @@
 
 package com.android.dx.mockito.inline.tests;
 
-import android.content.Intent;
-import android.os.IBinder;
-import android.print.PrintAttributes;
-import android.printservice.PrintService;
-import android.support.test.runner.AndroidJUnit4;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -32,6 +23,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+
+import android.content.Intent;
+import android.os.IBinder;
+import android.print.PrintAttributes;
+import android.printservice.PrintService;
+
+import androidx.test.runner.AndroidJUnit4;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class MockFinal {

@@ -16,17 +16,8 @@
 
 package com.android.dx.mockito.inline.extended.tests;
 
-import android.content.ContentResolver;
-import android.provider.Settings;
-import android.support.test.InstrumentationRegistry;
-
-import org.junit.Test;
-import org.mockito.MockingDetails;
-import org.mockito.MockitoSession;
-import org.mockito.exceptions.misusing.MissingMethodInvocationException;
-import org.mockito.quality.Strictness;
-
 import static android.provider.Settings.Global.DEVICE_NAME;
+
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.clearInvocations;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
@@ -36,6 +27,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.reset;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -44,6 +36,17 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+
+import android.content.ContentResolver;
+import android.provider.Settings;
+
+import androidx.test.InstrumentationRegistry;
+
+import org.junit.Test;
+import org.mockito.MockingDetails;
+import org.mockito.MockitoSession;
+import org.mockito.exceptions.misusing.MissingMethodInvocationException;
+import org.mockito.quality.Strictness;
 
 public class MockStatic {
     private static class SuperClass {

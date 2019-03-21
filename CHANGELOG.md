@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 2.25.0 (2019-03-21)
+- Update Mockito to 2.25.0
+- Fix crash in InspectClass - [#134](https://github.com/linkedin/dexmaker/issues/134)
+- Implement new InlineMockMaker interface in Mockito 2.25.0 - [#137](https://github.com/linkedin/dexmaker/issues/137)
+
 ## Version 2.21.0 (2019-01-21)
 - Correctly handle shared classloaders
 - Update to Mockito 2.21.0

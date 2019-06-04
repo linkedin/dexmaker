@@ -101,6 +101,13 @@ publishing {
                     }
                 }
             }
+
+            //Useful for inspecting maven artifacts in 'build/repo' after running './gradlew publish'
+            repositories {
+                maven {
+                    url = "$rootProject.buildDir/repo"
+                }
+            }
         }
     }
 }

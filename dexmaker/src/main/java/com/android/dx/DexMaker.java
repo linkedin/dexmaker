@@ -32,6 +32,7 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.StdTypeList;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -528,13 +529,22 @@ public final class DexMaker {
          * TODO: load the dex from memory where supported.
          */
         result.createNewFile();
-        JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(result));
-        JarEntry entry = new JarEntry(DexFormat.DEX_IN_JAR_NAME);
-        entry.setSize(dex.length);
-        jarOut.putNextEntry(entry);
-        jarOut.write(dex);
-        jarOut.closeEntry();
-        jarOut.close();
+        
+        JarOutputStream jarOut =
+            new JarOutputStream(new BufferedOutputStream(new FileOutputStream(result)));
+        try {
+            JarEntry entry = new JarEntry(DexFormat.DEX_IN_JAR_NAME);
+            entry.setSize(dex.length);
+            jarOut.putNextEntry(entry);
+            try {
+                jarOut.write(dex);
+            } finally {
+                jarOut.closeEntry();
+            }
+        } finally {
+            jarOut.close();
+        }
+        
         return generateClassLoader(result, dexCache, parent);
     }
 

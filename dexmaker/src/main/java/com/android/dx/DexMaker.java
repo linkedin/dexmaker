@@ -47,8 +47,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
 import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
-import static java.lang.reflect.Modifier.PRIVATE;
-import static java.lang.reflect.Modifier.STATIC;
+import static java.lang.reflect.Modifier.*;
+;
 
 /**
  * Generates a <strong>D</strong>alvik <strong>EX</strong>ecutable (dex)
@@ -231,7 +231,7 @@ public final class DexMaker {
      *     Modifier#FINAL} and {@link Modifier#ABSTRACT}.
      */
     public void declare(TypeId<?> type, String sourceFile, int flags,
-            TypeId<?> supertype, TypeId<?>... interfaces) {
+                        TypeId<?> supertype, TypeId<?>... interfaces) {
         TypeDeclaration declaration = getTypeDeclaration(type);
         int supportedFlags = Modifier.PUBLIC | Modifier.FINAL | Modifier.ABSTRACT
                 | AccessFlags.ACC_SYNTHETIC;
@@ -266,7 +266,7 @@ public final class DexMaker {
             throw new IllegalStateException("already declared: " + method);
         }
 
-        int supportedFlags = Modifier.PUBLIC | Modifier.PRIVATE | Modifier.PROTECTED
+        int supportedFlags = Modifier.ABSTRACT | Modifier.NATIVE | Modifier.PUBLIC | Modifier.PRIVATE | Modifier.PROTECTED
                 | Modifier.STATIC | Modifier.FINAL | Modifier.SYNCHRONIZED
                 | AccessFlags.ACC_SYNTHETIC | AccessFlags.ACC_BRIDGE;
         if ((flags & ~supportedFlags) != 0) {
@@ -529,9 +529,9 @@ public final class DexMaker {
          * TODO: load the dex from memory where supported.
          */
         result.createNewFile();
-        
+
         JarOutputStream jarOut =
-            new JarOutputStream(new BufferedOutputStream(new FileOutputStream(result)));
+                new JarOutputStream(new BufferedOutputStream(new FileOutputStream(result)));
         try {
             JarEntry entry = new JarEntry(DexFormat.DEX_IN_JAR_NAME);
             entry.setSize(dex.length);
@@ -544,7 +544,7 @@ public final class DexMaker {
         } finally {
             jarOut.close();
         }
-        
+
         return generateClassLoader(result, dexCache, parent);
     }
 
@@ -655,6 +655,10 @@ public final class DexMaker {
         }
 
         EncodedMethod toEncodedMethod(DexOptions dexOptions) {
+            if((flags & ABSTRACT) != 0 || (flags & NATIVE) != 0){
+                return new EncodedMethod(method.constant, flags, null, StdTypeList.EMPTY);
+            }
+
             RopMethod ropMethod = new RopMethod(code.toBasicBlocks(), 0);
             LocalVariableInfo locals = null;
             DalvCode dalvCode = RopTranslator.translate(

@@ -267,7 +267,7 @@ public final class DexMaker {
         }
 
         int supportedFlags = Modifier.PUBLIC | Modifier.PRIVATE | Modifier.PROTECTED
-                | Modifier.STATIC | Modifier.FINAL | Modifier.SYNCHRONIZED
+                | Modifier.STATIC | Modifier.FINAL | Modifier.SYNCHRONIZED | Modifier.NATIVE | Modifier.TRANSIENT
                 | AccessFlags.ACC_SYNTHETIC | AccessFlags.ACC_BRIDGE;
         if ((flags & ~supportedFlags) != 0) {
             throw new IllegalArgumentException("Unexpected flag: "
@@ -655,10 +655,16 @@ public final class DexMaker {
         }
 
         EncodedMethod toEncodedMethod(DexOptions dexOptions) {
-            RopMethod ropMethod = new RopMethod(code.toBasicBlocks(), 0);
-            LocalVariableInfo locals = null;
-            DalvCode dalvCode = RopTranslator.translate(
-                    ropMethod, PositionList.NONE, locals, code.paramSize(), dexOptions);
+            DalvCode dalvCode;
+            if ((this.flags & Modifier.NATIVE) != 0) {
+                dalvCode = null;
+            } else {
+                RopMethod ropMethod = new RopMethod(code.toBasicBlocks(), 0);
+                LocalVariableInfo locals = null;
+                dalvCode = RopTranslator.translate(
+                        ropMethod, PositionList.NONE, locals, code.paramSize(), dexOptions);
+            }
+
             return new EncodedMethod(method.constant, flags, dalvCode, StdTypeList.EMPTY);
         }
     }

@@ -16,12 +16,12 @@ allocation and regular/wide instruction selection for free.
 ### Mockito Mocks
 Dexmaker lets you use the [Mockito](https://github.com/mockito/mockito) mocking library in your
 Android projects by generating Dalvik bytecode class proxies. Just add an
-`androidTestCompile` dependency on `dexmaker-mockito` and you can use Mockito in your Android Instrumentation tests.
+`androidTestImplementation` dependency on `dexmaker-mockito` and you can use Mockito in your Android Instrumentation tests.
 
 The version of Mockito that Dexmaker targets can be found in `dexmaker-mockito`'s [build.gradle](https://github.com/linkedin/dexmaker/blob/master/dexmaker-mockito/build.gradle) file. The general rule is that the major and minor version of Dexmaker will match the underlying major and minor version of Mockito.
 
 ### Mocking Final Classes & Methods
-Starting in Android "P", it is possible to mock final classes and methods using the `dexmaker-mockito-inline` library. If you execute your tests on a device or emulator running Android P or above, you can add an `androidTestCompile` dependency on `dexmaker-mockito-inline` (instead of `dexmaker-mockito`; don't add both) and you can use the normal Mockito APIs to mock final classes and methods in your Android Instrumentation tests.
+Starting in Android "P", it is possible to mock final classes and methods using the `dexmaker-mockito-inline` library. If you execute your tests on a device or emulator running Android P or above, you can add an `androidTestImplementation` dependency on `dexmaker-mockito-inline` (instead of `dexmaker-mockito`; don't add both) and you can use the normal Mockito APIs to mock final classes and methods in your Android Instrumentation tests.
 
 **NOTE:** This functionality requires OS APIs which were introduced in Android P and cannot work on older versions of Android.
 
@@ -123,7 +123,7 @@ For Mockito support, download the latest .jar via Maven:
 
 or Gradle:
 ```
-    androidTestCompile 'com.linkedin.dexmaker:dexmaker-mockito:2.25.0'
+    androidTestImplementation 'com.linkedin.dexmaker:dexmaker-mockito:2.25.0'
 ```
 
 _Note: The dependency on Mockito will be transitively included, so there's no need to specify both Mockito AND dexmaker-mockito_

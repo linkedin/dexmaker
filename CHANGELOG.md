@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 2.25.1 (2019-11-21)
+- Add support for abstract and native methods generation - [#144](https://github.com/linkedin/dexmaker/pull/144)
+- Allow ProxyBuilder to call hidden APIs - [#150](https://github.com/linkedin/dexmaker/pull/150)
+
 ## Version 2.25.0 (2019-03-21)
 - Update Mockito to 2.25.0
 - Fix crash in InspectClass - [#134](https://github.com/linkedin/dexmaker/issues/134)

@@ -172,6 +172,26 @@ public final class DexMakerTest {
     }
 
     @Test
+    public void testLoadDeferredClassConstant() throws Exception {
+        /*
+         * public static String call() {
+         *   Class clazz = Generated.class;
+         *   return clazz.getSimpleName();
+         * }
+         */
+        MethodId<?, String> methodId = GENERATED.getMethod(TypeId.STRING, "call");
+        Code code = dexMaker.declare(methodId, PUBLIC | STATIC);
+        Local<Class> clazz = code.newLocal(TypeId.get(Class.class));
+        Local<String> retValue = code.newLocal(TypeId.STRING);
+        code.loadDeferredClassConstant(clazz, GENERATED);
+        MethodId<Class, String> getSimpleName = TypeId.get(Class.class).getMethod(TypeId.STRING, "getSimpleName");
+        code.invokeVirtual(getSimpleName, retValue, clazz);
+        code.returnValue(retValue);
+
+        assertEquals("Generated", getMethod().invoke(null));
+    }
+
+    @Test
     public void testCreateLocalMethodAsNull() throws Exception {
         /*
          * public void call(int value) {

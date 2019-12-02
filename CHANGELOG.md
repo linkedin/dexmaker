@@ -1,5 +1,8 @@
 # Change Log
 
+## Version 2.25.2-SNAPSHOT
+- Support generating locals that reference generated class types - [#151](https://github.com/linkedin/dexmaker/pull/151)
+
 ## Version 2.25.1 (2019-11-21)
 - Add support for abstract and native methods generation - [#144](https://github.com/linkedin/dexmaker/pull/144)
 - Allow ProxyBuilder to call hidden APIs - [#150](https://github.com/linkedin/dexmaker/pull/150)

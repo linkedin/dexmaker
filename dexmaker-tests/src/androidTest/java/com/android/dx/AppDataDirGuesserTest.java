@@ -32,26 +32,28 @@ import static org.junit.Assert.assertTrue;
 public final class AppDataDirGuesserTest {
     @Test
     public void testGuessCacheDir_SimpleExample() {
-        guessCacheDirFor("/data/app/a.b.c.apk").shouldGive("/data/data/a.b.c/cache");
-        guessCacheDirFor("/data/app/a.b.c.tests.apk").shouldGive("/data/data/a.b.c.tests/cache");
+        guessCacheDirFor("/data/app/a.b.c-xxx/base.apk")
+                .shouldGive("/data/data/a.b.c/cache");
+        guessCacheDirFor("/data/app/a.b.c.tests-xxx/base.apk")
+                .shouldGive("/data/data/a.b.c.tests/cache");
     }
 
     @Test
     public void testGuessCacheDir_MultipleResultsSeparatedByColon() {
-        guessCacheDirFor("/data/app/a.b.c.apk:/data/app/d.e.f.apk")
+        guessCacheDirFor("/data/app/a.b.c-xxx/base.apk:/data/app/d.e.f-xxx/base.apk")
                 .shouldGive("/data/data/a.b.c/cache", "/data/data/d.e.f/cache");
     }
 
     @Test
     public void testGuessCacheDir_NotWriteableSkipped() {
-        guessCacheDirFor("/data/app/a.b.c.apk:/data/app/d.e.f.apk")
+        guessCacheDirFor("/data/app/a.b.c-xxx/base.apk:/data/app/d.e.f-xxx/base.apk")
                 .withNonWriteable("/data/data/a.b.c/cache")
                 .shouldGive("/data/data/d.e.f/cache");
     }
 
     @Test
     public void testGuessCacheDir_ForSecondaryUser() {
-        guessCacheDirFor("/data/app/a.b.c.apk:/data/app/d.e.f.apk")
+        guessCacheDirFor("/data/app/a.b.c-xxx/base.apk:/data/app/d.e.f-xxx/base.apk")
                 .withNonWriteable("/data/data/a.b.c", "/data/data/d.e.f")
                 .withProcessUid(1110009)
                 .shouldGive("/data/user/11/a.b.c/cache", "/data/user/11/d.e.f/cache");
@@ -59,13 +61,16 @@ public final class AppDataDirGuesserTest {
 
     @Test
     public void testGuessCacheDir_StripHyphenatedSuffixes() {
-        guessCacheDirFor("/data/app/a.b.c-2.apk").shouldGive("/data/data/a.b.c/cache");
+        guessCacheDirFor("/data/app/a.b.c-2/base.apk")
+                .shouldGive("/data/data/a.b.c/cache");
     }
 
     @Test
     public void testGuessCacheDir_LeadingAndTrailingColonsIgnored() {
-        guessCacheDirFor("/data/app/a.b.c.apk:asdf:").shouldGive("/data/data/a.b.c/cache");
-        guessCacheDirFor(":asdf:/data/app/a.b.c.apk").shouldGive("/data/data/a.b.c/cache");
+        guessCacheDirFor("/data/app/a.b.c-xxx/base.apk:asdf:")
+                .shouldGive("/data/data/a.b.c/cache");
+        guessCacheDirFor(":asdf:/data/app/a.b.c-xxx/base.apk")
+                .shouldGive("/data/data/a.b.c/cache");
     }
 
     @Test
@@ -82,8 +87,38 @@ public final class AppDataDirGuesserTest {
     @Test
     public void testGuessCacheDir_RealWorldExample() {
         String realPath = "/system/framework/android.test.runner.jar:" +
-                "/data/app/com.google.android.voicesearch.tests-2.apk:" +
-                "/data/app/com.google.android.voicesearch-1.apk";
+                "/data/app/com.google.android.voicesearch.tests-2/base.apk:" +
+                "/data/app/com.google.android.voicesearch-1/base.apk";
+        guessCacheDirFor(realPath)
+                .withNonWriteable("/data/data/com.google.android.voicesearch.tests/cache")
+                .shouldGive("/data/data/com.google.android.voicesearch/cache");
+    }
+
+    @Test
+    public void testGuessCacheDir_RealWorldExampleWithOneLevelSubDirectories() {
+        String realPath = "/system/framework/android.test.runner.jar:" +
+                "/data/app/com.google.android.voicesearch.tests-abcde/base.apk:" +
+                "/data/app/com.google.android.voicesearch-fghij/base.apk";
+        guessCacheDirFor(realPath)
+                .withNonWriteable("/data/data/com.google.android.voicesearch.tests/cache")
+                .shouldGive("/data/data/com.google.android.voicesearch/cache");
+    }
+
+    @Test
+    public void testGuessCacheDir_RealWorldExampleWithTwoLevelSubDirectories() {
+        String realPath = "/system/framework/android.test.runner.jar:" +
+                "/data/app/abcde/com.google.android.voicesearch.tests-fghij/base.apk:" +
+                "/data/app/klmno/com.google.android.voicesearch-pqrst/base.apk";
+        guessCacheDirFor(realPath)
+                .withNonWriteable("/data/data/com.google.android.voicesearch.tests/cache")
+                .shouldGive("/data/data/com.google.android.voicesearch/cache");
+    }
+
+    @Test
+    public void testGuessCacheDir_RealWorldExampleWithHyphensInPath() {
+        String realPath = "/system/framework/android.test.runner.jar:" +
+                "/data/app/a-b-c/com.google.android.voicesearch.tests-e-f-g/base.apk:" +
+                "/data/app/com.google.android.voicesearch-k-l-n/base.apk";
         guessCacheDirFor(realPath)
                 .withNonWriteable("/data/data/com.google.android.voicesearch.tests/cache")
                 .shouldGive("/data/data/com.google.android.voicesearch/cache");

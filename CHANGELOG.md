@@ -1,6 +1,7 @@
 # Change Log
 
 ## Version 2.25.2-SNAPSHOT
+- guessPath not to depend on the first level of app directory - [#156](https://github.com/linkedin/dexmaker/pull/156)
 - Support generating locals that reference generated class types - [#151](https://github.com/linkedin/dexmaker/pull/151)
 - Update Mockito to 2.28.2 - [#153](https://github.com/linkedin/dexmaker/pull/153)
 

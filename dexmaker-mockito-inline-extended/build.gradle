@@ -1,21 +1,11 @@
-buildscript {
-    repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-        classpath "net.ltgt.gradle:gradle-errorprone-plugin:0.0.13"
-    }
+plugins {
+    id("net.ltgt.errorprone") version "0.8"
 }
-
-apply plugin: "net.ltgt.errorprone"
 apply plugin: 'com.android.library'
-apply plugin: 'maven-publish'
-apply plugin: 'ivy-publish'
-apply plugin: 'com.jfrog.artifactory'
+apply from: "$rootDir/gradle/publishing_aar.gradle"
 
 version = VERSION_NAME
+description = 'Extension of the Mockito Inline API to allow mocking static methods on the Android Dalvik VM'
 
 android {
     compileSdkVersion 28
@@ -46,81 +36,13 @@ android {
     }
 }
 
-tasks.withType(JavaCompile) {
-    options.compilerArgs += ["-Xep:StringSplitter:OFF"]
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from android.sourceSets.main.java.srcDirs
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    failOnError false
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-publishing {
-    publications {
-        ivyLib(IvyPublication) {
-            from new org.gradle.api.internal.java.JavaLibrary(new org.gradle.api.internal.artifacts.publish.DefaultPublishArtifact(project.getName(), 'aar', 'aar', null, new Date(), new File("$buildDir/outputs/aar/${project.getName()}-release.aar"), assemble), project.configurations.implementation.getAllDependencies())
-            artifact sourcesJar
-            artifact javadocJar
-        }
-
-        lib(MavenPublication) {
-            from new org.gradle.api.internal.java.JavaLibrary(new org.gradle.api.internal.artifacts.publish.DefaultPublishArtifact(project.getName(), 'aar', 'aar', null, new Date(), new File("$buildDir/outputs/aar/${project.getName()}-release.aar"), assemble), project.configurations.implementation.getAllDependencies())
-
-            artifact sourcesJar
-            artifact javadocJar
-
-            pom.withXml {
-                asNode().children().last() + {
-                    resolveStrategy = Closure.DELEGATE_FIRST
-                    description = 'Extension of the Mockito Inline API to allow mocking static methods on the Android Dalvik VM'
-                    url 'https://github.com/linkedin/dexmaker'
-                    scm {
-                        url 'https://github.com/linkedin/dexmaker'
-                        connection 'scm:git:git://github.com/linkedin/dexmaker.git'
-                        developerConnection 'https://github.com/linkedin/dexmaker.git'
-                    }
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id 'com.linkedin'
-                            name 'LinkedIn Corp'
-                            email ''
-                        }
-                    }
-                }
-            }
-
-            //Useful for inspecting maven artifacts in 'build/repo' after running './gradlew publish'
-            repositories {
-                maven {
-                    url = "$rootProject.buildDir/repo"
-                }
-            }
-        }
-    }
-}
-
 repositories {
-    jcenter()
     google()
+    jcenter()
+}
+
+tasks.withType(JavaCompile) {
+    options.errorprone.errorproneArgs.add("-Xep:StringSplitter:OFF")
 }
 
 dependencies {

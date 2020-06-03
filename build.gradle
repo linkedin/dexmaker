@@ -6,10 +6,10 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.3"
+        classpath 'com.android.tools.build:gradle:3.6.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.15.1"
     }
 }
 
@@ -45,5 +45,10 @@ artifactory {
 }
 
 task distributeBuild(type: DistributeTask) {
-    dependsOn ':artifactoryPublish', 'dexmaker:artifactoryPublish', 'dexmaker-mockito:artifactoryPublish', 'dexmaker-mockito-inline:artifactoryPublish', 'dexmaker-mockito-inline-extended:artifactoryPublish'
+    dependsOn ':artifactoryPublish',
+            'dexmaker:artifactoryPublish',
+            'dexmaker-mockito:artifactoryPublish',
+            'dexmaker-mockito-inline:artifactoryPublish',
+            'dexmaker-mockito-inline-extended:artifactoryPublish'
 }
+

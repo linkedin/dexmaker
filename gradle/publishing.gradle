@@ -22,7 +22,7 @@ publishing {
 
             pom.withXml {
                 asNode().children().last() + {
-                    resolveStrategy = Closure.DELEGATE_FIRST
+                    resolveStrategy = DELEGATE_FIRST
                     description "${ -> description }"
                     url 'https://github.com/linkedin/dexmaker'
                     scm {

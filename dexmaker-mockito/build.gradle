@@ -1,15 +1,6 @@
-buildscript {
-    repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-        classpath "net.ltgt.gradle:gradle-errorprone-plugin:0.0.13"
-    }
+plugins {
+    id("net.ltgt.errorprone") version "0.8"
 }
-
-apply plugin: "net.ltgt.errorprone"
 apply plugin: 'java'
 apply from: "$rootDir/gradle/publishing.gradle"
 
@@ -21,6 +12,10 @@ sourceCompatibility = '1.7'
 
 repositories {
     jcenter()
+}
+
+tasks.withType(JavaCompile) {
+    options.errorprone.errorproneArgs.add("-Xep:StringSplitter:OFF")
 }
 
 dependencies {

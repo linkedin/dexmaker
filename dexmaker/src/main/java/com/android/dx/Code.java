@@ -481,7 +481,7 @@ public final class Code {
 
     /**
      * Copies a class type in {@code target}. The benefit to using this method vs {@link Code#loadConstant(Local, Object)}
-     * is that the {@value} can itself be a generated type - {@link TypeId} allows for deferred referencing of class types.
+     * is that the {@code value} can itself be a generated type - {@link TypeId} allows for deferred referencing of class types.
      */
     public void loadDeferredClassConstant(Local<Class> target, TypeId value) {
         loadConstantInternal(target, value);

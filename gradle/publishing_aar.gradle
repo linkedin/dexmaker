@@ -1,0 +1,75 @@
+apply plugin: 'maven-publish'
+apply plugin: 'ivy-publish'
+apply plugin: 'com.jfrog.artifactory'
+
+tasks.register("sourcesJar", Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+tasks.register("javadoc", Javadoc) {
+    failOnError false
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+tasks.register("javadocJar", Jar) {
+    dependsOn javadoc
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+// Need afterEvaluate according to https://developer.android.com/studio/build/maven-publish-plugin
+afterEvaluate {
+    publishing {
+        publications {
+            ivyLib(IvyPublication) {
+                from components.release
+                artifact sourcesJar
+                artifact javadocJar
+            }
+
+            lib(MavenPublication) {
+                from components.release
+
+                artifact sourcesJar
+                artifact javadocJar
+
+                pom.withXml {
+                    asNode().children().last() + {
+                        resolveStrategy = DELEGATE_FIRST
+                        description "${ -> description }"
+                        url 'https://github.com/linkedin/dexmaker'
+                        scm {
+                            url 'https://github.com/linkedin/dexmaker'
+                            connection 'scm:git:git://github.com/linkedin/dexmaker.git'
+                            developerConnection 'https://github.com/linkedin/dexmaker.git'
+                        }
+                        licenses {
+                            license {
+                                name 'The Apache Software License, Version 2.0'
+                                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                                distribution 'repo'
+                            }
+                        }
+
+                        developers {
+                            developer {
+                                id 'com.linkedin'
+                                name 'LinkedIn Corp'
+                                email ''
+                            }
+                        }
+                    }
+                }
+
+                //Useful for inspecting maven artifacts in 'build/repo' after running './gradlew publish'
+                repositories {
+                    maven {
+                        url = "$rootProject.buildDir/repo"
+                    }
+                }
+            }
+        }
+    }
+}

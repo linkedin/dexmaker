@@ -112,7 +112,7 @@ public final class InlineStaticMockMaker implements MockMaker {
      * are modified, some are not. This list helps the {@link MockMethodAdvice} help figure out if a
      * object's method calls should be intercepted.
      */
-    private final HashMap<Object, InvocationHandlerAdapter> markerToHandler = new HashMap<>();
+    private final Map<Object, InvocationHandlerAdapter> markerToHandler = new MarkerToHandlerMap();
     private final Map<Class, Object> classToMarker = new HashMap<>();
 
     /**

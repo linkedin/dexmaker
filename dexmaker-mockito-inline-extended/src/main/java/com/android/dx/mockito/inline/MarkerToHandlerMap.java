@@ -94,7 +94,7 @@ class MarkerToHandlerMap implements Map<Object, InvocationHandlerAdapter> {
 
     private static class MockMarkerKey {
 
-        private Object mockMarker;
+        private final Object mockMarker;
 
         public MockMarkerKey(Object mockMarker) {
             this.mockMarker = mockMarker;

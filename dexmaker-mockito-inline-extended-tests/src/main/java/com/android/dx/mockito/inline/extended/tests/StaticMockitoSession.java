@@ -16,6 +16,7 @@
 
 package com.android.dx.mockito.inline.extended.tests;
 
+import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.provider.Settings;
 
@@ -33,8 +34,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 public class StaticMockitoSession {
+
     @Test
-    public void strictUnnecessaryStubbing() throws Exception {
+    public void strictUnnecessaryStubbing() {
         MockitoSession session = mockitoSession().spyStatic(Settings.Global.class).startMocking();
 
         // Set up unnecessary stubbing
@@ -51,7 +53,7 @@ public class StaticMockitoSession {
     }
 
     @Test
-    public void lenientUnnecessaryStubbing() throws Exception {
+    public void lenientUnnecessaryStubbing() {
         MockitoSession session = mockitoSession().strictness(Strictness.LENIENT)
                 .spyStatic(Settings.Global.class).startMocking();
 
@@ -60,5 +62,23 @@ public class StaticMockitoSession {
                 (ContentResolver.class), eq(DEVICE_NAME)));
 
         session.finishMocking();
+    }
+
+    @Test
+    public void spyStatic() {
+        mockitoSession()
+            .initMocks(this)
+            .spyStatic(PendingIntent.class)
+            .startMocking()
+            .finishMocking();
+    }
+
+    @Test
+    public void mockStatic() {
+        mockitoSession()
+            .initMocks(this)
+            .mockStatic(PendingIntent.class)
+            .startMocking()
+            .finishMocking();
     }
 }

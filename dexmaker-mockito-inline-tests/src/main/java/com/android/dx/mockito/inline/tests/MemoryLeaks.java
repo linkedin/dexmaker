@@ -29,7 +29,7 @@ public class MemoryLeaks {
     private static final int ARRAY_LENGTH = 1 << 20;  // 4 MB
 
     @Test
-    public void callMethodWithMocksCycalically() {
+    public void callMethodWithMocksCyclically() {
         for (int i = 0; i < 100; ++i) {
             final A a = mock(A.class);
             a.largeArray = new int[ARRAY_LENGTH];

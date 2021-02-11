@@ -1,54 +1,21 @@
-import com.linkedin.gradle.DistributeTask
-
 buildscript {
     repositories {
-        jcenter()
         google()
+        mavenCentral()
+        jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.0'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.15.1"
+        classpath 'com.android.tools.build:gradle:4.1.2'
     }
 }
-
-apply plugin: 'com.jfrog.artifactory'
-apply plugin: 'maven-publish'
 
 allprojects {
-    group = GROUP_ID
-}
-
-artifactoryPublish.skip = true
-artifactory {
-    contextUrl = 'https://linkedin.jfrog.io/linkedin'
-    publish {
-        repository {
-          repoKey = 'dexmaker'
-          username = System.getenv('ARTIFACTORY_USER') ?: ""
-          password = System.getenv('ARTIFACTORY_KEY') ?: ""
-          ivy {
-            ivyLayout = "[organisation]/[module]/[revision]/[module]-[revision].ivy"
-            artifactLayout = "[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]"
-            mavenCompatible = true
-          }
-        }
-
-        defaults {
-            publications 'lib', 'ivyJava', 'ivyLib'
-        }
-
-        publishArtifacts = true
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
     }
-    clientConfig.setIncludeEnvVars(false)
-}
 
-task distributeBuild(type: DistributeTask) {
-    dependsOn ':artifactoryPublish',
-            'dexmaker:artifactoryPublish',
-            'dexmaker-mockito:artifactoryPublish',
-            'dexmaker-mockito-inline:artifactoryPublish',
-            'dexmaker-mockito-inline-extended:artifactoryPublish'
+    group = GROUP_ID
+    version = VERSION_NAME
 }
-

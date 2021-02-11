@@ -4,7 +4,6 @@ plugins {
 apply plugin: 'com.android.library'
 apply from: "$rootDir/gradle/publishing_aar.gradle"
 
-version = VERSION_NAME
 description = 'Implementation of the Mockito Inline API for use on the Android Dalvik VM'
 
 android {
@@ -29,11 +28,6 @@ android {
             path 'CMakeLists.txt'
         }
     }
-}
-
-repositories {
-    google()
-    jcenter()
 }
 
 tasks.withType(JavaCompile) {

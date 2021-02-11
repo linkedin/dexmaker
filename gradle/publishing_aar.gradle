@@ -1,9 +1,8 @@
 apply plugin: 'maven-publish'
-apply plugin: 'ivy-publish'
-apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'signing'
 
 tasks.register("sourcesJar", Jar) {
-    classifier = 'sources'
+    classifier 'sources'
     from android.sourceSets.main.java.srcDirs
 }
 
@@ -15,61 +14,76 @@ tasks.register("javadoc", Javadoc) {
 
 tasks.register("javadocJar", Jar) {
     dependsOn javadoc
-    classifier = 'javadoc'
+    classifier 'javadoc'
     from javadoc.destinationDir
 }
 
-// Need afterEvaluate according to https://developer.android.com/studio/build/maven-publish-plugin
+// AGP creates the components in afterEvaluate, so we need to use it too
+// https://developer.android.com/studio/build/maven-publish-plugin
 afterEvaluate {
     publishing {
         publications {
-            ivyLib(IvyPublication) {
-                from components.release
-                artifact sourcesJar
-                artifact javadocJar
-            }
-
-            lib(MavenPublication) {
+            maven(MavenPublication) {
                 from components.release
 
                 artifact sourcesJar
                 artifact javadocJar
 
-                pom.withXml {
-                    asNode().children().last() + {
-                        resolveStrategy = DELEGATE_FIRST
-                        description "${ -> description }"
-                        url 'https://github.com/linkedin/dexmaker'
-                        scm {
-                            url 'https://github.com/linkedin/dexmaker'
-                            connection 'scm:git:git://github.com/linkedin/dexmaker.git'
-                            developerConnection 'https://github.com/linkedin/dexmaker.git'
+                pom {
+                    name = 'Dexmaker'
+                    description = project.description
+                    url = 'https://github.com/linkedin/dexmaker'
+                    licenses {
+                        license {
+                            name = 'The Apache Software License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                         }
-                        licenses {
-                            license {
-                                name 'The Apache Software License, Version 2.0'
-                                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                                distribution 'repo'
-                            }
+                    }
+                    developers {
+                        developer {
+                            id = 'com.linkedin'
+                            name = 'LinkedIn Corp'
                         }
-
-                        developers {
-                            developer {
-                                id 'com.linkedin'
-                                name 'LinkedIn Corp'
-                                email ''
-                            }
-                        }
+                    }
+                    scm {
+                        connection = 'scm:git:git://github.com/linkedin/dexmaker.git'
+                        developerConnection = 'scm:git:ssh://github.com:linkedin/dexmaker.git'
+                        url = 'https://github.com/linkedin/dexmaker/tree/master'
                     }
                 }
 
-                //Useful for inspecting maven artifacts in 'build/repo' after running './gradlew publish'
                 repositories {
+                    def sonatypeUsername = System.getenv("SONATYPE_USER")
+                    def sonatypePassword = System.getenv("SONATYPE_PASSWORD")
                     maven {
-                        url = "$rootProject.buildDir/repo"
+                        name = "sonatypeSnapshot"
+                        url = "https://oss.sonatype.org/content/repositories/snapshots"
+                        credentials {
+                            username = sonatypeUsername
+                            password = sonatypePassword
+                        }
+                    }
+                    maven {
+                        name = "mavenCentral"
+                        url = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                        credentials {
+                            username = sonatypeUsername
+                            password = sonatypePassword
+                        }
                     }
                 }
             }
         }
+    }
+
+    // DEXMAKER_GPG_PRIVATE_KEY should contain the armoured private key that
+    // starts with -----BEGIN PGP PRIVATE KEY BLOCK-----
+    // It can be obtained with gpg --armour --export-secret-keys KEY_ID
+    def signingKey = System.getenv("DEXMAKER_GPG_PRIVATE_KEY")
+    def signingPassword = System.getenv("DEXMAKER_GPG_PRIVATE_KEY_PASSWORD")
+    signing {
+        required { signingKey != null && signingPassword != null }
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign publishing.publications.maven
     }
 }

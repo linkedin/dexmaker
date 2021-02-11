@@ -24,11 +24,6 @@ android {
     }
 }
 
-repositories {
-    jcenter()
-    google()
-}
-
 dependencies {
     implementation project(':dexmaker-mockito-inline-tests')
     compileOnly project(':dexmaker-mockito-inline-extended')

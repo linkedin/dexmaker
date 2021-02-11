@@ -1,18 +1,14 @@
 plugins {
     id("net.ltgt.errorprone") version "0.8"
 }
+
+description = "Implementation of the Mockito API for use on the Android Dalvik VM"
+
 apply plugin: 'java-library'
 apply from: "$rootDir/gradle/publishing.gradle"
 
-version = VERSION_NAME
-description = "Implementation of the Mockito API for use on the Android Dalvik VM"
-
 targetCompatibility = '1.7'
 sourceCompatibility = '1.7'
-
-repositories {
-    jcenter()
-}
 
 tasks.withType(JavaCompile) {
     options.errorprone.errorproneArgs.add("-Xep:StringSplitter:OFF")

@@ -19,11 +19,6 @@ android {
     }
 }
 
-repositories {
-    jcenter()
-    google()
-}
-
 dependencies {
     compileOnly project(':dexmaker-mockito')
     androidTestImplementation project(':dexmaker-mockito')

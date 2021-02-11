@@ -15,11 +15,6 @@ android {
     }
 }
 
-repositories {
-    jcenter()
-    google()
-}
-
 dependencies {
     implementation project(":dexmaker")
 

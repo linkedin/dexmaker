@@ -1,18 +1,14 @@
 plugins {
     id("net.ltgt.errorprone") version "0.8"
 }
+
+description = "A utility for doing compile or runtime code generation targeting Android's Dalvik VM"
+
 apply plugin: 'java'
 apply from: "$rootDir/gradle/publishing.gradle"
 
-version = VERSION_NAME
-description = "A utility for doing compile or runtime code generation targeting Android's Dalvik VM"
-
 targetCompatibility = '1.7'
 sourceCompatibility = '1.7'
-
-repositories {
-    jcenter()
-}
 
 tasks.withType(JavaCompile) {
     options.errorprone.errorproneArgs.add("-Xep:StringSplitter:OFF")

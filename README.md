@@ -128,4 +128,18 @@ or Gradle:
 
 _Note: The dependency on Mockito will be transitively included, so there's no need to specify both Mockito AND dexmaker-mockito_
 
-You can also download the files manually from [Bintray](https://bintray.com/linkedin/maven/dexmaker-mockito/) if you prefer.
+## Snapshots
+
+You can use snapshot builds to test the latest unreleased changes. A new snapshot is published
+after every merge to the main branch by the [Deploy Snapshot Github Action workflow](.github/workflows/deploy-snapshot.yml).
+
+Just add the Sonatype snapshot repository to your Gradle scripts:
+```gradle
+repositories {
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+}
+```
+
+You can find the latest snapshot version to use in the [gradle.properties](gradle.properties) file.

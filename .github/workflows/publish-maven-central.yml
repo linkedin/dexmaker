@@ -1,0 +1,27 @@
+name: Publish package to the Maven Central Repository
+on:
+  release:
+    types: [published]
+    branches:
+      - master
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Publish package
+        run: ./gradlew publishAllPublicationsToMavenCentralRepository
+        env:
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          DEXMAKER_GPG_PRIVATE_KEY: ${{ secrets.DEXMAKER_GPG_PRIVATE_KEY }}
+          DEXMAKER_GPG_PRIVATE_KEY_PASSWORD: ${{ secrets.DEXMAKER_GPG_PRIVATE_KEY_PASSWORD }}

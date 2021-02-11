@@ -4,7 +4,6 @@ plugins {
 apply plugin: 'com.android.library'
 apply from: "$rootDir/gradle/publishing_aar.gradle"
 
-version = VERSION_NAME
 description = 'Extension of the Mockito Inline API to allow mocking static methods on the Android Dalvik VM'
 
 android {
@@ -34,11 +33,6 @@ android {
         targetCompatibility 1.8
         sourceCompatibility 1.8
     }
-}
-
-repositories {
-    google()
-    jcenter()
 }
 
 tasks.withType(JavaCompile) {

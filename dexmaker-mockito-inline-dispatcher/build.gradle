@@ -11,8 +11,3 @@ android {
         versionName VERSION_NAME
     }
 }
-
-repositories {
-    jcenter()
-    google()
-}

@@ -1,5 +1,5 @@
 # Dexmaker
-[![Build Status](https://travis-ci.org/linkedin/dexmaker.svg?branch=master)](https://travis-ci.org/linkedin/dexmaker)
+[![Build Status](https://img.shields.io/github/workflow/status/linkedin/dexmaker/Merge%20checks)](https://img.shields.io/github/workflow/status/linkedin/dexmaker/Merge%20checks)
 
 A Java-language API for doing compile time or runtime code generation targeting the Dalvik VM. Unlike
 [cglib](http://cglib.sourceforge.net/) or [ASM](http://asm.ow2.org/), this library creates Dalvik `.dex`

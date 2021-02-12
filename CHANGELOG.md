@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 2.28.1
+- Move artifact publishing from JCenter to MavenCentral [#174](https://github.com/linkedin/dexmaker/pull/174)
+- Fix crash when real hashCode() is called in mocktionsession [#170](https://github.com/linkedin/dexmaker/pull/170)
+- Change mockito-core dependency from "implementation" to "api" [#166](https://github.com/linkedin/dexmaker/issues/166)
+
 ## Version 2.28.0
 - guessPath not to depend on the first level of app directory - [#156](https://github.com/linkedin/dexmaker/pull/156)
 - Support generating locals that reference generated class types - [#151](https://github.com/linkedin/dexmaker/pull/151)

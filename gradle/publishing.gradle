@@ -30,7 +30,7 @@ publishing {
                 scm {
                     connection = 'scm:git:git://github.com/linkedin/dexmaker.git'
                     developerConnection = 'scm:git:ssh://github.com:linkedin/dexmaker.git'
-                    url = 'https://github.com/linkedin/dexmaker/tree/master'
+                    url = 'https://github.com/linkedin/dexmaker/tree/main'
                 }
             }
 

@@ -1,8 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 32
 
     android {
         lintOptions {
@@ -13,8 +12,7 @@ android {
 
     defaultConfig {
         minSdkVersion 28
-        targetSdkVersion 29
-        versionName VERSION_NAME
+        targetSdkVersion 32
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -31,7 +29,7 @@ dependencies {
     compileOnly project(':dexmaker-mockito-inline')
     androidTestImplementation project(':dexmaker-mockito-inline')
 
-    implementation 'junit:junit:4.12'
-    implementation 'androidx.test:runner:1.1.1'
+    implementation 'junit:junit:4.13.2'
+    implementation 'androidx.test:runner:1.4.0'
     api 'org.mockito:mockito-core:2.28.2', { exclude group: 'net.bytebuddy' }
 }

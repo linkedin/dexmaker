@@ -1,7 +1,11 @@
 # Change Log
 
+## Version 2.28.3
+- Update CI flows to use Java 11 [#182](https://github.com/linkedin/dexmaker/pull/182)
+
 ## Version 2.28.2
 - Make generated jar files read-only after creation [#181](https://github.com/linkedin/dexmaker/pull/181)
+- Note: This release was never published due to a release error
 
 ## Version 2.28.1
 - Move artifact publishing from JCenter to MavenCentral [#174](https://github.com/linkedin/dexmaker/pull/174)

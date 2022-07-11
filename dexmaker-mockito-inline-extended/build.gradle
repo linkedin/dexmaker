@@ -7,8 +7,7 @@ apply from: "$rootDir/gradle/publishing_aar.gradle"
 description = 'Extension of the Mockito Inline API to allow mocking static methods on the Android Dalvik VM'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 32
 
     android {
         lintOptions {
@@ -19,8 +18,7 @@ android {
 
     defaultConfig {
         minSdkVersion 9
-        targetSdkVersion 29
-        versionName VERSION_NAME
+        targetSdkVersion 32
     }
 
     externalNativeBuild {

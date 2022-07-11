@@ -1,13 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 32
 
     defaultConfig {
         applicationId 'com.android.dexmaker.mockito.inline.dispatcher'
         minSdkVersion 28
-        targetSdkVersion 29
+        targetSdkVersion 32
         versionName VERSION_NAME
     }
 }

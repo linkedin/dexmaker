@@ -516,7 +516,12 @@ public final class DexMaker {
         // Check that the file exists. If it does, return a DexClassLoader and skip all
         // the dex bytecode generation.
         if (result.exists()) {
-            return generateClassLoader(result, dexCache, parent);
+            if (!result.canWrite()) {
+                return generateClassLoader(result, dexCache, parent);
+            } else {
+                // Old writable files should be ignored and re-generated
+                result.delete();
+            }
         }
 
         byte[] dex = generate();
@@ -528,10 +533,10 @@ public final class DexMaker {
          *
          * TODO: load the dex from memory where supported.
          */
-        result.createNewFile();
 
         JarOutputStream jarOut =
                 new JarOutputStream(new BufferedOutputStream(new FileOutputStream(result)));
+        result.setReadOnly();
         try {
             JarEntry entry = new JarEntry(DexFormat.DEX_IN_JAR_NAME);
             entry.setSize(dex.length);

@@ -534,6 +534,7 @@ public final class DexMakerTest {
          * }
          */
 
+        dexMaker = new DexMaker();
         dexMaker.declare(GENERATED, "AbstractClass.java", PUBLIC, TypeId.OBJECT);
 
         String abstractMethodName = "abstractMethod";

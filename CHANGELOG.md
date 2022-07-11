@@ -1,5 +1,8 @@
 # Change Log
 
+## Version 2.28.2
+- Make generated jar files read-only after creation [#181](https://github.com/linkedin/dexmaker/pull/181)
+
 ## Version 2.28.1
 - Move artifact publishing from JCenter to MavenCentral [#174](https://github.com/linkedin/dexmaker/pull/174)
 - Fix crash when real hashCode() is called in mocktionsession [#170](https://github.com/linkedin/dexmaker/pull/170)

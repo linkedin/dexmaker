@@ -17,6 +17,11 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
 
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
       - name: Cache Gradle Files
         uses: actions/cache@v2
         with:

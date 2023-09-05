@@ -60,7 +60,7 @@ public class StaticMockitoSessionBuilder implements MockitoSessionBuilder {
     }
 
     /**
-     * Sets up mocking for sall tatic methods of a class. All methods will call the {@code
+     * Sets up mocking for all static methods of a class. All methods will call the {@code
      * defaultAnswer}.
      * <p>This changes the behavior of <u>all</u> static methods calls for <u>all</u>
      * invocations. In most cases using {@link #spyStatic(Class)} and stubbing only a few

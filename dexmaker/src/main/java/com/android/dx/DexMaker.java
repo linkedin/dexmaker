@@ -48,7 +48,6 @@ import java.util.jar.JarOutputStream;
 
 import static com.android.dx.rop.code.AccessFlags.ACC_CONSTRUCTOR;
 import static java.lang.reflect.Modifier.*;
-;
 
 /**
  * Generates a <strong>D</strong>alvik <strong>EX</strong>ecutable (dex)

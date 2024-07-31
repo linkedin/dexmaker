@@ -115,6 +115,7 @@ class StaticMockMethodAdvice {
      * @param methodParameters Parameter of method
      * @return {code true} iff the method would have be handled by superClass
      */
+    @SuppressWarnings("ReturnValueIgnored")
     private static boolean isMethodDefinedBySuperClass(Class<?> subclass, Class<?> superClass,
                                                        String methodName,
                                                        Class<?>[] methodParameters) {

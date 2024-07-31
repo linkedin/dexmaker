@@ -1,21 +1,13 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
-tasks.register("sourcesJar", Jar) {
-    classifier 'sources'
-    from android.sourceSets.main.java.srcDirs
-}
-
-tasks.register("javadoc", Javadoc) {
-    failOnError false
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-
-tasks.register("javadocJar", Jar) {
-    dependsOn javadoc
-    classifier 'javadoc'
-    from javadoc.destinationDir
+android {
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 // AGP creates the components in afterEvaluate, so we need to use it too
@@ -25,9 +17,6 @@ afterEvaluate {
         publications {
             maven(MavenPublication) {
                 from components.release
-
-                artifact sourcesJar
-                artifact javadocJar
 
                 pom {
                     name = 'Dexmaker'

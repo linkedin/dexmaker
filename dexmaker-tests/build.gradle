@@ -1,12 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
+    namespace 'com.linkedin.dexmaker'
     compileSdkVersion 32
 
     defaultConfig {
         applicationId 'com.linkedin.dexmaker'
-        minSdkVersion 14
-        targetSdkVersion 32
+        minSdkVersion 21
+        targetSdkVersion 33
         versionCode 1
         versionName VERSION_NAME
 

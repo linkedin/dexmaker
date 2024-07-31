@@ -29,6 +29,7 @@ class AppDataDirGuesser {
     // Copied from UserHandle, indicates range of uids allocated for a user.
     public static final int PER_USER_RANGE = 100000;
 
+    @SuppressWarnings("ReturnValueIgnored")
     public File guess() {
         try {
             ClassLoader classLoader = guessSuitableClassLoader();

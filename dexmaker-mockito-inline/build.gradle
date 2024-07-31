@@ -7,6 +7,7 @@ apply from: "$rootDir/gradle/publishing_aar.gradle"
 description = 'Implementation of the Mockito Inline API for use on the Android Dalvik VM'
 
 android {
+    namespace 'com.android.dx.mockito.inline'
     compileSdkVersion 32
 
     android {
@@ -17,8 +18,8 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 1
-        targetSdkVersion 32
+        minSdkVersion 21
+        targetSdkVersion 33
     }
 
     externalNativeBuild {
@@ -35,7 +36,7 @@ tasks.withType(JavaCompile) {
 }
 
 dependencies {
-    errorprone "com.google.errorprone:error_prone_core:2.5.1"
+    errorprone "com.google.errorprone:error_prone_core:2.29.2"
     errorproneJavac "com.google.errorprone:javac:9+181-r4173-1"
 
     implementation project(':dexmaker')

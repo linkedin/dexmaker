@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
+    namespace 'com.android.dexmaker.mockito.inline.tests'
     compileSdkVersion 32
 
     android {
@@ -12,7 +13,7 @@ android {
 
     defaultConfig {
         minSdkVersion 28
-        targetSdkVersion 32
+        targetSdkVersion 33
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }

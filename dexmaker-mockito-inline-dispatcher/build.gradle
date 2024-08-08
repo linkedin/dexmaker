@@ -1,12 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
+    namespace 'com.android.dexmaker.mockito.inline.dispatcher'
     compileSdkVersion 32
 
     defaultConfig {
         applicationId 'com.android.dexmaker.mockito.inline.dispatcher'
         minSdkVersion 28
-        targetSdkVersion 32
+        targetSdkVersion 33
         versionName VERSION_NAME
     }
 }

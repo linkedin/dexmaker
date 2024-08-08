@@ -434,6 +434,7 @@ public final class ProxyBuilder<T> {
     /**
      * Returns true if {@code c} is a proxy class created by this builder.
      */
+    @SuppressWarnings("ReturnValueIgnored")
     public static boolean isProxyClass(Class<?> c) {
         // TODO: use a marker interface instead?
         try {

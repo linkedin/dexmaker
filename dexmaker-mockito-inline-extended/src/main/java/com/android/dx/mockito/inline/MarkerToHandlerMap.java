@@ -84,6 +84,7 @@ class MarkerToHandlerMap implements Map<Object, InvocationHandlerAdapter> {
     }
 
     @Override
+    @SuppressWarnings("InfiniteRecursion")
     public Set<Entry<Object, InvocationHandlerAdapter>> entrySet() {
         Set<Entry<Object, InvocationHandlerAdapter>> set = new HashSet<>(entrySet().size());
         for (Entry<MockMarkerKey, InvocationHandlerAdapter> entry : markerToHandler.entrySet()) {

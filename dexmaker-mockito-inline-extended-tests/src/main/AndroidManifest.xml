@@ -1,4 +1,4 @@
-<manifest package="com.android.dexmaker.mockito.inline.extended.tests"
+<manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 

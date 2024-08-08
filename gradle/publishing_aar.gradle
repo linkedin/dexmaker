@@ -2,6 +2,16 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 android {
+    // Explicitly set the NDK release to ensure we use the latest stable, as
+    // opposed to the default NDK tied to the AGP version.
+    ndkVersion = '27.0.12077973'
+    defaultConfig {
+        ndk {
+            // Explicitly enable the 'riscv64' ABI with 'abiFilters' as it is
+            // not part of the default ABI set today.
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64', 'riscv64'
+        }
+    }
     publishing {
         singleVariant("release") {
             withSourcesJar()

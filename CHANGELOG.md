@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 2.28.4
+- Use NDK r27 and package riscv64 artifacts [#193](https://github.com/linkedin/dexmaker/pull/193)
+- Upgrade dexmaker to AGP 8.5 [#192](https://github.com/linkedin/dexmaker/pull/192)
+
 ## Version 2.28.3
 - Update CI flows to use Java 11 [#182](https://github.com/linkedin/dexmaker/pull/182)
 

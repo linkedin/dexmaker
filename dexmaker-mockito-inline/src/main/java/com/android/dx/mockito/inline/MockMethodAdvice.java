@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +25,9 @@ class MockMethodAdvice {
 
     /** Pattern to decompose a instrumentedMethodWithTypeAndSignature */
     private final Pattern methodPattern = Pattern.compile("(.*)#(.*)\\((.*)\\)");
+
+    /** Pattern to verifies types description is ending only with array type */
+    private static final Pattern ARRAY_PATTERN = Pattern.compile("(\\[\\])+");
 
     @SuppressWarnings("ThreadLocalUsage")
     private final SelfCallInfo selfCallInfo = new SelfCallInfo();
@@ -86,6 +90,58 @@ class MockMethodAdvice {
         }
     }
 
+    private static final Map<String, String> PRIMITIVE_CLASS_TO_SIGNATURE =
+            Map.of(
+                    "byte", "B",
+                    "short", "S",
+                    "int", "I",
+                    "long", "J",
+                    "char", "C",
+                    "float", "F",
+                    "double", "D",
+                    "boolean", "Z");
+
+    /**
+     * Convert a type signature of an array to the corresponding class
+     *
+     * <p>It parse "foo[][][][]" into a jni signature "[[[[Lfoo;" and rely on Class.forName to do
+     * the conversion. Primivite type are converted using {@code PRIMITIVE_CLASS_TO_SIGNATURE}.
+     *
+     * @param argTypeName the type description (e.g: byte[])
+     * @return the class wrapped in Optional on success, or empty if the conversion failed
+     */
+    private static Optional<Class<?>> parseTypeName(String argTypeName) {
+        int index = argTypeName.indexOf("[");
+        if (index == -1) {
+            // not an Array type
+            return Optional.empty();
+        }
+
+        String typeName = argTypeName.substring(0, index);
+        String rest = argTypeName.substring(index, argTypeName.length());
+
+        if (!ARRAY_PATTERN.matcher(rest).matches()) {
+            return Optional.empty();
+        }
+        int dimensionCount = (int) argTypeName.chars().filter(ch -> ch == '[').count();
+
+        String classSignature =
+                PRIMITIVE_CLASS_TO_SIGNATURE.getOrDefault(typeName, "L" + typeName + ";");
+
+        // String.repeat would be better, but this is available only starting java 11
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < dimensionCount; i++) {
+            sb.append("[");
+        }
+        sb.append(classSignature);
+        String fullTypeSignature = sb.toString();
+        try {
+            return Optional.of(Class.forName(fullTypeSignature));
+        } catch (ClassNotFoundException e) {
+            return Optional.empty();
+        }
+    }
+
     /**
      * Get the method of {@code instance} specified by {@code methodWithTypeAndSignature}.
      *
@@ -135,34 +191,10 @@ class MockMethodAdvice {
                     case "boolean":
                         argTypes.add(Boolean.TYPE);
                         break;
-                    case "byte[]":
-                        argTypes.add(byte[].class);
-                        break;
-                    case "short[]":
-                        argTypes.add(short[].class);
-                        break;
-                    case "int[]":
-                        argTypes.add(int[].class);
-                        break;
-                    case "long[]":
-                        argTypes.add(long[].class);
-                        break;
-                    case "char[]":
-                        argTypes.add(char[].class);
-                        break;
-                    case "float[]":
-                        argTypes.add(float[].class);
-                        break;
-                    case "double[]":
-                        argTypes.add(double[].class);
-                        break;
-                    case "boolean[]":
-                        argTypes.add(boolean[].class);
-                        break;
                     default:
-                        if (argTypeName.endsWith("[]")) {
-                            argTypes.add(Class.forName("[L" + argTypeName.substring(0,
-                                    argTypeName.length() - 2) + ";"));
+                        Optional<Class<?>> arrayClass = parseTypeName(argTypeName);
+                        if (arrayClass.isPresent()) {
+                            argTypes.add(arrayClass.get());
                         } else {
                             argTypes.add(Class.forName(argTypeName));
                         }

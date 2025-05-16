@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.4.1)
 
-project(dexmaker-mockito-inline-extended)
-
 set(slicer_sources
     ../dexmaker-mockito-inline/external/slicer/bytecode_encoder.cc
     ../dexmaker-mockito-inline/external/slicer/code_ir.cc

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.4.1)
 
+project(dexmaker-mockito-inline-extended)
+
 set(slicer_sources
     ../dexmaker-mockito-inline/external/slicer/bytecode_encoder.cc
     ../dexmaker-mockito-inline/external/slicer/code_ir.cc
@@ -31,3 +33,5 @@ add_library(staticjvmtiagent
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANDROID_STL=c++_shared -frtti -Wall -Werror -Wno-unused-parameter -Wno-shift-count-overflow -Wno-error=non-virtual-dtor -Wno-sign-compare -Wno-switch -Wno-missing-braces")
 
 target_link_libraries(staticjvmtiagent slicer)
+
+target_link_options(staticjvmtiagent PRIVATE "-Wl,-z,max-page-size=16384")

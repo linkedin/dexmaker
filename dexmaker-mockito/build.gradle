@@ -7,8 +7,8 @@ description = "Implementation of the Mockito API for use on the Android Dalvik V
 apply plugin: 'java-library'
 apply from: "$rootDir/gradle/publishing.gradle"
 
-java.targetCompatibility = '1.7'
-java.sourceCompatibility = '1.7'
+java.targetCompatibility = '1.8'
+java.sourceCompatibility = '1.8'
 
 tasks.withType(JavaCompile) {
     options.errorprone {

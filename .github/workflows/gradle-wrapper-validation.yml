@@ -19,5 +19,5 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 17
-      - uses: gradle/wrapper-validation-action@v1
+      - uses: gradle/wrapper-validation-action@v3
 

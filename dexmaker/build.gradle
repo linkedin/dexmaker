@@ -7,8 +7,8 @@ description = "A utility for doing compile or runtime code generation targeting 
 apply plugin: 'java'
 apply from: "$rootDir/gradle/publishing.gradle"
 
-java.targetCompatibility = '1.7'
-java.sourceCompatibility = '1.7'
+java.targetCompatibility = '1.8'
+java.sourceCompatibility = '1.8'
 
 tasks.withType(JavaCompile) {
     options.errorprone {

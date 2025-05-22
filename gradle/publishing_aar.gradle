@@ -4,7 +4,7 @@ apply plugin: 'signing'
 android {
     // Explicitly set the NDK release to ensure we use the latest stable, as
     // opposed to the default NDK tied to the AGP version.
-    ndkVersion = '27.0.12077973'
+    ndkVersion = '28.1.13356709'
     defaultConfig {
         ndk {
             // Explicitly enable the 'riscv64' ABI with 'abiFilters' as it is

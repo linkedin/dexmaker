@@ -1,5 +1,7 @@
 # Change Log
-
+## Version 2.28.5
+- Support for 16kb page sizes 
+ 
 ## Version 2.28.4
 - Use NDK r27 and package riscv64 artifacts [#193](https://github.com/linkedin/dexmaker/pull/193)
 - Upgrade dexmaker to AGP 8.5 [#192](https://github.com/linkedin/dexmaker/pull/192)

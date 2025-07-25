@@ -1,1 +1,1 @@
-Copied from aosp/master::tools/dexter/slicer on 02/26/2018 + removed Android.bp
+Copied from aosp/main::tools/dexter/slicer on 07/24/2025 + removed Android.bp and tests

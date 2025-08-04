@@ -43,23 +43,12 @@ publishing {
             repositories {
                 def sonatypeUsername = System.getenv("SONATYPE_USER")
                 def sonatypePassword = System.getenv("SONATYPE_PASSWORD")
-<<<<<<< HEAD
-                maven {
-                    name = "centralSnapshot"
-                    url = "https://central.sonatype.com/api/v1/publisher/snapshots"
-                    credentials {
-                        username = sonatypeUsername
-                        password = sonatypePassword
-                    }
-                }
-=======
 
                 // Local Maven repository for local development
                 mavenLocal()
 
                 // Note: Sonatype Central Portal snapshots are published via API, not Maven repository
                 // The publishSnapshotToCentral task handles the API-based upload
->>>>>>> 9f7318e (Update release scripts.)
             }
         }
     }

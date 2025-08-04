@@ -1,5 +1,6 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
+apply from: "$rootDir/gradle/sonatype-central.gradle"
 
 android {
     // Explicitly set the NDK release to ensure we use the latest stable, as
@@ -19,6 +20,12 @@ android {
         }
     }
 }
+
+// Task to publish to local repository for bundle creation
+tasks.register("publishToLocalMaven", Task) {
+    dependsOn "publishMavenPublicationToLocalRepository"
+}
+
 
 // AGP creates the components in afterEvaluate, so we need to use it too
 // https://developer.android.com/studio/build/maven-publish-plugin

@@ -33,9 +33,3 @@ jobs:
 
       - name: Build
         run: ./gradlew build
-
-      - name: Publish package
-        run: ./gradlew publishAllPublicationsToSonatypeSnapshotRepository
-        env:
-          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

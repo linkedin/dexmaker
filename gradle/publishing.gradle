@@ -1,9 +1,15 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
+apply from: "$rootDir/gradle/sonatype-central.gradle"
 
 java {
     withSourcesJar()
     withJavadocJar()
+}
+
+// Task to publish to local repository for bundle creation
+tasks.register("publishToLocalMaven", Task) {
+    dependsOn "publishMavenPublicationToLocalRepository"
 }
 
 publishing {

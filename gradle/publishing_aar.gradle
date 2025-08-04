@@ -2,23 +2,9 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply from: "$rootDir/gradle/sonatype-central.gradle"
 
-android {
-    // Explicitly set the NDK release to ensure we use the latest stable, as
-    // opposed to the default NDK tied to the AGP version.
-    ndkVersion = '28.1.13356709'
-    defaultConfig {
-        ndk {
-            // Explicitly enable the 'riscv64' ABI with 'abiFilters' as it is
-            // not part of the default ABI set today.
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64', 'riscv64'
-        }
-    }
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-            withJavadocJar()
-        }
-    }
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
 // Task to publish to local repository for bundle creation
@@ -26,62 +12,55 @@ tasks.register("publishToLocalMaven", Task) {
     dependsOn "publishMavenPublicationToLocalRepository"
 }
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
 
-// AGP creates the components in afterEvaluate, so we need to use it too
-// https://developer.android.com/studio/build/maven-publish-plugin
-afterEvaluate {
-    publishing {
-        publications {
-            maven(MavenPublication) {
-                from components.release
-
-                pom {
-                    name = 'Dexmaker'
-                    description = project.description
-                    url = 'https://github.com/linkedin/dexmaker'
-                    licenses {
-                        license {
-                            name = 'The Apache Software License, Version 2.0'
-                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        }
-                    }
-                    developers {
-                        developer {
-                            id = 'com.linkedin'
-                            name = 'LinkedIn Corp'
-                        }
-                    }
-                    scm {
-                        connection = 'scm:git:git://github.com/linkedin/dexmaker.git'
-                        developerConnection = 'scm:git:ssh://github.com:linkedin/dexmaker.git'
-                        url = 'https://github.com/linkedin/dexmaker/tree/main'
+            pom {
+                name = 'Dexmaker'
+                description = project.description
+                url = 'https://github.com/linkedin/dexmaker'
+                licenses {
+                    license {
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
                 }
-
-                repositories {
-                    def sonatypeUsername = System.getenv("SONATYPE_USER")
-                    def sonatypePassword = System.getenv("SONATYPE_PASSWORD")
-                    maven {
-                        name = "centralSnapshot"
-                        url = "https://central.sonatype.com/api/v1/publisher/snapshots"
-                        credentials {
-                            username = sonatypeUsername
-                            password = sonatypePassword
-                        }
+                developers {
+                    developer {
+                        id = 'com.linkedin'
+                        name = 'LinkedIn Corp'
                     }
                 }
+                scm {
+                    connection = 'scm:git:git://github.com/linkedin/dexmaker.git'
+                    developerConnection = 'scm:git:ssh://github.com:linkedin/dexmaker.git'
+                    url = 'https://github.com/linkedin/dexmaker/tree/main'
+                }
+            }
+
+            repositories {
+                def sonatypeUsername = System.getenv("SONATYPE_USER")
+                def sonatypePassword = System.getenv("SONATYPE_PASSWORD")
+
+                // Local Maven repository for local development
+                mavenLocal()
+
+                // Note: Sonatype Central Portal snapshots are published via API, not Maven repository
+                // The publishSnapshotToCentral task handles the API-based upload
             }
         }
     }
+}
 
-    // DEXMAKER_GPG_PRIVATE_KEY should contain the armoured private key that
-    // starts with -----BEGIN PGP PRIVATE KEY BLOCK-----
-    // It can be obtained with gpg --armour --export-secret-keys KEY_ID
-    def signingKey = System.getenv("DEXMAKER_GPG_PRIVATE_KEY")
-    def signingPassword = System.getenv("DEXMAKER_GPG_PRIVATE_KEY_PASSWORD")
-    signing {
-        required { signingKey != null && signingPassword != null }
-        useInMemoryPgpKeys(signingKey, signingPassword)
-        sign publishing.publications.maven
-    }
+// DEXMAKER_GPG_PRIVATE_KEY should contain the armoured private key that
+// starts with -----BEGIN PGP PRIVATE KEY BLOCK-----
+// It can be obtained with gpg --armour --export-secret-keys KEY_ID
+def signingKey = System.getenv("DEXMAKER_GPG_PRIVATE_KEY")
+def signingPassword = System.getenv("DEXMAKER_GPG_PRIVATE_KEY_PASSWORD")
+signing {
+    required { signingKey != null && signingPassword != null }
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.maven
 }

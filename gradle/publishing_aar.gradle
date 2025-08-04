@@ -1,5 +1,6 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
+apply from: "$rootDir/gradle/sonatype-central.gradle"
 
 android {
     // Explicitly set the NDK release to ensure we use the latest stable, as
@@ -19,6 +20,12 @@ android {
         }
     }
 }
+
+// Task to publish to local repository for bundle creation
+tasks.register("publishToLocalMaven", Task) {
+    dependsOn "publishMavenPublicationToLocalRepository"
+}
+
 
 // AGP creates the components in afterEvaluate, so we need to use it too
 // https://developer.android.com/studio/build/maven-publish-plugin
@@ -55,16 +62,8 @@ afterEvaluate {
                     def sonatypeUsername = System.getenv("SONATYPE_USER")
                     def sonatypePassword = System.getenv("SONATYPE_PASSWORD")
                     maven {
-                        name = "sonatypeSnapshot"
-                        url = "https://oss.sonatype.org/content/repositories/snapshots"
-                        credentials {
-                            username = sonatypeUsername
-                            password = sonatypePassword
-                        }
-                    }
-                    maven {
-                        name = "mavenCentral"
-                        url = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                        name = "centralSnapshot"
+                        url = "https://central.sonatype.com/api/v1/publisher/snapshots"
                         credentials {
                             username = sonatypeUsername
                             password = sonatypePassword

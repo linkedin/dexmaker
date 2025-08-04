@@ -19,10 +19,10 @@ jobs:
       - name: Build
         run: ./gradlew build
 
-      - name: Publish package
-        run: ./gradlew publishAllPublicationsToMavenCentralRepository
+      - name: Upload to Sonatype Central
+        run: ./gradlew uploadToSonatypeCentral
         env:
-          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USER: ${{ secrets.CENTRAL_SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_PASSWORD }}
           DEXMAKER_GPG_PRIVATE_KEY: ${{ secrets.DEXMAKER_GPG_PRIVATE_KEY }}
           DEXMAKER_GPG_PRIVATE_KEY_PASSWORD: ${{ secrets.DEXMAKER_GPG_PRIVATE_KEY_PASSWORD }}

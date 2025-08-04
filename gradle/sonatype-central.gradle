@@ -1,0 +1,99 @@
+// Common Sonatype Central publishing functionality
+// This script can be applied by both publishing.gradle and publishing_aar.gradle
+
+// Custom task to upload deployment bundle to Sonatype Central API
+tasks.register("uploadToSonatypeCentral") {
+    dependsOn publishToLocalMaven
+    doLast {
+        def sonatypeUsername = System.getenv("SONATYPE_USER")
+        def sonatypePassword = System.getenv("SONATYPE_PASSWORD")
+
+        if (!sonatypeUsername || !sonatypePassword) {
+            throw new GradleException("SONATYPE_USER and SONATYPE_PASSWORD environment variables must be set")
+        }
+
+        // Create deployment bundle (zip file containing all artifacts)
+        def bundleFile = new File(project.buildDir, "distributions/deployment-bundle.zip")
+        bundleFile.parentFile.mkdirs()
+
+        ant.zip(destfile: bundleFile) {
+            fileset(dir: "${project.buildDir}/repo") {
+                include(name: "**/*")
+            }
+        }
+
+        // Create base64 encoded credentials
+        def credentials = "${sonatypeUsername}:${sonatypePassword}"
+        def encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes())
+
+        // Upload bundle to Sonatype Central API
+        def connection = new URL("https://central.sonatype.com/api/v1/publisher/upload").openConnection()
+        connection.setRequestMethod("POST")
+        connection.setRequestProperty("Authorization", "Bearer ${encodedCredentials}")
+        connection.setRequestProperty("Content-Type", "multipart/form-data")
+        connection.setDoOutput(true)
+
+        // Set up multipart form data
+        def boundary = "----WebKitFormBoundary" + System.currentTimeMillis()
+        connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary)
+
+        def outputStream = connection.getOutputStream()
+        def writer = new PrintWriter(new OutputStreamWriter(outputStream, "UTF-8"), true)
+
+        // Add file part
+        writer.append("--" + boundary).append("\r\n")
+        writer.append("Content-Disposition: form-data; name=\"bundle\"; filename=\"" + bundleFile.name + "\"").append("\r\n")
+        writer.append("Content-Type: application/zip").append("\r\n")
+        writer.append("\r\n")
+        writer.flush()
+
+        // Write file content
+        bundleFile.withInputStream { inputStream ->
+            outputStream << inputStream
+        }
+        outputStream.flush()
+
+        writer.append("\r\n")
+        writer.append("--" + boundary + "--").append("\r\n")
+        writer.close()
+
+        // Get response
+        def responseCode = connection.getResponseCode()
+        if (responseCode == 200 || responseCode == 201) {
+            println "Bundle uploaded successfully to Sonatype Central"
+            def response = connection.getInputStream().getText()
+            println "Response: ${response}"
+        } else {
+            def errorResponse = connection.getErrorStream()?.getText() ?: "No error details available"
+            throw new GradleException("Failed to upload bundle. Response code: ${responseCode}, Error: ${errorResponse}")
+        }
+    }
+}
+
+// Task to publish snapshots to Sonatype Central Portal
+tasks.register("publishSnapshotToCentral") {
+    description = "Publishes snapshot artifacts to Sonatype Central Portal"
+    group = "publishing"
+
+    doFirst {
+        // Ensure version ends with -SNAPSHOT
+        if (!project.version.toString().endsWith('-SNAPSHOT')) {
+            throw new GradleException("Version must end with -SNAPSHOT to publish as snapshot. Current version: ${project.version}")
+        }
+    }
+
+    dependsOn "publishAllPublicationsToCentralSnapshotRepository"
+}
+
+// Task to publish artifacts to local Maven repository
+tasks.register("publishToLocalMavenRepository") {
+    description = "Publishes all artifacts to local Maven repository (~/.m2/repository)"
+    group = "publishing"
+
+    dependsOn "publishToMavenLocal"
+
+    doLast {
+        println "Artifacts published to local Maven repository at: ${System.getProperty('user.home')}/.m2/repository"
+        println "You can now use the artifacts in other local projects with version: ${project.version}"
+    }
+}

@@ -44,16 +44,8 @@ publishing {
                 def sonatypeUsername = System.getenv("SONATYPE_USER")
                 def sonatypePassword = System.getenv("SONATYPE_PASSWORD")
                 maven {
-                    name = "sonatypeSnapshot"
-                    url = "https://oss.sonatype.org/content/repositories/snapshots"
-                    credentials {
-                        username = sonatypeUsername
-                        password = sonatypePassword
-                    }
-                }
-                maven {
-                    name = "mavenCentral"
-                    url = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                    name = "centralSnapshot"
+                    url = "https://central.sonatype.com/api/v1/publisher/snapshots"
                     credentials {
                         username = sonatypeUsername
                         password = sonatypePassword

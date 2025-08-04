@@ -69,3 +69,31 @@ tasks.register("uploadToSonatypeCentral") {
         }
     }
 }
+
+// Task to publish snapshots to Sonatype Central Portal
+tasks.register("publishSnapshotToCentral") {
+    description = "Publishes snapshot artifacts to Sonatype Central Portal"
+    group = "publishing"
+
+    doFirst {
+        // Ensure version ends with -SNAPSHOT
+        if (!project.version.toString().endsWith('-SNAPSHOT')) {
+            throw new GradleException("Version must end with -SNAPSHOT to publish as snapshot. Current version: ${project.version}")
+        }
+    }
+
+    dependsOn "publishAllPublicationsToCentralSnapshotRepository"
+}
+
+// Task to publish artifacts to local Maven repository
+tasks.register("publishToLocalMavenRepository") {
+    description = "Publishes all artifacts to local Maven repository (~/.m2/repository)"
+    group = "publishing"
+
+    dependsOn "publishToMavenLocal"
+
+    doLast {
+        println "Artifacts published to local Maven repository at: ${System.getProperty('user.home')}/.m2/repository"
+        println "You can now use the artifacts in other local projects with version: ${project.version}"
+    }
+}

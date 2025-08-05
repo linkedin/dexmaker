@@ -9,7 +9,7 @@ java {
 
 // Task to publish to local repository for bundle creation
 tasks.register("publishToLocalMaven", Task) {
-    dependsOn "publishMavenPublicationToLocalRepository"
+    dependsOn "publishMavenPublicationToMavenLocalRepository"
 }
 
 publishing {

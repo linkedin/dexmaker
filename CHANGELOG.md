@@ -1,4 +1,7 @@
 # Change Log
+## Version 2.28.6
+ - Update slicer to aosp-main circa 2025-07-24 [#201](https://github.com/linkedin/dexmaker/pull/201)
+ 
 ## Version 2.28.5
 - Support for 16kb page sizes 
  

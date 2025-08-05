@@ -107,7 +107,8 @@ tasks.register("publishSnapshotToCentral") {
 
         // Upload each artifact file
         artifactDir.eachFile { file ->
-            if (file.isFile() && !file.name.endsWith('.sha1') && !file.name.endsWith('.md5')) {
+            if (file.isFile() && !file.name.endsWith('.sha1') && !file.name.endsWith('.md5') && 
+                !file.name.endsWith('.sha256') && !file.name.endsWith('.sha512')) {
                 println "Uploading ${file.name} to Sonatype Central snapshots..."
 
                 def connection = new URL("https://central.sonatype.com/api/v1/publisher/snapshots/${project.group}/${project.name}/${project.version}/${file.name}").openConnection()

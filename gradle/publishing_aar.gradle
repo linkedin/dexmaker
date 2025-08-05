@@ -66,6 +66,12 @@ afterEvaluate {
                     // Local Maven repository for local development
                     mavenLocal()
 
+                    // Local repository for bundle creation
+                    maven {
+                        name = "Local"
+                        url = uri("${project.buildDir}/repo")
+                    }
+
                     // Note: Sonatype Central Portal snapshots are published via API, not Maven repository
                     // The publishSnapshotToCentral task handles the API-based upload
                 }

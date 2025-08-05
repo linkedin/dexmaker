@@ -1,10 +1,10 @@
-name: Deploy snapshot
+name: Build and Test
 on:
   push:
     branches:
       - main
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.head_commit.message, 'Prepare for release') }}
     steps:
@@ -26,16 +26,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Set up Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 17
-
-      - name: Build
+      - name: Build and Test
         run: ./gradlew build
-
-      - name: Publish package
-        run: ./gradlew publishSnapshotToCentral
-        env:
-          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

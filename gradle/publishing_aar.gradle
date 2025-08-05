@@ -22,7 +22,7 @@ android {
 
 // Task to publish to local repository for bundle creation
 tasks.register("publishToLocalMaven", Task) {
-    dependsOn "publishMavenPublicationToMavenLocalRepository"
+    dependsOn "publishMavenPublicationToLocalRepository"
 }
 
 

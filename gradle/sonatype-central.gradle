@@ -82,7 +82,57 @@ tasks.register("publishSnapshotToCentral") {
         }
     }
 
-    dependsOn "publishAllPublicationsToCentralSnapshotRepository"
+    dependsOn publishToLocalMaven
+
+    doLast {
+        def sonatypeUsername = System.getenv("SONATYPE_USER")
+        def sonatypePassword = System.getenv("SONATYPE_PASSWORD")
+
+        if (!sonatypeUsername || !sonatypePassword) {
+            throw new GradleException("SONATYPE_USER and SONATYPE_PASSWORD environment variables must be set")
+        }
+
+        // Create base64 encoded credentials for Basic Auth
+        def credentials = "${sonatypeUsername}:${sonatypePassword}"
+        def encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes())
+
+        // Find all artifacts in the local repository
+        def repoDir = new File(project.buildDir, "repo")
+        def groupPath = project.group.toString().replace('.', '/')
+        def artifactDir = new File(repoDir, "${groupPath}/${project.name}/${project.version}")
+
+        if (!artifactDir.exists()) {
+            throw new GradleException("No artifacts found in ${artifactDir}. Run publishToLocalMaven first.")
+        }
+
+        // Upload each artifact file
+        artifactDir.eachFile { file ->
+            if (file.isFile() && !file.name.endsWith('.sha1') && !file.name.endsWith('.md5')) {
+                println "Uploading ${file.name} to Sonatype Central snapshots..."
+
+                def connection = new URL("https://central.sonatype.com/api/v1/publisher/snapshots/${project.group}/${project.name}/${project.version}/${file.name}").openConnection()
+                connection.setRequestMethod("PUT")
+                connection.setRequestProperty("Authorization", "Basic ${encodedCredentials}")
+                connection.setRequestProperty("Content-Type", "application/octet-stream")
+                connection.setDoOutput(true)
+
+                // Upload file content
+                file.withInputStream { inputStream ->
+                    connection.outputStream << inputStream
+                }
+
+                def responseCode = connection.responseCode
+                if (responseCode >= 200 && responseCode < 300) {
+                    println "Successfully uploaded ${file.name}"
+                } else {
+                    def errorResponse = connection.errorStream?.text ?: connection.inputStream?.text ?: "No error details"
+                    throw new GradleException("Failed to upload ${file.name}. Response code: ${responseCode}, Error: ${errorResponse}")
+                }
+            }
+        }
+
+        println "All snapshot artifacts uploaded successfully to Sonatype Central Portal"
+    }
 }
 
 // Task to publish artifacts to local Maven repository

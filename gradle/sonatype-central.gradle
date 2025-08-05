@@ -107,20 +107,57 @@ tasks.register("publishSnapshotToCentral") {
 
         // Upload each artifact file
         artifactDir.eachFile { file ->
-            if (file.isFile() && !file.name.endsWith('.sha1') && !file.name.endsWith('.md5') && 
+            if (file.isFile() && !file.name.endsWith('.sha1') && !file.name.endsWith('.md5') &&
                 !file.name.endsWith('.sha256') && !file.name.endsWith('.sha512')) {
                 println "Uploading ${file.name} to Sonatype Central snapshots..."
 
-                def connection = new URL("https://central.sonatype.com/api/v1/publisher/snapshots/${project.group}/${project.name}/${project.version}/${file.name}").openConnection()
-                connection.setRequestMethod("PUT")
+                // Use the correct Sonatype Central snapshot API endpoint
+                def uploadUrl = "https://central.sonatype.com/api/v1/publisher/snapshots"
+                def connection = new URL(uploadUrl).openConnection()
+                connection.setRequestMethod("POST")
                 connection.setRequestProperty("Authorization", "Basic ${encodedCredentials}")
-                connection.setRequestProperty("Content-Type", "application/octet-stream")
+                connection.setRequestProperty("Content-Type", "multipart/form-data")
                 connection.setDoOutput(true)
 
-                // Upload file content
+                // Set up multipart form data for snapshot upload
+                def boundary = "----WebKitFormBoundary" + System.currentTimeMillis()
+                connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary)
+
+                def outputStream = connection.getOutputStream()
+                def writer = new PrintWriter(new OutputStreamWriter(outputStream, "UTF-8"), true)
+
+                // Add metadata fields
+                writer.append("--" + boundary).append("\r\n")
+                writer.append("Content-Disposition: form-data; name=\"groupId\"").append("\r\n")
+                writer.append("\r\n")
+                writer.append(project.group.toString()).append("\r\n")
+
+                writer.append("--" + boundary).append("\r\n")
+                writer.append("Content-Disposition: form-data; name=\"artifactId\"").append("\r\n")
+                writer.append("\r\n")
+                writer.append(project.name).append("\r\n")
+
+                writer.append("--" + boundary).append("\r\n")
+                writer.append("Content-Disposition: form-data; name=\"version\"").append("\r\n")
+                writer.append("\r\n")
+                writer.append(project.version.toString()).append("\r\n")
+
+                // Add file part
+                writer.append("--" + boundary).append("\r\n")
+                writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + file.name + "\"").append("\r\n")
+                writer.append("Content-Type": "application/octet-stream").append("\r\n")
+                writer.append("\r\n")
+                writer.flush()
+
+                // Write file content
                 file.withInputStream { inputStream ->
-                    connection.outputStream << inputStream
+                    outputStream << inputStream
                 }
+                outputStream.flush()
+
+                writer.append("\r\n")
+                writer.append("--" + boundary + "--").append("\r\n")
+                writer.close()
 
                 def responseCode = connection.responseCode
                 if (responseCode >= 200 && responseCode < 300) {

@@ -145,7 +145,7 @@ tasks.register("publishSnapshotToCentral") {
                 // Add file part
                 writer.append("--" + boundary).append("\r\n")
                 writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + file.name + "\"").append("\r\n")
-                writer.append("Content-Type": "application/octet-stream").append("\r\n")
+                writer.append("Content-Type: application/octet-stream").append("\r\n")
                 writer.append("\r\n")
                 writer.flush()
 

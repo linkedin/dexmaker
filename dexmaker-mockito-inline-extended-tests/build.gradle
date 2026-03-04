@@ -24,13 +24,11 @@ android {
 }
 
 dependencies {
-    implementation project(':dexmaker-mockito-inline-tests')
-    compileOnly project(':dexmaker-mockito-inline-extended')
     androidTestImplementation project(':dexmaker-mockito-inline-extended')
 
-    implementation 'junit:junit:4.13.2'
-    implementation 'androidx.test:runner:1.4.0'
-    implementation 'androidx.test:rules:1.4.0'
+    androidTestImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
 
-    api 'org.mockito:mockito-core:2.28.2', { exclude group: 'net.bytebuddy' }
+    androidTestImplementation 'org.mockito:mockito-core:2.28.2', { exclude group: 'net.bytebuddy' }
 }

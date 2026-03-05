@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Debug;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,8 +63,56 @@ class JvmtiAgent {
                     + "by a BaseDexClassLoader");
         }
 
-        Debug.attachJvmtiAgent(AGENT_LIB_NAME, null, cl);
+        String agentPath = resolveAgentPath(cl);
+        Debug.attachJvmtiAgent(agentPath, null, cl);
         nativeRegisterTransformerHook();
+    }
+
+    /**
+     * Resolve the agent library to a path that Debug.attachJvmtiAgent can load.
+     *
+     * <p>Debug.attachJvmtiAgent rejects paths containing '=' (used as options
+     * separator). On Android, app install directories may contain '=' in their
+     * path (e.g. /data/app/~~K6yx...A==/pkg-axiN...Q==/). When findLibrary
+     * returns such a path, or returns null (extractNativeLibs=false), we copy
+     * the library to a temp file.
+     */
+    private static String resolveAgentPath(ClassLoader cl) throws IOException {
+        String path = ((BaseDexClassLoader) cl).findLibrary("dexmakerjvmtiagent");
+
+        if (path != null && !path.contains("=")) {
+            return path;
+        }
+
+        // Copy the library to a temp file with a clean path.
+        File copiedAgent = File.createTempFile("org.mockito.android.agent", ".so");
+        copiedAgent.deleteOnExit();
+
+        InputStream is;
+        if (path != null) {
+            is = new FileInputStream(path);
+        } else {
+            // findLibrary returned null — try loading from APK resources
+            String abi = Build.SUPPORTED_ABIS[0];
+            String resourcePath = "lib/" + abi + "/" + AGENT_LIB_NAME;
+            is = cl.getResourceAsStream(resourcePath);
+            if (is == null) {
+                throw new IOException("Could not find " + AGENT_LIB_NAME
+                        + " via findLibrary or classloader resources");
+            }
+        }
+
+        try (OutputStream os = new FileOutputStream(copiedAgent)) {
+            byte[] buffer = new byte[64 * 1024];
+            int numRead;
+            while ((numRead = is.read(buffer)) != -1) {
+                os.write(buffer, 0, numRead);
+            }
+        } finally {
+            is.close();
+        }
+
+        return copiedAgent.getAbsolutePath();
     }
 
     private native void nativeUnregisterTransformerHook();

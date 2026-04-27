@@ -20,10 +20,9 @@ android {
 }
 
 dependencies {
-    compileOnly project(':dexmaker-mockito')
     androidTestImplementation project(':dexmaker-mockito')
 
-    implementation 'androidx.test:runner:1.4.0'
-    implementation 'junit:junit:4.13.2'
-    api 'org.mockito:mockito-core:2.28.2', { exclude group: 'net.bytebuddy' }
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'org.mockito:mockito-core:2.28.2', { exclude group: 'net.bytebuddy' }
 }

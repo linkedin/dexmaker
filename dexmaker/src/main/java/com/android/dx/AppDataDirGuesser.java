@@ -34,7 +34,7 @@ class AppDataDirGuesser {
         try {
             ClassLoader classLoader = guessSuitableClassLoader();
             // Check that we have an instance of the PathClassLoader.
-            Class<?> clazz = Class.forName("dalvik.system.PathClassLoader");
+            Class<?> clazz = Class.forName("dalvik.system.BaseDexClassLoader");
             clazz.cast(classLoader);
             // Use the toString() method to calculate the data directory.
             String pathFromThisClassLoader = getPathFromThisClassLoader(classLoader, clazz);
@@ -44,7 +44,16 @@ class AppDataDirGuesser {
             }
         } catch (ClassCastException ignored) {
         } catch (ClassNotFoundException ignored) {
+        } catch (Throwable ignored) {
         }
+        
+        // Fallback
+        File fallback = guessContextCacheDir();
+        if (fallback != null) {
+            System.out.println("DexMaker: Guessed dexcache directory via ActivityThread: " + fallback.getAbsolutePath());
+            return fallback;
+        }
+        
         return null;
     }
 
@@ -215,6 +224,25 @@ class AppDataDirGuesser {
             // Catch any exceptions thrown and default to returning a null.
             return null;
         }
+    }
+
+    private File guessContextCacheDir() {
+        try {
+            Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
+            Method currentApplicationMethod = activityThreadClass.getMethod("currentApplication");
+            Object app = currentApplicationMethod.invoke(null);
+            if (app != null) {
+                Method getCacheDirMethod = app.getClass().getMethod("getCacheDir");
+                File cacheDir = (File) getCacheDirMethod.invoke(app);
+                if (cacheDir != null) {
+                    if (isWriteableDirectory(cacheDir)) {
+                        return cacheDir;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
     }
 
     File guessUserDataDirectory(String packageName) {

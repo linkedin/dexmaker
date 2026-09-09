@@ -5,10 +5,10 @@ import org.mockito.mock.MockCreationSettings;
 
 import java.util.AbstractMap;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A map for mock marker object -> {@link InvocationHandlerAdapter} but
@@ -20,7 +20,11 @@ import java.util.Set;
  */
 class MarkerToHandlerMap implements Map<Object, InvocationHandlerAdapter> {
 
-    private final Map<MockMarkerKey, InvocationHandlerAdapter> markerToHandler = new HashMap<>();
+    // NOTE: Must be ConcurrentHashMap to ensure thread safety when background threads
+    // perform mock dispatch while test threads register or remove handlers. Note that
+    // ConcurrentHashMap does not accept {@code null} keys or values, which is why null checks
+    // are explicitly handled in this map.
+    private final Map<MockMarkerKey, InvocationHandlerAdapter> markerToHandler = new ConcurrentHashMap<>();
 
     @Override
     public int size() {
@@ -34,26 +38,41 @@ class MarkerToHandlerMap implements Map<Object, InvocationHandlerAdapter> {
 
     @Override
     public boolean containsKey(Object key) {
+        if (key == null) {
+            return false;
+        }
         return markerToHandler.containsKey(new MockMarkerKey(key));
     }
 
     @Override
     public boolean containsValue(Object value) {
+        if (value == null) {
+            return false;
+        }
         return markerToHandler.containsValue(value);
     }
 
     @Override
     public InvocationHandlerAdapter get(Object key) {
+        if (key == null) {
+            return null;
+        }
         return markerToHandler.get(new MockMarkerKey(key));
     }
 
     @Override
     public InvocationHandlerAdapter put(Object key, InvocationHandlerAdapter value) {
+        if (key == null || value == null) {
+            return null;
+        }
         return markerToHandler.put(new MockMarkerKey(key), value);
     }
 
     @Override
     public InvocationHandlerAdapter remove(Object key) {
+        if (key == null) {
+            return null;
+        }
         return markerToHandler.remove(new MockMarkerKey(key));
     }
 
@@ -71,7 +90,7 @@ class MarkerToHandlerMap implements Map<Object, InvocationHandlerAdapter> {
 
     @Override
     public Set<Object> keySet() {
-        Set<Object> set = new HashSet<>(entrySet().size());
+        Set<Object> set = new HashSet<>(markerToHandler.size());
         for (MockMarkerKey key : markerToHandler.keySet()) {
             set.add(key.mockMarker);
         }
@@ -86,7 +105,7 @@ class MarkerToHandlerMap implements Map<Object, InvocationHandlerAdapter> {
     @Override
     @SuppressWarnings("InfiniteRecursion")
     public Set<Entry<Object, InvocationHandlerAdapter>> entrySet() {
-        Set<Entry<Object, InvocationHandlerAdapter>> set = new HashSet<>(entrySet().size());
+        Set<Entry<Object, InvocationHandlerAdapter>> set = new HashSet<>(markerToHandler.size());
         for (Entry<MockMarkerKey, InvocationHandlerAdapter> entry : markerToHandler.entrySet()) {
             set.add(new AbstractMap.SimpleImmutableEntry<>(entry.getKey().mockMarker, entry.getValue()));
         }

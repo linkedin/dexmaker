@@ -227,8 +227,14 @@ class StaticMockMethodAdvice {
             Throwable {
         MethodDesc methodDesc = new MethodDesc((String) methodDescStr);
         Class clazz = getClassMethodWasCalledOn(methodDesc);
+        if (clazz == null) {
+            return null;
+        }
 
         Object marker = classToMarker.get(clazz);
+        if (marker == null) {
+            return null;
+        }
         InvocationHandlerAdapter interceptor = markersToHandler.get(marker);
         if (interceptor == null) {
             return null;
@@ -256,6 +262,9 @@ class StaticMockMethodAdvice {
      * @return {@code true} iff the marker is a mock marker
      */
     public boolean isMarker(Object marker) {
+        if (marker == null) {
+            return false;
+        }
         return markersToHandler.containsKey(marker);
     }
 

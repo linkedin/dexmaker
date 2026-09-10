@@ -30,9 +30,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 /**
@@ -113,7 +113,10 @@ public final class InlineStaticMockMaker implements MockMaker {
      * object's method calls should be intercepted.
      */
     private final Map<Object, InvocationHandlerAdapter> markerToHandler = new MarkerToHandlerMap();
-    private final Map<Class, Object> classToMarker = new HashMap<>();
+    // NOTE: Must be ConcurrentHashMap to prevent ConcurrentModificationException when
+    // background threads execute methods on instrumented classes while test threads mutate this map.
+    // Also note that ConcurrentHashMap does not accept {@code null} keys or values.
+    private final Map<Class, Object> classToMarker = new ConcurrentHashMap<>();
 
     /**
      * Class doing the actual byte code transformation.

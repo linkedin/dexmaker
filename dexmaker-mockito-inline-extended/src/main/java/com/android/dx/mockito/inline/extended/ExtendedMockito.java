@@ -29,6 +29,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.android.dx.mockito.inline.InlineDexmakerMockMaker.onSpyInProgressInstance;
 import static com.android.dx.mockito.inline.InlineStaticMockMaker.onMethodCallDuringVerification;
@@ -66,8 +67,12 @@ import static org.mockito.internal.progress.ThreadSafeMockingProgress.mockingPro
 public class ExtendedMockito extends Mockito {
     /**
      * Currently active {@link #mockitoSession() sessions}
+     *
+     * <p>NOTE: Must be {@link CopyOnWriteArrayList} to prevent {@link java.util
+     * .ConcurrentModificationException} when background threads query active sessions
+     * while test threads start or finish mocking sessions.
      */
-    private static ArrayList<StaticMockitoSession> sessions = new ArrayList<>();
+    private static final List<StaticMockitoSession> sessions = new CopyOnWriteArrayList<>();
 
     /**
      * Same as {@link Mockito#doAnswer(Answer)} but adds the ability to stub static method calls via

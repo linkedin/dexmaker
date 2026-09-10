@@ -21,7 +21,8 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.android.dx.mockito.inline.InlineStaticMockMaker.mockingInProgressClass;
 
@@ -32,8 +33,13 @@ import static com.android.dx.mockito.inline.InlineStaticMockMaker.mockingInProgr
 public class StaticMockitoSession implements MockitoSession {
     /**
      * For each class where static mocking is enabled there is one marker object.
+     *
+     * <p>NOTE: Must be {@link ConcurrentHashMap} to prevent {@link java.util
+     * .ConcurrentModificationException} when background threads execute methods on
+     * instrumented classes while test threads mutate this map. Note that
+     * {@link ConcurrentHashMap} does not accept {@code null} keys or values.
      */
-    private static final HashMap<Class, Object> classToMarker = new HashMap<>();
+    private static final Map<Class, Object> classToMarker = new ConcurrentHashMap<>();
 
     private final MockitoSession instanceSession;
     private final ArrayList<Class<?>> staticMocks = new ArrayList<>(0);
@@ -112,6 +118,9 @@ public class StaticMockitoSession implements MockitoSession {
      */
     @SuppressWarnings("unchecked")
     <T> T staticMockMarker(Class<T> clazz) {
+        if (clazz == null) {
+            return null;
+        }
         return (T) classToMarker.get(clazz);
     }
 }

@@ -47,7 +47,7 @@ import org.junit.runner.RunWith;
 public class BlacklistedApis {
     @Before
     public void onlyRunOnPlatformsThatSupportBlacklisting() {
-        assumeTrue(Build.VERSION.SDK_INT >= 28);
+        assumeTrue("Requires API level 28 or higher", Build.VERSION.SDK_INT >= 28);
     }
 
     /**
@@ -63,6 +63,15 @@ public class BlacklistedApis {
         return (packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 
+    /**
+     * Check if blacklisting of non-SDK APIs is currently enforced in this process.
+     *
+     * @return {@code true} iff blacklisting is enforced
+     */
+    private boolean isBlacklistingEnforced() {
+        return new CallBlackListedMethod().callingBlacklistedMethodCausesException();
+    }
+
     @Test
     public void callBlacklistedPublicMethodRealMethod() throws Exception {
         Context targetContext = InstrumentationRegistry.getTargetContext();
@@ -70,7 +79,7 @@ public class BlacklistedApis {
         FrameLayout child = new FrameLayout(targetContext);
         FrameLayout parent = spy(new FrameLayout(targetContext));
 
-        if (isDebuggable()) {
+        if (isDebuggable() || !isBlacklistingEnforced()) {
             // This calls a blacklisted public method.
             // Since Android P these methods are not callable from outside of the Android framework
             // anymore:
@@ -82,19 +91,25 @@ public class BlacklistedApis {
             // problem as the mock class is the same as the mocked class.
             parent.addView(child);
         } else {
+            boolean threw = false;
             try {
                 parent.addView(child);
-                fail();
-            } catch (NoSuchMethodError expected) {
-                // expected
+            } catch (NoSuchMethodError | NullPointerException expected) {
+                // expected: on early Android P, accessing hidden ViewGroup.mChildren threw
+                // NoSuchMethodError; on modern Android, mChildren cannot be copied into the
+                // subclass spy because reflection on hidden fields is blocked, leaving mChildren
+                // null and causing addView to throw NullPointerException.
+                threw = true;
             }
+            assertTrue("Calling blacklisted method parent.addView() should throw an exception or error",
+                    threw);
         }
     }
 
     @Test
     public void copyBlacklistedFields() throws Exception {
         // Can only copy blacklisted fields when debuggable
-        assumeTrue(isDebuggable());
+        assumeTrue("Application must be debuggable to copy blacklisted fields", isDebuggable());
 
         Context targetContext = InstrumentationRegistry.getTargetContext();
 
@@ -116,8 +131,11 @@ public class BlacklistedApis {
     }
 
     @SuppressLint({"PrivateApi", "CheckReturnValue", "SoonBlockedPrivateApi"})
+    @SuppressWarnings("ReturnValueIgnored") // Used for side effect of checking reflection resolution
     @Test
-    public void cannotCallBlackListedAfterSpying() {
+    public void cannotCallBlackListedAfterSpying() throws Exception {
+        assumeTrue("Blacklisting is not enforced in this process", isBlacklistingEnforced());
+
         // Spying and mocking might change the View class's byte code
         spy(new View(InstrumentationRegistry.getTargetContext(), null));
         mock(View.class);
@@ -125,7 +143,7 @@ public class BlacklistedApis {
         // View#setNotifyAutofillManagerOnClick is a blacklisted method. Resolving it should fail
         try {
             View.class.getDeclaredMethod("setNotifyAutofillManagerOnClick", Boolean.TYPE);
-            fail();
+            fail("Resolving blacklisted method should throw NoSuchMethodException");
         } catch (NoSuchMethodException expected) {
             // expected
         }
@@ -133,6 +151,7 @@ public class BlacklistedApis {
 
     public static class CallBlackListedMethod {
         @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi"})
+        @SuppressWarnings("ReturnValueIgnored") // Used for side effect of checking reflection resolution
         boolean callingBlacklistedMethodCausesException() {
             // Settings.Global#isValidZenMode is a blacklisted method. Resolving it should fail
             try {
@@ -145,13 +164,17 @@ public class BlacklistedApis {
     }
 
     @Test
-    public void spiesCannotBeUsedToCallHiddenMethods() {
+    public void spiesCannotBeUsedToCallHiddenMethods() throws Exception {
+        assumeTrue("Blacklisting is not enforced in this process", isBlacklistingEnforced());
+
         CallBlackListedMethod t = spy(new CallBlackListedMethod());
-        assertTrue(t.callingBlacklistedMethodCausesException());
+        assertTrue("Calling blacklisted method on spy should cause an exception",
+                t.callingBlacklistedMethodCausesException());
     }
 
     public static abstract class CallBlacklistedMethodAbstract {
         @SuppressLint({"PrivateApi", "SoonBlockedPrivateApi"})
+        @SuppressWarnings("ReturnValueIgnored") // Used for side effect of checking reflection resolution
         public boolean callingBlacklistedMethodCausesException() {
             // Settings.Global#isValidZenMode is a blacklisted method. Resolving it should fail
             try {
@@ -166,9 +189,12 @@ public class BlacklistedApis {
     }
 
     @Test
-    public void mocksOfAbstractClassesCannotBeUsedToCallHiddenMethods() {
+    public void mocksOfAbstractClassesCannotBeUsedToCallHiddenMethods() throws Exception {
+        assumeTrue("Blacklisting is not enforced in this process", isBlacklistingEnforced());
+
         CallBlacklistedMethodAbstract t = mock(CallBlacklistedMethodAbstract.class);
         doCallRealMethod().when(t).callingBlacklistedMethodCausesException();
-        assertTrue(t.callingBlacklistedMethodCausesException());
+        assertTrue("Calling blacklisted method on mock of abstract class should cause an exception",
+                t.callingBlacklistedMethodCausesException());
     }
 }
